@@ -73,37 +73,12 @@ export async function PUT(
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
-    // Validate level if provided (only for students)
-    if (level !== undefined) {
-      // Determine the final person type (updated type if provided, otherwise existing type)
-      const finalType = type !== undefined ? type : existing.type;
-      
-      // Reject if the final person type is not "student"
-      if (finalType !== "student") {
-        return NextResponse.json(
-          { error: "Level can only be set for students" },
-          { status: 400 }
-        );
-      }
-      if (
-        level !== null &&
-        ![
-          "License_1",
-          "License_2",
-          "License_3",
-          "Master_1",
-          "Master_2",
-        ].includes(level)
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
-          },
-          { status: 400 }
-        );
-      }
-    }
+    // Determine the final person type (updated type if provided, otherwise existing type)
+    const finalType = type !== undefined ? type : existing.type;
+    
+    // Check if type is changing from student to non-student
+    const isChangingFromStudentToNonStudent = 
+      type !== undefined && type !== "student" && existing.type === "student";
 
     // Build update data
     const updateData: any = {};
@@ -112,8 +87,57 @@ export async function PUT(
     if (nom !== undefined) updateData.nom = nom;
     if (prenom !== undefined) updateData.prenom = prenom;
     if (photo_path !== undefined) updateData.photo_path = photo_path && photo_path.trim() !== "" ? photo_path : null;
-    if (level !== undefined) updateData.level = level;
-    if (classField !== undefined) updateData.class = classField;
+    
+    // Handle level and class: clear them if type changes from student to non-student
+    if (isChangingFromStudentToNonStudent) {
+      // Type is changing from student to non-student, clear level and class
+      // Skip validation since we're clearing these fields
+      updateData.level = null;
+      updateData.class = null;
+    } else {
+      // Normal update logic - validate and set level/class only for students
+      // Validate level if provided (only for students)
+      if (level !== undefined) {
+        // Reject if the final person type is not "student"
+        if (finalType !== "student") {
+          return NextResponse.json(
+            { error: "Level can only be set for students" },
+            { status: 400 }
+          );
+        }
+        if (
+          level !== null &&
+          ![
+            "License_1",
+            "License_2",
+            "License_3",
+            "Master_1",
+            "Master_2",
+          ].includes(level)
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
+            },
+            { status: 400 }
+          );
+        }
+        updateData.level = level;
+      }
+
+      // Validate class if provided (only for students)
+      if (classField !== undefined) {
+        // Reject if the final person type is not "student"
+        if (finalType !== "student") {
+          return NextResponse.json(
+            { error: "Class can only be set for students" },
+            { status: 400 }
+          );
+        }
+        updateData.class = classField;
+      }
+    }
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(

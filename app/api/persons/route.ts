@@ -107,6 +107,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate class if provided (only for students)
+    if (classField && type !== "student") {
+      return NextResponse.json(
+        { error: "Class can only be set for students" },
+        { status: 400 }
+      );
+    }
+
     // Insert the new person with rfid_uuid
     const newPerson = await prisma.person.create({
       data: {

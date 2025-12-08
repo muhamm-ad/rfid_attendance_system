@@ -372,7 +372,7 @@ export default function PersonManagement() {
           ...formData,
           photo_path: photoPath || formData.photo_path || null,
           level: formData.type === "student" ? formData.level || null : null,
-          class: formData.class || null,
+          class: formData.type === "student" ? formData.class || null : null,
         }),
       });
       const data = await res.json();
@@ -663,6 +663,7 @@ export default function PersonManagement() {
                       ...formData,
                       type: newType,
                       level: newType === "student" ? formData.level : "",
+                      class: newType === "student" ? formData.class : "",
                     });
                   }}
                   required
@@ -723,20 +724,22 @@ export default function PersonManagement() {
                   </select>
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Class
-                </label>
-                <input
-                  type="text"
-                  value={formData.class}
-                  onChange={(e) =>
-                    setFormData({ ...formData, class: e.target.value })
-                  }
-                  placeholder="e.g., L1-A, M1-B, Mathématiques"
-                  className={inputClasses}
-                />
-              </div>
+              {formData.type === "student" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Class
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.class}
+                    onChange={(e) =>
+                      setFormData({ ...formData, class: e.target.value })
+                    }
+                    placeholder="e.g., L1-A, M1-B, Mathématiques"
+                    className={inputClasses}
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Photo
