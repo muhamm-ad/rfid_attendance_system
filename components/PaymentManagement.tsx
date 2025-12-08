@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { CreditCard, Plus, Calendar, Search, ChevronDown, X, User } from "lucide-react";
+import { CreditCard, Plus, Calendar, Search, ChevronDown, X, User, Edit2, Trash2 } from "lucide-react";
 // import Image from "next/image";
 
 type Payment = {
@@ -29,6 +29,7 @@ export default function PaymentManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -101,12 +102,46 @@ export default function PaymentManagement() {
     }
   }
 
+  function resetForm() {
+    setFormData({
+      student_id: "",
+      trimester: "1",
+      amount: "",
+      payment_method: "cash",
+    });
+    setFormStudentSearchTerm("");
+    setIsFormDropdownOpen(false);
+    setEditingPayment(null);
+    setShowForm(false);
+    setError(null);
+  }
+
+  function startEdit(payment: Payment) {
+    setEditingPayment(payment);
+    const student = students.find((s) => s.id === payment.student_id);
+    setFormData({
+      student_id: payment.student_id.toString(),
+      trimester: payment.trimester.toString() as "1" | "2" | "3",
+      amount: payment.amount.toString(),
+      payment_method: payment.payment_method,
+    });
+    if (student) {
+      setFormStudentSearchTerm(`${student.prenom} ${student.nom}`);
+    }
+    setShowForm(true);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      const res = await fetch("/api/payments", {
-        method: "POST",
+      const url = editingPayment
+        ? `/api/payments/${editingPayment.id}`
+        : "/api/payments";
+      const method = editingPayment ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           student_id: parseInt(formData.student_id),
@@ -116,17 +151,26 @@ export default function PaymentManagement() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Payment failed");
-      
-      setShowForm(false);
-      setFormData({
-        student_id: "",
-        trimester: "1",
-        amount: "",
-        payment_method: "cash",
+      if (!res.ok) throw new Error(data?.error || "Payment operation failed");
+
+      resetForm();
+      if (selectedStudentId) {
+        await loadPayments(selectedStudentId);
+      }
+    } catch (e: any) {
+      setError(e.message || "Unexpected error");
+    }
+  }
+
+  async function handleDelete(paymentId: number) {
+    if (!confirm("Are you sure you want to delete this payment?")) return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/payments/${paymentId}`, {
+        method: "DELETE",
       });
-      setFormStudentSearchTerm("");
-      setIsFormDropdownOpen(false);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Delete failed");
       if (selectedStudentId) {
         await loadPayments(selectedStudentId);
       }
@@ -224,6 +268,7 @@ export default function PaymentManagement() {
   }
 
   function handleFormInputChange(value: string) {
+    if (editingPayment) return; // Prevent changes when editing
     setFormStudentSearchTerm(value);
     setIsFormDropdownOpen(true);
     if (value === "") {
@@ -232,6 +277,7 @@ export default function PaymentManagement() {
   }
 
   function handleFormInputFocus() {
+    if (editingPayment) return; // Prevent dropdown when editing
     setIsFormDropdownOpen(true);
     // Load students if not already loaded
     if (students.length === 0) {
@@ -345,7 +391,17 @@ export default function PaymentManagement() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Record New Payment</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">
+                {editingPayment ? "Edit Payment" : "Record New Payment"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
@@ -357,6 +413,11 @@ export default function PaymentManagement() {
                   Student *
                 </label>
                 <div className="relative" ref={formDropdownRef}>
+                  {editingPayment && (
+                    <p className="text-xs text-gray-500 mb-2">
+                      Note: Changing student is not allowed when editing
+                    </p>
+                  )}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
                     <input
@@ -367,7 +428,8 @@ export default function PaymentManagement() {
                       onFocus={handleFormInputFocus}
                       placeholder="Search by name or ID..."
                       required={!formData.student_id}
-                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      disabled={!!editingPayment}
+                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                       {formData.student_id && (
@@ -471,14 +533,11 @@ export default function PaymentManagement() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                  Record Payment
+                  {editingPayment ? "Update Payment" : "Record Payment"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setError(null);
-                  }}
+                  onClick={resetForm}
                   className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -554,6 +613,9 @@ export default function PaymentManagement() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -584,6 +646,24 @@ export default function PaymentManagement() {
                         <div className="flex items-center gap-2">
                           <Calendar size={14} />
                           {new Date(payment.payment_date).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => startEdit(payment)}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Edit payment"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(payment.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete payment"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
