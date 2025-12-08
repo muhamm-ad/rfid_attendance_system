@@ -1,9 +1,9 @@
 // components/PersonSearchDropdown.tsx
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Search, ChevronDown, X } from "lucide-react";
-import { useClickOutside } from "@/hooks/useClickOutside";
 import { filterPersons } from "@/lib/ui-utils";
 import PersonAvatar from "./PersonAvatar";
 import { PersonWithPayments } from "@/lib/db";
@@ -32,10 +32,118 @@ export default function PersonSearchDropdown({
   onFocus,
 }: PersonSearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [positionAbove, setPositionAbove] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownListRef = useRef<HTMLDivElement>(null);
 
-  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+  // Handle mounting for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle click outside - including the fixed dropdown
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        dropdownListRef.current &&
+        !dropdownListRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Function to calculate and update dropdown position
+  const updateDropdownPosition = useCallback(() => {
+    if (!isOpen || !inputRef.current) return;
+    
+    const inputRect = inputRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+    const dropdownHeight = 240; // max-h-60 = 240px
+    const inputWidth = inputRect.width;
+
+    // Position above if there's not enough space below
+    // Prefer above if space below is less than dropdown height
+    const shouldPositionAbove = spaceBelow < dropdownHeight && spaceAbove >= dropdownHeight;
+    setPositionAbove(shouldPositionAbove);
+
+    // Calculate position for dropdown
+    const left = inputRect.left;
+    const top = shouldPositionAbove 
+      ? inputRect.top - dropdownHeight - 4 // 4px for mb-1
+      : inputRect.bottom + 4; // 4px for mt-1
+
+    // Ensure dropdown stays within viewport
+    const adjustedLeft = Math.max(8, Math.min(left, viewportWidth - inputWidth - 8));
+    const adjustedTop = shouldPositionAbove
+      ? Math.max(8, top)
+      : Math.min(top, viewportHeight - dropdownHeight - 8);
+
+    setDropdownStyle({
+      position: 'fixed',
+      left: `${adjustedLeft}px`,
+      top: `${adjustedTop}px`,
+      width: `${inputWidth}px`,
+      zIndex: 9999,
+    });
+  }, [isOpen]);
+
+  // Calculate position and scroll into view when dropdown opens
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        updateDropdownPosition();
+
+        // Scroll input into view to ensure dropdown is visible
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+          }
+        }, 50);
+      });
+    }
+  }, [isOpen, updateDropdownPosition]);
+
+  // Update position on scroll and resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => {
+      updateDropdownPosition();
+    };
+
+    const handleResize = () => {
+      updateDropdownPosition();
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen, updateDropdownPosition]);
 
   const filteredPersons = filterPersons(
     persons as Array<PersonWithPayments & { nom: string; prenom: string; id: number; rfid_uuid: string }>,
@@ -103,9 +211,13 @@ export default function PersonSearchDropdown({
         </div>
       </div>
 
-      {/* Dropdown List */}
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+      {/* Dropdown List - Rendered via Portal to avoid overflow issues */}
+      {isOpen && mounted && typeof window !== 'undefined' && createPortal(
+        <div
+          ref={dropdownListRef}
+          style={dropdownStyle}
+          className="bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+        >
           {filteredPersons.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-500 text-center">
               No persons found
@@ -144,7 +256,8 @@ export default function PersonSearchDropdown({
               ))}
             </ul>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
