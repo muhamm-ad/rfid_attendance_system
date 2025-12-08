@@ -31,7 +31,7 @@ model Attendance {
   status          AttendanceStatus
   attendance_date DateTime         @default(now())
 
-  person Person @relation(fields: [person_id], references: [id])
+  person Person @relation(fields: [person_id], references: [id], onDelete: Cascade)
 
   @@map("attendance")
 }
@@ -54,7 +54,7 @@ model StudentPayment {
   trimester  Int
 
   student Person  @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  payment Payment @relation(fields: [payment_id], references: [id])
+  payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
 
   @@map("student_payments")
 }
