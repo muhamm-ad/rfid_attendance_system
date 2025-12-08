@@ -76,9 +76,9 @@ export async function PUT(
     // Determine the final person type (updated type if provided, otherwise existing type)
     const finalType = type !== undefined ? type : existing.type;
     
-    // Check if type is changing from student to non-student
-    const isChangingFromStudentToNonStudent = 
-      type !== undefined && type !== "student" && existing.type === "student";
+    // Check if type is changing to non-student (from any type)
+    const isChangingToNonStudent = 
+      type !== undefined && type !== "student";
 
     // Build update data
     const updateData: any = {};
@@ -88,9 +88,9 @@ export async function PUT(
     if (prenom !== undefined) updateData.prenom = prenom;
     if (photo_path !== undefined) updateData.photo_path = photo_path && photo_path.trim() !== "" ? photo_path : null;
     
-    // Handle level and class: clear them if type changes from student to non-student
-    if (isChangingFromStudentToNonStudent) {
-      // Type is changing from student to non-student, clear level and class
+    // Handle level and class: clear them if changing to non-student
+    if (isChangingToNonStudent) {
+      // Type is changing to non-student, always clear level and class
       // Skip validation since we're clearing these fields
       updateData.level = null;
       updateData.class = null;
@@ -98,44 +98,54 @@ export async function PUT(
       // Normal update logic - validate and set level/class only for students
       // Validate level if provided (only for students)
       if (level !== undefined) {
-        // Reject if the final person type is not "student"
-        if (finalType !== "student") {
-          return NextResponse.json(
-            { error: "Level can only be set for students" },
-            { status: 400 }
-          );
+        // If level is null and type is not student, just ignore it (don't set it)
+        if (level === null && finalType !== "student") {
+          // Don't set level for non-students, just skip it
+        } else {
+          // Reject if trying to set a non-null level for non-student
+          if (finalType !== "student") {
+            return NextResponse.json(
+              { error: "Level can only be set for students" },
+              { status: 400 }
+            );
+          }
+          if (
+            level !== null &&
+            ![
+              "License_1",
+              "License_2",
+              "License_3",
+              "Master_1",
+              "Master_2",
+            ].includes(level)
+          ) {
+            return NextResponse.json(
+              {
+                error:
+                  "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
+              },
+              { status: 400 }
+            );
+          }
+          updateData.level = level;
         }
-        if (
-          level !== null &&
-          ![
-            "License_1",
-            "License_2",
-            "License_3",
-            "Master_1",
-            "Master_2",
-          ].includes(level)
-        ) {
-          return NextResponse.json(
-            {
-              error:
-                "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
-            },
-            { status: 400 }
-          );
-        }
-        updateData.level = level;
       }
 
       // Validate class if provided (only for students)
       if (classField !== undefined) {
-        // Reject if the final person type is not "student"
-        if (finalType !== "student") {
-          return NextResponse.json(
-            { error: "Class can only be set for students" },
-            { status: 400 }
-          );
+        // If class is null and type is not student, just ignore it (don't set it)
+        if (classField === null && finalType !== "student") {
+          // Don't set class for non-students, just skip it
+        } else {
+          // Reject if trying to set a non-null class for non-student
+          if (finalType !== "student") {
+            return NextResponse.json(
+              { error: "Class can only be set for students" },
+              { status: 400 }
+            );
+          }
+          updateData.class = classField;
         }
-        updateData.class = classField;
       }
     }
 

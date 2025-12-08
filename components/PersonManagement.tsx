@@ -365,15 +365,24 @@ export default function PersonManagement() {
         : "/api/persons";
       const method = editingPerson ? "PUT" : "POST";
 
+      // Build request body - only include level and class for students
+      const { level, class: classField, ...restFormData } = formData;
+      const requestBody: any = {
+        ...restFormData,
+        photo_path: photoPath || formData.photo_path || null,
+      };
+      
+      // Only include level and class if type is student
+      if (formData.type === "student") {
+        requestBody.level = formData.level || null;
+        requestBody.class = formData.class || null;
+      }
+      // For non-students, level and class are excluded from the request
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          photo_path: photoPath || formData.photo_path || null,
-          level: formData.type === "student" ? formData.level || null : null,
-          class: formData.type === "student" ? formData.class || null : null,
-        }),
+        body: JSON.stringify(requestBody),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Operation failed");
