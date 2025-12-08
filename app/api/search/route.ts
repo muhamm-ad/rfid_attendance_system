@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const isNumeric = !isNaN(Number(query));
     const queryId = isNumeric ? Number(query) : null;
 
+    // Case-insensitive search for names and UUID
     const where: any = {
       OR: [
         { nom: { contains: query, mode: "insensitive" } },

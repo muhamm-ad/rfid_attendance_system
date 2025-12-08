@@ -55,19 +55,29 @@ export function formatLevel(level: string | null | undefined): string {
   return level.replace("_", " ");
 }
 
-// Helper to filter persons
+// Helper to filter persons (case-insensitive)
 export function filterPersons<T extends { nom: string; prenom: string; id: number; rfid_uuid: string }>(
   persons: T[],
   searchTerm: string
 ): T[] {
   if (!searchTerm) return persons;
-  const search = searchTerm.toLowerCase();
+  const search = searchTerm.toLowerCase().trim();
   return persons.filter(
-    (person) =>
-      person.nom.toLowerCase().includes(search) ||
-      person.prenom.toLowerCase().includes(search) ||
+    (person) => {
+      const nomLower = person.nom.toLowerCase();
+      const prenomLower = person.prenom.toLowerCase();
+      const fullName = `${prenomLower} ${nomLower}`;
+      const fullNameReverse = `${nomLower} ${prenomLower}`;
+      
+      return (
+      nomLower.includes(search) ||
+      prenomLower.includes(search) ||
+      fullName.includes(search) ||
+      fullNameReverse.includes(search) ||
       person.id.toString().includes(search) ||
       person.rfid_uuid.toLowerCase().includes(search)
+      );
+    }
   );
 }
 

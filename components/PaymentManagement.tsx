@@ -143,13 +143,20 @@ export default function PaymentManagement() {
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
-  // Filter students based on search term
+  // Filter students based on search term (case-insensitive)
   const filteredStudents = students.filter((student) => {
     if (!studentSearchTerm) return true;
-    const search = studentSearchTerm.toLowerCase();
+    const search = studentSearchTerm.toLowerCase().trim();
+    const nomLower = student.nom.toLowerCase();
+    const prenomLower = student.prenom.toLowerCase();
+    const fullName = `${prenomLower} ${nomLower}`;
+    const fullNameReverse = `${nomLower} ${prenomLower}`;
+    
     return (
-      student.nom.toLowerCase().includes(search) ||
-      student.prenom.toLowerCase().includes(search) ||
+      nomLower.includes(search) ||
+      prenomLower.includes(search) ||
+      fullName.includes(search) ||
+      fullNameReverse.includes(search) ||
       student.id.toString().includes(search)
     );
   });
@@ -189,13 +196,20 @@ export default function PaymentManagement() {
     setIsDropdownOpen(false);
   }
 
-  // Filter students for form dropdown
+  // Filter students for form dropdown (case-insensitive)
   const filteredFormStudents = students.filter((student) => {
     if (!formStudentSearchTerm) return true;
-    const search = formStudentSearchTerm.toLowerCase();
+    const search = formStudentSearchTerm.toLowerCase().trim();
+    const nomLower = student.nom.toLowerCase();
+    const prenomLower = student.prenom.toLowerCase();
+    const fullName = `${prenomLower} ${nomLower}`;
+    const fullNameReverse = `${nomLower} ${prenomLower}`;
+    
     return (
-      student.nom.toLowerCase().includes(search) ||
-      student.prenom.toLowerCase().includes(search) ||
+      nomLower.includes(search) ||
+      prenomLower.includes(search) ||
+      fullName.includes(search) ||
+      fullNameReverse.includes(search) ||
       student.id.toString().includes(search)
     );
   });
