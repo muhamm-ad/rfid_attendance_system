@@ -87,27 +87,31 @@ export async function PUT(
       }
 
       // Update student payment if trimester changed
-      let updatedStudentPayment = existingStudentPayment;
       if (trimester !== undefined) {
-        updatedStudentPayment = await tx.studentPayment.update({
+        await tx.studentPayment.update({
           where: { id },
           data: { trimester },
         });
       }
 
-      // Fetch updated payment
-      const updatedPayment = await tx.payment.findUnique({
-        where: { id: existingStudentPayment.payment_id },
+      // Fetch updated student payment with payment relation
+      const updatedStudentPayment = await tx.studentPayment.findUnique({
+        where: { id },
+        include: { payment: true },
       });
+
+      if (!updatedStudentPayment) {
+        throw new Error("Failed to fetch updated payment");
+      }
 
       return {
         id: updatedStudentPayment.id,
         student_id: updatedStudentPayment.student_id,
         trimester: updatedStudentPayment.trimester,
-        payment_id: updatedPayment!.id,
-        amount: updatedPayment!.amount,
-        payment_method: updatedPayment!.payment_method,
-        payment_date: updatedPayment!.payment_date.toISOString(),
+        payment_id: updatedStudentPayment.payment.id,
+        amount: updatedStudentPayment.payment.amount,
+        payment_method: updatedStudentPayment.payment.payment_method,
+        payment_date: updatedStudentPayment.payment.payment_date.toISOString(),
       };
     });
 
