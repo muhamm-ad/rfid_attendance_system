@@ -50,7 +50,7 @@ This command opens a web interface (usually on `http://localhost:5555`) where yo
 
 The diagram below represents the complete database structure with all relationships between tables:
 
-![Database ERD Diagram](./database-erd.png)
+![Database ERD Diagram](./images/database-erd.png)
 
 ## Database Structure
 
