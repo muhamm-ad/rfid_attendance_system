@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       skip: offset,
     });
 
-    const formattedLogs: AttendanceLog[] = logs.map((log) => ({
+    const formattedLogs: AttendanceLog[] = logs.map((log: any) => ({
       id: log.id,
       person_id: log.person_id,
       action: log.action,
