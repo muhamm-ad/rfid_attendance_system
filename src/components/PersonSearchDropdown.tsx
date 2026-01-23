@@ -4,7 +4,7 @@
 import React, { useRef, useState } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { filterPersons } from "@/lib/ui-utils";
+import { filterPersons } from "@/lib/utils-ui";
 import PersonAvatar from "./PersonAvatar";
 import { PersonWithPayments } from "@/lib/db";
 

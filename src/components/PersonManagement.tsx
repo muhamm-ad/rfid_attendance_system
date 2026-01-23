@@ -23,7 +23,7 @@ import {
   selectClasses,
   buttonPrimaryClasses,
   buttonSecondaryClasses,
-} from "@/lib/ui-utils";
+} from "@/lib/utils-ui";
 // import { useClickOutside } from "@/hooks/useClickOutside";
 // import Image from "next/image";
 

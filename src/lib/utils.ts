@@ -1,4 +1,5 @@
 // lib/utils.ts
+
 // Server-side utilities for API routes
 import prisma from "./db";
 import { PersonWithPayments } from "./db";

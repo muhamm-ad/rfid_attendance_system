@@ -13,7 +13,7 @@ import {
 import DataTable, { Column } from "./DataTable";
 import PersonSearchDropdown from "./PersonSearchDropdown";
 import PersonAvatar from "./PersonAvatar";
-import { statusColors, BadgeGray, formatLevel, inputClasses, selectClasses } from "@/lib/ui-utils";
+import { statusColors, BadgeGray, formatLevel, inputClasses, selectClasses } from "@/lib/utils-ui";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
