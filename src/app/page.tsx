@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function Home() {
-  return redirect("/dashboard");
+  // TODO: If already logged in, redirect to dashboard
+  return redirect("/login");
 }

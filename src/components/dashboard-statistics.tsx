@@ -72,7 +72,7 @@ type Stats = {
   }>;
 };
 
-export default function StatisticsDashboard() {
+export default function Statistics() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

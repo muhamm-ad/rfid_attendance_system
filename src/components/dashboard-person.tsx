@@ -11,9 +11,9 @@ import {
   X,
   Scan,
 } from "lucide-react";
-import DataTable, { Column } from "./DataTable";
-import PersonSearchDropdown from "./PersonSearchDropdown";
-import PersonAvatar from "./PersonAvatar";
+import DataTable, { Column } from "./shared/data-table";
+import PersonSearchDropdown from "./shared/person-search-dropdown";
+import PersonAvatar from "./shared/person-avatar";
 import {
   typeColors,
   BadgeGray,
@@ -23,7 +23,7 @@ import {
   selectClasses,
   buttonPrimaryClasses,
   buttonSecondaryClasses,
-} from "@/lib/utils-ui";
+} from "@/lib/ui-utils";
 // import { useClickOutside } from "@/hooks/useClickOutside";
 // import Image from "next/image";
 

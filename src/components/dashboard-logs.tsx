@@ -10,10 +10,10 @@ import {
   LogOut,
   UserCircle2,
 } from "lucide-react";
-import DataTable, { Column } from "./DataTable";
-import PersonSearchDropdown from "./PersonSearchDropdown";
-import PersonAvatar from "./PersonAvatar";
-import { statusColors, BadgeGray, formatLevel, inputClasses, selectClasses } from "@/lib/utils-ui";
+import DataTable, { Column } from "./shared/data-table";
+import PersonSearchDropdown from "./shared/person-search-dropdown";
+import PersonAvatar from "./shared/person-avatar";
+import { statusColors, BadgeGray, formatLevel, inputClasses, selectClasses } from "@/lib/ui-utils";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
