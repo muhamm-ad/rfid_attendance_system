@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "start": "next start",
-    "dev": "next dev",
-    "build": "prisma generate && next build"
-  },
-  "prisma": {
-    "seed": "tsx src/prisma/seed.ts"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
@@ -29,7 +29,6 @@
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.553.0",
     "next": "^16.0.7",
-    "next-auth": "^5.0.0-beta.30",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "tailwind-merge": "^2.6.0",

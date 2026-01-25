@@ -1,10 +1,7 @@
-import { PrismaClient } from "@/prisma/generated/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 type PersonType = "student" | "teacher" | "staff" | "visitor";
 
@@ -281,7 +278,7 @@ function generateAttendanceEntries(
   endDate: string,
   days: number[],
   inTime: string,
-  outTime: string
+  outTime: string,
 ): AttendanceSeed[] {
   const entries: AttendanceSeed[] = [];
   const start = new Date(startDate + "T00:00:00Z");
@@ -320,7 +317,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:55",
-    "16:05"
+    "16:05",
   ),
   ...generateAttendanceEntries(
     "STU-0002",
@@ -328,7 +325,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "08:10",
-    "15:50"
+    "15:50",
   ),
   ...generateAttendanceEntries(
     "STU-0003",
@@ -336,7 +333,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "08:15",
-    "16:00"
+    "16:00",
   ),
   ...generateAttendanceEntries(
     "STU-0004",
@@ -344,7 +341,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:20"
+    "16:20",
   ),
   ...generateAttendanceEntries(
     "STU-0005",
@@ -352,7 +349,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:50",
-    "16:10"
+    "16:10",
   ),
   ...generateAttendanceEntries(
     "STU-0006",
@@ -360,7 +357,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "08:05",
-    "15:45"
+    "15:45",
   ),
   ...generateAttendanceEntries(
     "STU-0007",
@@ -368,7 +365,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:30"
+    "16:30",
   ),
   ...generateAttendanceEntries(
     "STU-0008",
@@ -376,7 +373,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:15"
+    "16:15",
   ),
 
   // December 2024 - Regular students
@@ -386,7 +383,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:55",
-    "16:05"
+    "16:05",
   ),
   ...generateAttendanceEntries(
     "STU-0002",
@@ -394,7 +391,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "08:10",
-    "15:50"
+    "15:50",
   ),
   ...generateAttendanceEntries(
     "STU-0003",
@@ -402,7 +399,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "08:15",
-    "16:00"
+    "16:00",
   ),
   ...generateAttendanceEntries(
     "STU-0004",
@@ -410,7 +407,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:20"
+    "16:20",
   ),
   ...generateAttendanceEntries(
     "STU-0005",
@@ -418,7 +415,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:50",
-    "16:10"
+    "16:10",
   ),
   ...generateAttendanceEntries(
     "STU-0006",
@@ -426,7 +423,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "08:05",
-    "15:45"
+    "15:45",
   ),
   ...generateAttendanceEntries(
     "STU-0007",
@@ -434,7 +431,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:30"
+    "16:30",
   ),
   ...generateAttendanceEntries(
     "STU-0008",
@@ -442,7 +439,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:15"
+    "16:15",
   ),
 
   // January 2025 - Regular students (current month)
@@ -452,7 +449,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:55",
-    "16:05"
+    "16:05",
   ),
   ...generateAttendanceEntries(
     "STU-0002",
@@ -460,7 +457,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:10",
-    "15:50"
+    "15:50",
   ),
   ...generateAttendanceEntries(
     "STU-0003",
@@ -468,7 +465,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:15",
-    "16:00"
+    "16:00",
   ),
   ...generateAttendanceEntries(
     "STU-0004",
@@ -476,7 +473,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:20"
+    "16:20",
   ),
   ...generateAttendanceEntries(
     "STU-0005",
@@ -484,7 +481,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:50",
-    "16:10"
+    "16:10",
   ),
   ...generateAttendanceEntries(
     "STU-0006",
@@ -492,7 +489,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:05",
-    "15:45"
+    "15:45",
   ),
   ...generateAttendanceEntries(
     "STU-0007",
@@ -500,7 +497,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:30"
+    "16:30",
   ),
   ...generateAttendanceEntries(
     "STU-0008",
@@ -508,7 +505,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:15"
+    "16:15",
   ),
 
   // Additional students with varied attendance
@@ -518,7 +515,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:20",
-    "16:00"
+    "16:00",
   ),
   ...generateAttendanceEntries(
     "STU-0010",
@@ -526,7 +523,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4],
     "08:05",
-    "15:55"
+    "15:55",
   ), // No Friday
   ...generateAttendanceEntries(
     "STU-0011",
@@ -534,7 +531,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:00",
-    "16:10"
+    "16:10",
   ),
   ...generateAttendanceEntries(
     "STU-0012",
@@ -542,7 +539,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:50",
-    "16:20"
+    "16:20",
   ),
   ...generateAttendanceEntries(
     "STU-0013",
@@ -550,7 +547,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:10",
-    "15:50"
+    "15:50",
   ),
   ...generateAttendanceEntries(
     "STU-0014",
@@ -558,7 +555,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "08:15",
-    "16:05"
+    "16:05",
   ),
   ...generateAttendanceEntries(
     "STU-0015",
@@ -566,7 +563,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:55",
-    "16:15"
+    "16:15",
   ),
 
   // Teachers - November 2024
@@ -576,7 +573,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:30",
-    "17:05"
+    "17:05",
   ),
   ...generateAttendanceEntries(
     "TCH-0002",
@@ -584,7 +581,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:40",
-    "16:40"
+    "16:40",
   ),
   ...generateAttendanceEntries(
     "TCH-0003",
@@ -592,7 +589,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:35",
-    "17:00"
+    "17:00",
   ),
   ...generateAttendanceEntries(
     "TCH-0004",
@@ -600,7 +597,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:50"
+    "16:50",
   ),
   ...generateAttendanceEntries(
     "TCH-0005",
@@ -608,7 +605,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:50",
-    "17:10"
+    "17:10",
   ),
 
   // Teachers - December 2024
@@ -618,7 +615,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:30",
-    "17:05"
+    "17:05",
   ),
   ...generateAttendanceEntries(
     "TCH-0002",
@@ -626,7 +623,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:40",
-    "16:40"
+    "16:40",
   ),
   ...generateAttendanceEntries(
     "TCH-0003",
@@ -634,7 +631,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:35",
-    "17:00"
+    "17:00",
   ),
   ...generateAttendanceEntries(
     "TCH-0004",
@@ -642,7 +639,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:50"
+    "16:50",
   ),
   ...generateAttendanceEntries(
     "TCH-0005",
@@ -650,7 +647,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:50",
-    "17:10"
+    "17:10",
   ),
 
   // Teachers - January 2025
@@ -660,7 +657,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:30",
-    "17:05"
+    "17:05",
   ),
   ...generateAttendanceEntries(
     "TCH-0002",
@@ -668,7 +665,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:40",
-    "16:40"
+    "16:40",
   ),
   ...generateAttendanceEntries(
     "TCH-0003",
@@ -676,7 +673,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:35",
-    "17:00"
+    "17:00",
   ),
   ...generateAttendanceEntries(
     "TCH-0004",
@@ -684,7 +681,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:45",
-    "16:50"
+    "16:50",
   ),
   ...generateAttendanceEntries(
     "TCH-0005",
@@ -692,7 +689,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:50",
-    "17:10"
+    "17:10",
   ),
 
   // Staff - November 2024
@@ -702,7 +699,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:20",
-    "18:10"
+    "18:10",
   ),
   ...generateAttendanceEntries(
     "STF-0002",
@@ -710,7 +707,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:15",
-    "18:00"
+    "18:00",
   ),
   ...generateAttendanceEntries(
     "STF-0003",
@@ -718,7 +715,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:25",
-    "18:15"
+    "18:15",
   ),
   ...generateAttendanceEntries(
     "STF-0004",
@@ -726,7 +723,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-11-30",
     [1, 2, 3, 4, 5],
     "07:30",
-    "18:20"
+    "18:20",
   ),
 
   // Staff - December 2024
@@ -736,7 +733,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:20",
-    "18:10"
+    "18:10",
   ),
   ...generateAttendanceEntries(
     "STF-0002",
@@ -744,7 +741,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:15",
-    "18:00"
+    "18:00",
   ),
   ...generateAttendanceEntries(
     "STF-0003",
@@ -752,7 +749,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:25",
-    "18:15"
+    "18:15",
   ),
   ...generateAttendanceEntries(
     "STF-0004",
@@ -760,7 +757,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2024-12-20",
     [1, 2, 3, 4, 5],
     "07:30",
-    "18:20"
+    "18:20",
   ),
 
   // Staff - January 2025
@@ -770,7 +767,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:20",
-    "18:10"
+    "18:10",
   ),
   ...generateAttendanceEntries(
     "STF-0002",
@@ -778,7 +775,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:15",
-    "18:00"
+    "18:00",
   ),
   ...generateAttendanceEntries(
     "STF-0003",
@@ -786,7 +783,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:25",
-    "18:15"
+    "18:15",
   ),
   ...generateAttendanceEntries(
     "STF-0004",
@@ -794,7 +791,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
     "2025-01-31",
     [1, 2, 3, 4, 5],
     "07:30",
-    "18:20"
+    "18:20",
   ),
 
   // Some failed attempts and retries
@@ -1179,7 +1176,54 @@ export async function seedDatabase() {
   console.log("✅ Test data seeded successfully!");
 }
 
+export async function seedUsers() {
+  // Check if users already exist
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log("ℹ️  Users already exist, skipping user seed");
+    return;
+  }
+
+  // Create default users
+  const defaultPassword = await bcrypt.hash("Admin123!@#", 12);
+  const staffPassword = await bcrypt.hash("Staff123!@#", 12);
+  const viewerPassword = await bcrypt.hash("Viewer123!@#", 12);
+
+  await prisma.user.createMany({
+    data: [
+      {
+        email: "admin@rfid.local",
+        password: defaultPassword,
+        name: "System Administrator",
+        role: "admin",
+        is_active: true,
+      },
+      {
+        email: "staff@rfid.local",
+        password: staffPassword,
+        name: "Staff Member",
+        role: "staff",
+        is_active: true,
+      },
+      {
+        email: "viewer@rfid.local",
+        password: viewerPassword,
+        name: "Viewer User",
+        role: "viewer",
+        is_active: true,
+      },
+    ],
+  });
+
+  console.log("✅ Default users created:");
+  console.log("   Admin: admin@rfid.local / Admin123!@#");
+  console.log("   Staff: staff@rfid.local / Staff123!@#");
+  console.log("   Viewer: viewer@rfid.local / Viewer123!@#");
+  console.log("   ⚠️  Please change these passwords after first login!");
+}
+
 async function main() {
+  await seedUsers();
   await seedDatabase();
 }
 

@@ -1,7 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
 }
@@ -88,4 +88,19 @@ enum StudentLevel {
   License_3
   Master_1
   Master_2
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  admin
+  staff
+  user
 }
