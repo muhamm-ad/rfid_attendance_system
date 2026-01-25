@@ -2,8 +2,23 @@
 
 "use client";
 
+import { motion } from "framer-motion";
+import Image from "next/image";
+import loginBg from "@/assets/images/login_bg.png";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { loginSchema, LoginSchema } from "@/schemas";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Card,
   CardContent,
@@ -11,20 +26,174 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LoginForm } from "@/components/login-form";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import loginBg from "@/assets/images/login_bg.png";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { FormMessage as FormStatusMessage } from "@/components/ui/message";
+import { LoginResponse } from "@/lib/type";
 
-type Role = "staff" | "user" | null;
+export function LoginForm() {
+  const [isVisible, setIsVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-export function Login() {
-  const [selectedRole, setSelectedRole] = useState<Role>("user");
+  const form = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      role: "user",
+      email: "",
+      password: "",
+    },
+  });
+
+  const selectedRole = form.watch("role");
 
   const handleRoleSelect = (role: "staff" | "user") => {
-    setSelectedRole(selectedRole === role ? null : role);
+    form.setValue("role", role === selectedRole ? "user" : role);
+    // Clear messages when role changes
+    setError(null);
+    setSuccess(null);
   };
 
+  const onSubmit = async (data: LoginSchema) => {
+    setError(null);
+    setSuccess(null);
+    try {
+      // call the login API
+      const response: Response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const responseData: LoginResponse = await response.json();
+      if (responseData.success) {
+        setSuccess(responseData.message as string);
+      } else {
+        setError(responseData.error as string);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Role Selection Buttons */}
+        <div className="flex flex-wrap gap-4 sm:gap-6">
+          <Button
+            type="button"
+            variant={selectedRole === "staff" ? "default" : "outline"}
+            className={`grow transition-all ${
+              selectedRole === "staff"
+                ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
+                : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
+            }`}
+            onClick={() => handleRoleSelect("staff")}
+          >
+            Login as Staff
+          </Button>
+          <Button
+            type="button"
+            variant={selectedRole === "user" ? "default" : "outline"}
+            className={`grow transition-all ${
+              selectedRole === "user"
+                ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
+                : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
+            }`}
+            onClick={() => handleRoleSelect("user")}
+          >
+            Login as User
+          </Button>
+        </div>
+
+        {/* Hidden role field for form validation */}
+        <FormField control={form.control} name="role" render={() => <></>} />
+
+        {/* Email Field */}
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email address*</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="john.doe@example.com"
+                  className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Password Field */}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password*</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    type={isVisible ? "text" : "password"}
+                    placeholder="••••••••••••••••"
+                    className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                    {...field}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => setIsVisible((prev) => !prev)}
+                    className="text-gray-500 hover:text-violet-600 focus-visible:ring-violet-500/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
+                  >
+                    {isVisible ? <EyeOffIcon /> : <EyeIcon />}
+                    <span className="sr-only">
+                      {isVisible ? "Hide password" : "Show password"}
+                    </span>
+                  </Button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Remember Me Checkbox */}
+        <div className="flex items-center gap-3">
+          <Checkbox
+            id="rememberMe"
+            className="size-6 border-violet-300 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
+          />
+          <Label htmlFor="rememberMe" className="text-gray-600 cursor-pointer">
+            Remember Me
+          </Label>
+        </div>
+
+        {error && <FormStatusMessage type="error" message={error} />}
+        {success && <FormStatusMessage type="success" message={success} />}
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/50 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all"
+        >
+          Sign in
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+export function Login() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -58,34 +227,7 @@ export function Login() {
         </CardHeader>
 
         <CardContent>
-          {/* Login Roles Buttons (Staff and User) Admin is accessible from the /admin route*/}
-          <div className="mb-6 flex flex-wrap gap-4 sm:gap-6">
-            <Button
-              variant={selectedRole === "staff" ? "default" : "outline"}
-              className={`grow transition-all ${
-                selectedRole === "staff"
-                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-              }`}
-              onClick={() => handleRoleSelect("staff")}
-            >
-              Login as Staff
-            </Button>
-            <Button
-              variant={selectedRole === "user" ? "default" : "outline"}
-              className={`grow transition-all ${
-                selectedRole === "user"
-                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-              }`}
-              onClick={() => handleRoleSelect("user")}
-            >
-              {/* User aka Viewer */}
-              Login as User
-            </Button>
-          </div>
-
-          <LoginForm className="space-y-4" selectedRole={selectedRole} />
+          <LoginForm />
         </CardContent>
       </Card>
     </motion.div>
