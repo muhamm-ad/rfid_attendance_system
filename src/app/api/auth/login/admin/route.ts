@@ -22,22 +22,17 @@ export async function POST(request: NextRequest) {
     }
 
     //  validate role to be staff or user if not return error admin access route
-    if (validatedBody.data.role === "admin") {
+    if (validatedBody.data.role !== "admin") {
       respondBody.success = false;
       respondBody.message = "Invalid role";
-      respondBody.error = "Access denied, if you are an admin, please use the admin login page";
+      respondBody.error = "Access denied only admin can login with this route";
       return NextResponse.json(respondBody, { status: 400 });
     }
 
-    // const user = await prisma.user.findUnique({
-    //   where: { email: validatedBody.data.email },
-    // });
+    // TODO: Find the admin user by email
 
-    // TODO: find the user by email
-    // TODO: verify the password
-    // TODO: create a session
-    // TODO: return the session
 
+    
     return NextResponse.json(respondBody);
   } catch (error) {
     respondBody.success = false;

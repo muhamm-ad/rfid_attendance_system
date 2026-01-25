@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { loginSchema, LoginSchema } from "@/schemas";
+import { useTransition } from "react";
 
 import {
   Form,
@@ -37,6 +38,7 @@ export function LoginForm() {
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -59,24 +61,26 @@ export function LoginForm() {
   const onSubmit = async (data: LoginSchema) => {
     setError(null);
     setSuccess(null);
-    try {
-      // call the login API
-      const response: Response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      const responseData: LoginResponse = await response.json();
-      if (responseData.success) {
-        setSuccess(responseData.message as string);
-      } else {
-        setError(responseData.error as string);
+    startTransition(async () => {
+      try {
+        // call the login API
+        const response: Response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        const responseData: LoginResponse = await response.json();
+        if (responseData.success) {
+          setSuccess(responseData.message as string);
+        } else {
+          setError(responseData.error as string);
+        }
+      } catch (err: any) {
+        setError(err.message || "An error occurred. Please try again.");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.");
-    }
+    });
   };
 
   return (
@@ -87,6 +91,7 @@ export function LoginForm() {
           <Button
             type="button"
             variant={selectedRole === "staff" ? "default" : "outline"}
+            disabled={isPending}
             className={`grow transition-all ${
               selectedRole === "staff"
                 ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
@@ -99,6 +104,7 @@ export function LoginForm() {
           <Button
             type="button"
             variant={selectedRole === "user" ? "default" : "outline"}
+            disabled={isPending}
             className={`grow transition-all ${
               selectedRole === "user"
                 ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
@@ -117,6 +123,7 @@ export function LoginForm() {
         <FormField
           control={form.control}
           name="email"
+          rules={{ required: { value: true, message: "Email is required" } }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email address*</FormLabel>
@@ -125,6 +132,7 @@ export function LoginForm() {
                   type="email"
                   placeholder="john.doe@example.com"
                   className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -137,6 +145,7 @@ export function LoginForm() {
         <FormField
           control={form.control}
           name="password"
+          rules={{ required: { value: true, message: "Password is required" } }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password*</FormLabel>
@@ -146,6 +155,7 @@ export function LoginForm() {
                     type={isVisible ? "text" : "password"}
                     placeholder="••••••••••••••••"
                     className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                    disabled={isPending}
                     {...field}
                   />
                   <Button
@@ -185,6 +195,7 @@ export function LoginForm() {
         <Button
           type="submit"
           className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/50 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all"
+          disabled={isPending}
         >
           Sign in
         </Button>
