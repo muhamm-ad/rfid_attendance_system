@@ -5,18 +5,6 @@ import {
   StudentPayment as PrismaStudentPayment,
 } from "@/prisma/generated/client";
 
-export type LoginResponse = {
-  message: string;
-  success: boolean;
-  error?: string;
-};
-
-export type LogoutResponse = {
-  message: string;
-  success: boolean;
-  error?: string;
-};
-
 /**
  Utility type to convert Date fields to ISO strings for JSON serialization
  */

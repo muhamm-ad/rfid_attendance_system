@@ -32,18 +32,20 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FormMessage as FormStatusMessage } from "@/components/ui/message";
-import { LoginResponse } from "@/lib/type";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { AuthError } from "next-auth";
 
-export function LoginForm() {
+export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
+  const router = useRouter();
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      role: "viewer",
+      role: isAdmin ? "admin" : "viewer",
       email: "",
       password: "",
     },
@@ -63,22 +65,27 @@ export function LoginForm() {
     setSuccess(null);
     startTransition(async () => {
       try {
-        // call the login API
-        const response: Response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+        await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          role: data.role,
+          redirect: false,
         });
-        const responseData: LoginResponse = await response.json();
-        if (responseData.success) {
-          setSuccess(responseData.message as string);
-        } else {
-          setError(responseData.error as string);
-        }
+        setSuccess("Login successful");
+        router.push("/dashboard");
+        router.refresh();
       } catch (err: any) {
-        setError(err.message || "An error occurred. Please try again.");
+        if (err instanceof AuthError) {
+          switch (err.type) {
+            case "CredentialsSignin":
+              setError("Invalid credentials");
+              break;
+            default:
+              setError("An error occurred. Please try again.");
+          }
+        } else {
+          throw err;
+        }
       }
     });
   };
@@ -87,34 +94,36 @@ export function LoginForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Role Selection Buttons */}
-        <div className="flex flex-wrap gap-4 sm:gap-6">
-          <Button
-            type="button"
-            variant={selectedRole === "staff" ? "default" : "outline"}
-            disabled={isPending}
-            className={`grow transition-all ${
-              selectedRole === "staff"
-                ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-            }`}
-            onClick={() => handleRoleSelect("staff")}
-          >
-            Login as Staff
-          </Button>
-          <Button
-            type="button"
-            variant={selectedRole === "viewer" ? "default" : "outline"}
-            disabled={isPending}
-            className={`grow transition-all ${
-              selectedRole === "viewer"
-                ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-            }`}
-            onClick={() => handleRoleSelect("viewer")}
-          >
-            Login as User
-          </Button>
-        </div>
+        {!isAdmin && (
+          <div className="flex flex-wrap gap-4 sm:gap-6">
+            <Button
+              type="button"
+              variant={selectedRole === "staff" ? "default" : "outline"}
+              disabled={isPending}
+              className={`grow transition-all ${
+                selectedRole === "staff"
+                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
+                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
+              }`}
+              onClick={() => handleRoleSelect("staff")}
+            >
+              Login as Staff
+            </Button>
+            <Button
+              type="button"
+              variant={selectedRole === "viewer" ? "default" : "outline"}
+              disabled={isPending}
+              className={`grow transition-all ${
+                selectedRole === "viewer"
+                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
+                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
+              }`}
+              onClick={() => handleRoleSelect("viewer")}
+            >
+              Login as User
+            </Button>
+          </div>
+        )}
 
         {/* Hidden role field for form validation */}
         <FormField control={form.control} name="role" render={() => <></>} />
@@ -204,14 +213,24 @@ export function LoginForm() {
   );
 }
 
-export function Login() {
+export function Login({
+  className,
+  isAdmin = false,
+}: {
+  className?: string;
+  isAdmin?: boolean;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="relative flex h-auto min-h-screen items-center justify-center px-8 py-12 overflow-hidden"
+      className={
+        className
+          ? `${className}`
+          : `relative flex h-auto min-h-screen items-center justify-center px-8 py-12 overflow-hidden`
+      }
     >
       {/* Background Image */}
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -238,7 +257,7 @@ export function Login() {
         </CardHeader>
 
         <CardContent>
-          <LoginForm />
+          <LoginForm isAdmin={isAdmin} />
         </CardContent>
       </Card>
     </motion.div>
