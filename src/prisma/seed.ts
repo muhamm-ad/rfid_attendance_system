@@ -1,7 +1,51 @@
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import prisma from "@/lib/db";
 
-const prisma = new PrismaClient();
+export async function seedUsers() {
+  // Check if users already exist
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log("ℹ️  Users already exist, skipping user seed");
+    return;
+  }
+
+  // Create default users
+  const defaultPassword = await bcrypt.hash("Admin123!@#", 12);
+  const staffPassword = await bcrypt.hash("Staff123!@#", 12);
+  const viewerPassword = await bcrypt.hash("Viewer123!@#", 12);
+
+  await prisma.user.createMany({
+    data: [
+      {
+        email: "admin@rfid.local",
+        password: defaultPassword,
+        first_name: "System",
+        last_name: "Administrator",
+        role: "admin",
+      },
+      {
+        email: "staff@rfid.local",
+        password: staffPassword,
+        first_name: "Staff",
+        last_name: "Member",
+        role: "staff",
+      },
+      {
+        email: "viewer@rfid.local",
+        password: viewerPassword,
+        first_name: "Viewer",
+        last_name: "User",
+        role: "viewer",
+      },
+    ],
+  });
+
+  console.log("✅ Default users created:");
+  console.log("   Admin: admin@rfid.local / Admin123!@#");
+  console.log("   Staff: staff@rfid.local / Staff123!@#");
+  console.log("   Viewer: viewer@rfid.local / Viewer123!@#");
+  console.log("   ⚠️  Please change these passwords after first login!");
+}
 
 type PersonType = "student" | "teacher" | "staff" | "visitor";
 
@@ -1174,52 +1218,6 @@ export async function seedDatabase() {
   }
 
   console.log("✅ Test data seeded successfully!");
-}
-
-export async function seedUsers() {
-  // Check if users already exist
-  const userCount = await prisma.user.count();
-  if (userCount > 0) {
-    console.log("ℹ️  Users already exist, skipping user seed");
-    return;
-  }
-
-  // Create default users
-  const defaultPassword = await bcrypt.hash("Admin123!@#", 12);
-  const staffPassword = await bcrypt.hash("Staff123!@#", 12);
-  const viewerPassword = await bcrypt.hash("Viewer123!@#", 12);
-
-  await prisma.user.createMany({
-    data: [
-      {
-        email: "admin@rfid.local",
-        password: defaultPassword,
-        name: "System Administrator",
-        role: "admin",
-        is_active: true,
-      },
-      {
-        email: "staff@rfid.local",
-        password: staffPassword,
-        name: "Staff Member",
-        role: "staff",
-        is_active: true,
-      },
-      {
-        email: "viewer@rfid.local",
-        password: viewerPassword,
-        name: "Viewer User",
-        role: "viewer",
-        is_active: true,
-      },
-    ],
-  });
-
-  console.log("✅ Default users created:");
-  console.log("   Admin: admin@rfid.local / Admin123!@#");
-  console.log("   Staff: staff@rfid.local / Staff123!@#");
-  console.log("   Viewer: viewer@rfid.local / Viewer123!@#");
-  console.log("   ⚠️  Please change these passwords after first login!");
 }
 
 async function main() {

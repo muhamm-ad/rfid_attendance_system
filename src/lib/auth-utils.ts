@@ -1,10 +1,8 @@
 // lib/utils_auth.ts
 import { NextRequest } from "next/server";
+import { User, UserRole } from "@/prisma/generated/client";
 import { getToken } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/db";
-
-export type UserRole = "admin" | "staff" | "viewer";
 
 export interface SessionUser {
   id: string;
@@ -116,35 +114,3 @@ export function validatePassword(password: string): {
     errors,
   };
 }
-
-/**
- * Create a default admin user if none exists
- */
-export async function createDefaultAdmin(): Promise<void> {
-  const adminCount = await prisma.user.count({
-    where: { role: "admin" },
-  });
-
-  if (adminCount === 0) {
-    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
-    if (!defaultPassword) {
-      throw new Error("DEFAULT_ADMIN_PASSWORD is not set");
-    }
-    const hashedPassword = await hashPassword(defaultPassword);
-
-    await prisma.user.create({
-      data: {
-        email: process.env.DEFAULT_ADMIN_EMAIL || "admin@rfid.local",
-        password: hashedPassword,
-        name: "System Administrator",
-        role: "admin",
-        is_active: true,
-      },
-    });
-
-    console.log("✅ Default admin user created:");
-    console.log("   Email: " + process.env.DEFAULT_ADMIN_EMAIL || "admin@rfid.local");
-    console.log("   Password: " + defaultPassword + " (⚠️ Please change this password after first login!)");
-  }
-}
-

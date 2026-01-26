@@ -1,8 +1,8 @@
 // lib/utils.ts
 
 // Server-side utilities for API routes
-import prisma from "./db";
-import { PersonWithPayments } from "./db";
+import prisma from "@/lib/db";
+import { PersonWithPayments } from "@/lib/type";
 
 /**
  * Determines the current trimester based on the month

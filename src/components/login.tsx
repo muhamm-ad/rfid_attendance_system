@@ -43,7 +43,7 @@ export function LoginForm() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      role: "user",
+      role: "viewer",
       email: "",
       password: "",
     },
@@ -51,8 +51,8 @@ export function LoginForm() {
 
   const selectedRole = form.watch("role");
 
-  const handleRoleSelect = (role: "staff" | "user") => {
-    form.setValue("role", role === selectedRole ? "user" : role);
+  const handleRoleSelect = (role: "staff" | "viewer") => {
+    form.setValue("role", role === selectedRole ? "viewer" : role);
     // Clear messages when role changes
     setError(null);
     setSuccess(null);
@@ -103,14 +103,14 @@ export function LoginForm() {
           </Button>
           <Button
             type="button"
-            variant={selectedRole === "user" ? "default" : "outline"}
+            variant={selectedRole === "viewer" ? "default" : "outline"}
             disabled={isPending}
             className={`grow transition-all ${
-              selectedRole === "user"
+              selectedRole === "viewer"
                 ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
                 : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
             }`}
-            onClick={() => handleRoleSelect("user")}
+            onClick={() => handleRoleSelect("viewer")}
           >
             Login as User
           </Button>
