@@ -20,29 +20,29 @@ export async function seedUsers() {
         password: defaultPassword,
         first_name: "System",
         last_name: "Administrator",
-        role: "admin",
+        role: "ADMIN",
       },
       {
         email: "staff@rfid.local",
         password: staffPassword,
         first_name: "Staff",
         last_name: "Member",
-        role: "staff",
+        role: "STAFF",
       },
       {
         email: "viewer@rfid.local",
         password: viewerPassword,
         first_name: "Viewer",
         last_name: "User",
-        role: "viewer",
+        role: "VIEWER",
       },
     ],
   });
 
   console.log("✅ Default users created:");
-  console.log("   Admin: admin@rfid.local / Admin123!@#");
-  console.log("   Staff: staff@rfid.local / Staff123!@#");
-  console.log("   Viewer: viewer@rfid.local / Viewer123!@#");
+  console.log("   ADMIN: admin@rfid.local / Admin123!@#");
+  console.log("   STAFF: staff@rfid.local / Staff123!@#");
+  console.log("   VIEWER: viewer@rfid.local / Viewer123!@#");
   console.log("   ⚠️  Please change these passwords after first login!");
 }
 

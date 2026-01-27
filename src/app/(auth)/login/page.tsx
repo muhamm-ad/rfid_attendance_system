@@ -9,10 +9,9 @@ export default async function LoginPage({
   searchParams: Promise<{ role?: UserRole }>;
 }) {
   const params = await searchParams;
-  const isAdmin = params.role === "admin";
   return (
     <Login
-      isAdmin={isAdmin}
+      isAdmin={params.role === "admin"}
       className="relative flex h-auto min-h-screen items-center justify-center px-8 py-12 overflow-hidden"
     />
   );

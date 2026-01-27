@@ -13,6 +13,12 @@ export const authConfig = {
     signOut: "/logout",
   },
   adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 hours
+    updateAge: 1 * 60 * 60, // 1 hour
+  },
+
   providers: [
     Credentials({
       name: "credentials",
@@ -69,17 +75,6 @@ export const authConfig = {
       }
       return session;
     },
-    // authorized({ auth, request: { nextUrl } }) {
-    //   const isLoggedIn = !!auth?.user;
-    //   const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-    //   if (isOnDashboard) {
-    //     if (isLoggedIn) return true;
-    //     return false; // Redirect unauthenticated users to login page
-    //   } else if (isLoggedIn) {
-    //     return Response.redirect(new URL("/dashboard", nextUrl));
-    //   }
-    //   return true;
-    // },
   },
 } satisfies NextAuthConfig;
 

@@ -330,7 +330,7 @@ User {
   id: string (UUID)
   email: string (unique)
   password: string (hashed)
-  role: 'admin' | 'staff' | 'viewer'
+  role: 'ADMIN' | 'STAFF' | 'VIEWER'
   name: string
   created_at: DateTime
   updated_at: DateTime

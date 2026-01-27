@@ -38,20 +38,6 @@ export const getUserById = async (id: string): Promise<User | null> => {
   }
 };
 
-export const getUserByRefreshToken = async (
-  refreshToken: string,
-): Promise<User | null> => {
-  try {
-    const user = await prisma.user.findFirst({
-      where: { refresh_token: refreshToken },
-    });
-    return user;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-};
-
 export const getAllUsers = async (): Promise<User[]> => {
   try {
     const users = await prisma.user.findMany();
@@ -116,9 +102,9 @@ export const verifyPassword = async (
 export const hasRequiredRole = async (user: User, role: UserRole): Promise<boolean> => {
   try {
     const roleHierarchy: Record<UserRole, number> = {
-      viewer: 1,
-      staff: 2,
-      admin: 3,
+      VIEWER: 1,
+      STAFF: 2,
+      ADMIN: 3,
     };
     return roleHierarchy[user.role] >= roleHierarchy[role];
   } catch (error) {
@@ -129,9 +115,9 @@ export const hasRequiredRole = async (user: User, role: UserRole): Promise<boole
 
 
 export const canWrite = async (user: User): Promise<boolean> => {
-  return await hasRequiredRole(user, "admin") || await hasRequiredRole(user, "staff");
+  return await hasRequiredRole(user, "ADMIN") || await hasRequiredRole(user, "STAFF");
 };
 
 export const canManageUsers = async (user: User): Promise<boolean> => {
-  return await hasRequiredRole(user, "admin");
+  return await hasRequiredRole(user, "ADMIN");
 };

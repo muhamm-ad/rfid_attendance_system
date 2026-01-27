@@ -45,7 +45,7 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      role: isAdmin ? "admin" : "viewer",
+      role: isAdmin ? "ADMIN" : "VIEWER",
       email: "",
       password: "",
     },
@@ -53,8 +53,8 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
 
   const selectedRole = form.watch("role");
 
-  const handleRoleSelect = (role: "staff" | "viewer") => {
-    form.setValue("role", role === selectedRole ? "viewer" : role);
+  const handleRoleSelect = (role: "STAFF" | "VIEWER") => {
+    form.setValue("role", role === selectedRole ? "VIEWER" : role);
     // Clear messages when role changes
     setError(null);
     setSuccess(null);
@@ -118,27 +118,27 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
           <div className="flex flex-wrap gap-4 sm:gap-6">
             <Button
               type="button"
-              variant={selectedRole === "staff" ? "default" : "outline"}
+              variant={selectedRole === "STAFF" ? "default" : "outline"}
               disabled={isPending}
               className={`grow transition-all ${
-                selectedRole === "staff"
+                selectedRole === "STAFF"
                   ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
                   : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
               }`}
-              onClick={() => handleRoleSelect("staff")}
+              onClick={() => handleRoleSelect("STAFF")}
             >
               Login as Staff
             </Button>
             <Button
               type="button"
-              variant={selectedRole === "viewer" ? "default" : "outline"}
+              variant={selectedRole === "VIEWER" ? "default" : "outline"}
               disabled={isPending}
               className={`grow transition-all ${
-                selectedRole === "viewer"
+                selectedRole === "VIEWER"
                   ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
                   : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
               }`}
-              onClick={() => handleRoleSelect("viewer")}
+              onClick={() => handleRoleSelect("VIEWER")}
             >
               Login as User
             </Button>

@@ -1,6 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client"
+  provider               = "prisma-client-js"
+  output                 = "./generated/client"
+  engineType             = "client"
+  runtime                = "vercel-edge"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
 }
 
 datasource db {
@@ -9,33 +13,26 @@ datasource db {
 
 // ================ AUTHENTICATION ================
 
+enum UserRole {
+  ADMIN
+  STAFF
+  VIEWER
+}
+
 model User {
-  id        String   @id @default(uuid())
-  first_name String?
-  last_name  String?
-  email     String   @unique
-  email_verified DateTime?
-  image String?
-  password  String
-  role      UserRole
+  id             String    @id @default(uuid())
+  email          String    @unique
+  password       String @map("hashed_password")
+  role           UserRole
   
+  first_name     String?
+  last_name      String?
+  image          String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  id_token           String? @db.Text
-  session_state      String?
- 
   @@map("users")
-}
-
-enum UserRole {
-  admin
-  staff
-  viewer
 }
 
 // ================ TABLES ================
