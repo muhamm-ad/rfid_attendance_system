@@ -6,19 +6,17 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { getUserByEmail, verifyPassword, hasRequiredRole } from "@/data/user";
 import { loginSchema } from "@/schemas";
+import { authConfig } from "#/auth.config";
 
-export const authConfig = {
-  pages: {
-    signIn: "/login",
-    signOut: "/logout",
-  },
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
     updateAge: 1 * 60 * 60, // 1 hour
   },
-
   providers: [
     Credentials({
       name: "credentials",
@@ -76,6 +74,4 @@ export const authConfig = {
       return session;
     },
   },
-} satisfies NextAuthConfig;
-
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+});

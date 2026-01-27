@@ -1,12 +1,11 @@
 // src/app/login/page.tsx
 
 import { Login } from "@/components/login";
-import { UserRole } from "@/prisma/generated/client";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: UserRole }>;
+  searchParams: Promise<{ role?: string }>;
 }) {
   const params = await searchParams;
   return (
