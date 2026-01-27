@@ -65,15 +65,34 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
     setSuccess(null);
     startTransition(async () => {
       try {
-        await signIn("credentials", {
+        const result = await signIn("credentials", {
           email: data.email,
           password: data.password,
           role: data.role,
           redirect: false,
         });
-        setSuccess("Login successful");
-        router.push("/dashboard");
-        router.refresh();
+
+        // Check if sign-in was successful
+        if (result?.error) {
+          // Handle different error types
+          switch (result.error) {
+            case "CredentialsSignin":
+              setError("Invalid credentials");
+              break;
+            default:
+              setError("An error occurred. Please try again.");
+          }
+          return;
+        }
+
+        // Only redirect if sign-in was successful (no error)
+        if (result?.ok) {
+          setSuccess("Login successful");
+          router.push("/dashboard");
+          router.refresh();
+        } else {
+          setError("An error occurred. Please try again.");
+        }
       } catch (err: any) {
         if (err instanceof AuthError) {
           switch (err.type) {
@@ -84,7 +103,8 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
               setError("An error occurred. Please try again.");
           }
         } else {
-          throw err;
+          setError("An unexpected error occurred. Please try again.");
+          console.error("Login error:", err);
         }
       }
     });
@@ -125,8 +145,12 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
           </div>
         )}
 
-        {/* Hidden role field for form validation */}
-        <FormField control={form.control} name="role" render={() => <></>} />
+        {/* Hidden role field for form validation and submission */}
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => <input type="hidden" {...field} />}
+        />
 
         {/* Email Field */}
         <FormField
@@ -171,7 +195,7 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
                     variant="ghost"
                     size="icon"
                     type="button"
-                    onClick={() => setIsVisible((prev) => !prev)}
+                    onClick={() => setIsVisible((prev: boolean) => !prev)}
                     className="text-gray-500 hover:text-violet-600 focus-visible:ring-violet-500/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
                   >
                     {isVisible ? <EyeOffIcon /> : <EyeIcon />}
@@ -206,7 +230,7 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
           className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/50 disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all"
           disabled={isPending}
         >
-          Sign in
+          {isPending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
     </Form>

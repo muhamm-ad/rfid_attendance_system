@@ -63,16 +63,16 @@ export function FormMessage({
   return (
     <div
       className={cn(
-        "rounded-md border p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2",
+        "rounded-md border p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2",
         config.bgColor,
         config.borderColor,
         className
       )}
     >
       <IconComponent
-        className={cn("h-5 w-5 mt-0.5 shrink-0", config.iconColor)}
+        className={cn("h-5 w-5 shrink-0", config.iconColor)}
       />
-      <p className={cn("text-sm mt-1", config.textColor)}>{message}</p>
+      <p className={cn("text-sm", config.textColor)}>{message}</p>
     </div>
   );
 }

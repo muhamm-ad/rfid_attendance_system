@@ -99,13 +99,39 @@ export const deleteUser = async (id: string) => {
   }
 };
 
-
-export const verifyPassword = async (user: User, password: string): Promise<boolean> => {
+export const verifyPassword = async (
+  user: User,
+  password: string,
+): Promise<boolean> => {
   try {
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
     const isPasswordValid = await bcrypt.compare(password, user.password);
     return isPasswordValid;
   } catch (error) {
     console.error(error);
     return false;
   }
+};
+
+export const hasRequiredRole = async (user: User, role: UserRole): Promise<boolean> => {
+  try {
+    const roleHierarchy: Record<UserRole, number> = {
+      viewer: 1,
+      staff: 2,
+      admin: 3,
+    };
+    return roleHierarchy[user.role] >= roleHierarchy[role];
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
+
+export const canWrite = async (user: User): Promise<boolean> => {
+  return await hasRequiredRole(user, "admin") || await hasRequiredRole(user, "staff");
+};
+
+export const canManageUsers = async (user: User): Promise<boolean> => {
+  return await hasRequiredRole(user, "admin");
 };
