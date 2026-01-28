@@ -18,6 +18,7 @@ import Statistics from "@/components/dashboard-statistics";
 import Reports from "@/components/dashboard-reports";
 import { UserRole } from "@/prisma/generated/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -43,6 +44,19 @@ export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
     { id: "reports", label: "Reports", icon: FileText },
   ];
 
+  const getRoleBadgeColor = (role: UserRole) => {
+    switch (role) {
+      case "ADMIN":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "STAFF":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "VIEWER":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
   return (
     <div className="min-h-screen theme-page p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -50,10 +64,18 @@ export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
-                <Camera className="text-indigo-600" size={40} />
-                RFID Access Control System
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
+                  <Camera className="text-indigo-600" size={40} />
+                  RFID Access Control System
+                </h1>
+                <Badge
+                  variant="outline"
+                  className={`${getRoleBadgeColor(userRole)} border font-semibold`}
+                >
+                  {userRole}
+                </Badge>
+              </div>
               <p className="text-gray-600 mt-2 text-lg">
                 Automated entry and exit management with payment tracking
               </p>
