@@ -4,7 +4,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib";
-import { getUserByEmail, verifyPassword, hasRequiredRole } from "@/data/user";
+import { getUserByEmail, verifyPassword } from "@/data/user";
 import { loginSchema } from "@/schemas";
 import { authConfig } from "#/auth.config";
 
@@ -23,7 +23,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        role: { label: "Role", type: "text" },
       },
       async authorize(credentials) {
         const validatedCredentials = loginSchema.safeParse(credentials);
@@ -31,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const { email, password, role } = validatedCredentials.data;
+        const { email, password } = validatedCredentials.data;
         const user = await getUserByEmail(email);
         if (!user) {
           return null;
@@ -39,11 +38,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const isPasswordValid = await verifyPassword(user, password);
         if (!isPasswordValid) {
-          return null;
-        }
-
-        const hasRequiredRoleResult = await hasRequiredRole(user, role);
-        if (!hasRequiredRoleResult) {
           return null;
         }
 

@@ -36,7 +36,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AuthError } from "next-auth";
 
-export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
+export function LoginForm() {
   const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -45,20 +45,10 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      role: isAdmin ? "ADMIN" : "VIEWER",
       email: "",
       password: "",
     },
   });
-
-  const selectedRole = form.watch("role");
-
-  const handleRoleSelect = (role: "STAFF" | "VIEWER") => {
-    form.setValue("role", role === selectedRole ? "VIEWER" : role);
-    // Clear messages when role changes
-    setError(null);
-    setSuccess(null);
-  };
 
   const onSubmit = async (data: LoginSchema) => {
     setError(null);
@@ -68,7 +58,6 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
         const result = await signIn("credentials", {
           email: data.email,
           password: data.password,
-          role: data.role,
           redirect: false,
         });
 
@@ -113,45 +102,6 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Role Selection Buttons */}
-        {!isAdmin && (
-          <div className="flex flex-wrap gap-4 sm:gap-6">
-            <Button
-              type="button"
-              variant={selectedRole === "STAFF" ? "default" : "outline"}
-              disabled={isPending}
-              className={`grow transition-all ${
-                selectedRole === "STAFF"
-                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-              }`}
-              onClick={() => handleRoleSelect("STAFF")}
-            >
-              Login as Staff
-            </Button>
-            <Button
-              type="button"
-              variant={selectedRole === "VIEWER" ? "default" : "outline"}
-              disabled={isPending}
-              className={`grow transition-all ${
-                selectedRole === "VIEWER"
-                  ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-lg shadow-violet-500/50"
-                  : "border-violet-300 text-violet-700 hover:bg-violet-50 hover:border-violet-400"
-              }`}
-              onClick={() => handleRoleSelect("VIEWER")}
-            >
-              Login as User
-            </Button>
-          </div>
-        )}
-
-        {/* Hidden role field for form validation and submission */}
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => <input type="hidden" {...field} />}
-        />
-
         {/* Email Field */}
         <FormField
           control={form.control}
@@ -239,10 +189,8 @@ export function LoginForm({ isAdmin }: { isAdmin?: boolean }) {
 
 export function Login({
   className,
-  isAdmin = false,
 }: {
   className?: string;
-  isAdmin?: boolean;
 }) {
   return (
     <motion.div
@@ -281,7 +229,7 @@ export function Login({
         </CardHeader>
 
         <CardContent>
-          <LoginForm isAdmin={isAdmin} />
+          <LoginForm />
         </CardContent>
       </Card>
     </motion.div>
