@@ -19,11 +19,25 @@ import Reports from "@/components/dashboard-reports";
 import { UserRole } from "@/prisma/generated/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { signOut } from "next-auth/react";
+import { Loading } from "#/src/components/loading";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
+export function Dashboard() {
+  const {
+    data: session,
+    status,
+    update,
+  } = useSession({
+    required: true,
+    onUnauthenticated: () => {
+      router.push("/login");
+    },
+  });
+
+  const userRole = session?.user.role as UserRole;
+
   const [activeTab, setActiveTab] = useState("logs");
   const router = useRouter();
   const [isSigningOut, startSignOut] = useTransition();
@@ -57,7 +71,10 @@ export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
     }
   };
 
-  return (
+  // return status === "loading" ? (
+  return true ? (
+    <Loading />
+  ) : session ? (
     <div className="min-h-screen theme-page p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -132,6 +149,10 @@ export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
           {activeTab === "reports" && <Reports />}
         </div>
       </div>
+    </div>
+  ) : (
+    <div>
+      <Button onClick={() => router.push("/login")}>Login</Button>
     </div>
   );
 }

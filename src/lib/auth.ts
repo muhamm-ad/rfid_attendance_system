@@ -2,15 +2,12 @@
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-// import { PrismaAdapter } from "@auth/prisma-adapter";
-// import { prisma } from "@/lib";
 import { getUserByEmail, verifyPassword } from "@/data/user";
 import { loginSchema } from "@/schemas";
 import { authConfig } from "#/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  // adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       name: "credentials",
@@ -32,6 +29,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const isPasswordValid = await verifyPassword(user, password);
         if (!isPasswordValid) {
+          return null;
+        }
+
+        if (!user.is_active) {
           return null;
         }
 

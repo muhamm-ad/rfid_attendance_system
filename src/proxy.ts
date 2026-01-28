@@ -1,9 +1,4 @@
-// import { authConfig } from "#/auth.config";
-// import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-
-// export const { auth } = NextAuth(authConfig);
-
 import { auth } from "@/lib";
 
 export const PUBLIC_ROUTES = ["/docs"];
@@ -17,7 +12,7 @@ export default auth((req) => {
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(API_AUTH_PREFIX);
   if (isApiAuthRoute) {
-    return null;
+    return NextResponse.next();
   }
 
   const isAuthRoute = AUTH_ROUTES.includes(nextUrl.pathname);
@@ -26,7 +21,7 @@ export default auth((req) => {
     if (isLoggedIn) {
       return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
     }
-    return null;
+    return NextResponse.next();
   }
 
   const isPublicRoute = PUBLIC_ROUTES.includes(nextUrl.pathname);
@@ -42,7 +37,7 @@ export default auth((req) => {
     if (!isAdmin) {
       return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
     }
-    return null;
+    return NextResponse.next();
   }
 
   console.log("ROUTE: ", req.nextUrl.pathname);
