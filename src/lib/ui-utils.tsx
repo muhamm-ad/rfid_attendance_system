@@ -1,4 +1,4 @@
-// lib/utils-ui.tsx
+// lib/ui-utils.tsx
 import React from "react";
 
 // Common CSS classes

@@ -16,7 +16,7 @@ import {
   selectClasses,
   buttonPrimaryClasses,
   buttonSecondaryClasses,
-} from "@/lib/client";
+} from "@/lib/utils";
 // import { useClickOutside } from "@/hooks/useClickOutside";
 // import Image from "next/image";
 

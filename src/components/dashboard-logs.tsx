@@ -13,7 +13,7 @@ import {
   formatLevel,
   inputClasses,
   selectClasses,
-} from "@/lib/client";
+} from "@/lib/utils";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
