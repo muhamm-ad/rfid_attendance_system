@@ -2,15 +2,8 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { PersonWithPayments } from "@/lib/db";
-import {
-  Users,
-  Plus,
-  Edit2,
-  Trash2,
-  X,
-  Scan,
-} from "lucide-react";
+import { PersonWithPayments } from "@/types";
+import { Users, Plus, Edit2, Trash2, X, Scan } from "lucide-react";
 import DataTable, { Column } from "./shared/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
@@ -23,7 +16,7 @@ import {
   selectClasses,
   buttonPrimaryClasses,
   buttonSecondaryClasses,
-} from "@/lib/ui-utils";
+} from "@/lib/client";
 // import { useClickOutside } from "@/hooks/useClickOutside";
 // import Image from "next/image";
 
@@ -43,7 +36,7 @@ export default function PersonManagement() {
   const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPerson, setEditingPerson] = useState<PersonWithPayments | null>(
-    null
+    null,
   );
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -65,8 +58,12 @@ export default function PersonManagement() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [scanStatus, setScanStatus] = useState<"idle" | "scanning" | "success" | "error">("idle");
-  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<
+    "idle" | "scanning" | "success" | "error"
+  >("idle");
+  const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(
+    null,
+  );
 
   const loadPersons = useCallback(async () => {
     setLoading(true);
@@ -79,7 +76,7 @@ export default function PersonManagement() {
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load persons");
-      
+
       // Extract unique levels and classes
       const levels = new Set<string>();
       const classes = new Set<string>();
@@ -89,16 +86,20 @@ export default function PersonManagement() {
       });
       setUniqueLevels(Array.from(levels).sort());
       setUniqueClasses(Array.from(classes).sort());
-      
+
       // Apply filters
       let filtered = data;
       if (filters.level) {
-        filtered = filtered.filter((p: PersonWithPayments) => p.level === filters.level);
+        filtered = filtered.filter(
+          (p: PersonWithPayments) => p.level === filters.level,
+        );
       }
       if (filters.class) {
-        filtered = filtered.filter((p: PersonWithPayments) => p.class === filters.class);
+        filtered = filtered.filter(
+          (p: PersonWithPayments) => p.class === filters.class,
+        );
       }
-      
+
       setPersons(filtered);
       setAllPersons(data); // Store all persons for dropdown
     } catch (e: any) {
@@ -138,7 +139,7 @@ export default function PersonManagement() {
         // If a person is selected, filter locally from all persons
         if (allPersons.length > 0) {
           data = allPersons.filter(
-            (p: PersonWithPayments) => p.id === selectedPersonId
+            (p: PersonWithPayments) => p.id === selectedPersonId,
           );
         } else {
           // If allPersons is not loaded, load it first
@@ -148,10 +149,11 @@ export default function PersonManagement() {
               : `/api/persons?type=${typeFilter}`;
           const res = await fetch(url);
           const fetchedData = await res.json();
-          if (!res.ok) throw new Error(fetchedData?.error || "Failed to load persons");
+          if (!res.ok)
+            throw new Error(fetchedData?.error || "Failed to load persons");
           setAllPersons(fetchedData);
           data = fetchedData.filter(
-            (p: PersonWithPayments) => p.id === selectedPersonId
+            (p: PersonWithPayments) => p.id === selectedPersonId,
           );
         }
       } else {
@@ -159,22 +161,26 @@ export default function PersonManagement() {
           typeFilter === "all"
             ? `/api/search?q=${encodeURIComponent(searchTerm)}`
             : `/api/search?q=${encodeURIComponent(
-                searchTerm
+                searchTerm,
               )}&type=${typeFilter}`;
         const res = await fetch(url);
         const fetchedData = await res.json();
         if (!res.ok) throw new Error(fetchedData?.error || "Search failed");
         data = fetchedData;
       }
-      
+
       // Apply level and class filters
       if (filters.level) {
-        data = data.filter((p: PersonWithPayments) => p.level === filters.level);
+        data = data.filter(
+          (p: PersonWithPayments) => p.level === filters.level,
+        );
       }
       if (filters.class) {
-        data = data.filter((p: PersonWithPayments) => p.class === filters.class);
+        data = data.filter(
+          (p: PersonWithPayments) => p.class === filters.class,
+        );
       }
-      
+
       setPersons(data);
     } catch (e: any) {
       setError(e.message || "Unexpected error");
@@ -196,7 +202,7 @@ export default function PersonManagement() {
     try {
       if (allPersons.length > 0) {
         const filtered = allPersons.filter(
-          (p: PersonWithPayments) => p.id === personId
+          (p: PersonWithPayments) => p.id === personId,
         );
         setPersons(filtered);
       } else {
@@ -210,7 +216,7 @@ export default function PersonManagement() {
         if (!res.ok) throw new Error(data?.error || "Failed to load persons");
         setAllPersons(data);
         const filtered = data.filter(
-          (p: PersonWithPayments) => p.id === personId
+          (p: PersonWithPayments) => p.id === personId,
         );
         setPersons(filtered);
       }
@@ -255,13 +261,17 @@ export default function PersonManagement() {
   }
 
   // Check if UUID already exists
-  const checkDuplicateUUID = useCallback((uuid: string): boolean => {
-    if (!uuid) return false;
-    return allPersons.some(
-      (p) => p.rfid_uuid.toLowerCase() === uuid.toLowerCase() && 
-             (!editingPerson || p.id !== editingPerson.id)
-    );
-  }, [allPersons, editingPerson]);
+  const checkDuplicateUUID = useCallback(
+    (uuid: string): boolean => {
+      if (!uuid) return false;
+      return allPersons.some(
+        (p) =>
+          p.rfid_uuid.toLowerCase() === uuid.toLowerCase() &&
+          (!editingPerson || p.id !== editingPerson.id),
+      );
+    },
+    [allPersons, editingPerson],
+  );
 
   // Start scanning - poll for new scans
   const startScanning = useCallback(() => {
@@ -292,7 +302,9 @@ export default function PersonManagement() {
           // Check for duplicate UUID
           if (checkDuplicateUUID(data.rfid_uuid)) {
             setScanStatus("error");
-            setError(`UUID ${data.rfid_uuid} already exists. Please use a different badge.`);
+            setError(
+              `UUID ${data.rfid_uuid} already exists. Please use a different badge.`,
+            );
             setTimeout(() => {
               setScanStatus("idle");
               setError(null);
@@ -387,18 +399,21 @@ export default function PersonManagement() {
     }
   }
 
-  const handleDelete = useCallback(async (id: number) => {
-    if (!confirm("Are you sure you want to delete this person?")) return;
-    setError(null);
-    try {
-      const res = await fetch(`/api/persons/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Delete failed");
-      await loadPersons();
-    } catch (e: any) {
-      setError(e.message || "Unexpected error");
-    }
-  }, [loadPersons]);
+  const handleDelete = useCallback(
+    async (id: number) => {
+      if (!confirm("Are you sure you want to delete this person?")) return;
+      setError(null);
+      try {
+        const res = await fetch(`/api/persons/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Delete failed");
+        await loadPersons();
+      } catch (e: any) {
+        setError(e.message || "Unexpected error");
+      }
+    },
+    [loadPersons],
+  );
 
   function startEdit(person: PersonWithPayments) {
     setEditingPerson(person);
@@ -455,7 +470,6 @@ export default function PersonManagement() {
         return "";
     }
   };
-
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-8">
@@ -598,7 +612,11 @@ export default function PersonManagement() {
                     }}
                     required
                     className={`${inputClasses} flex-1`}
-                    placeholder={isScanning ? "Scanning... Please scan the badge" : "Enter UUID or scan badge"}
+                    placeholder={
+                      isScanning
+                        ? "Scanning... Please scan the badge"
+                        : "Enter UUID or scan badge"
+                    }
                     disabled={isScanning}
                   />
                   <button
@@ -614,14 +632,19 @@ export default function PersonManagement() {
                       isScanning
                         ? "bg-red-500 hover:bg-red-600 text-white"
                         : scanStatus === "success"
-                        ? "bg-green-500 text-white"
-                        : scanStatus === "error"
-                        ? "bg-red-500 text-white"
-                        : "bg-indigo-500 hover:bg-indigo-600 text-white"
+                          ? "bg-green-500 text-white"
+                          : scanStatus === "error"
+                            ? "bg-red-500 text-white"
+                            : "bg-indigo-500 hover:bg-indigo-600 text-white"
                     }`}
-                    title={isScanning ? "Stop scanning" : "Start scanning badge"}
+                    title={
+                      isScanning ? "Stop scanning" : "Start scanning badge"
+                    }
                   >
-                    <Scan size={18} className={isScanning ? "animate-pulse" : ""} />
+                    <Scan
+                      size={18}
+                      className={isScanning ? "animate-pulse" : ""}
+                    />
                     {isScanning ? "Stop" : "Scan"}
                   </button>
                 </div>
@@ -641,11 +664,12 @@ export default function PersonManagement() {
                     ✗ Scan failed or duplicate UUID detected
                   </p>
                 )}
-                {formData.rfid_uuid && checkDuplicateUUID(formData.rfid_uuid) && (
-                  <p className="text-xs text-red-600 mt-1">
-                    ⚠ This UUID already exists in the system
-                  </p>
-                )}
+                {formData.rfid_uuid &&
+                  checkDuplicateUUID(formData.rfid_uuid) && (
+                    <p className="text-xs text-red-600 mt-1">
+                      ⚠ This UUID already exists in the system
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -769,8 +793,8 @@ export default function PersonManagement() {
                   {uploadingPhoto
                     ? "Uploading..."
                     : editingPerson
-                    ? "Update"
-                    : "Create"}
+                      ? "Update"
+                      : "Create"}
                 </button>
                 <button
                   type="button"
@@ -953,7 +977,7 @@ export default function PersonManagement() {
               ),
             },
           ],
-          [handleDelete]
+          [handleDelete],
         )}
         loading={loading}
         emptyMessage="No persons found"

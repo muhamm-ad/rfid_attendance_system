@@ -1,10 +1,9 @@
 // lib/utils.ts
 
 // Server-side utilities for API routes
-import prisma from "@/lib/db";
-import { PersonWithPayments } from "@/lib/type";
-
+import { prisma } from "@/lib";
 import bcrypt from "bcryptjs";
+import { PersonWithPayments } from "@/types";
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);

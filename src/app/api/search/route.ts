@@ -1,7 +1,7 @@
 // app/api/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, PersonWithPayments } from "@/lib/db";
-import { getPersonWithPayments } from "@/lib/utils";
+import { PersonWithPayments } from "@/types";
+import { prisma, getPersonWithPayments } from "@/lib";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!query || query.length < 2) {
       return NextResponse.json(
         { error: "Search must contain at least 2 characters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,10 +38,7 @@ export async function GET(request: NextRequest) {
 
     const results = await prisma.person.findMany({
       where,
-      orderBy: [
-        { nom: "asc" },
-        { prenom: "asc" },
-      ],
+      orderBy: [{ nom: "asc" }, { prenom: "asc" }],
       take: 50,
     });
 
@@ -49,15 +46,17 @@ export async function GET(request: NextRequest) {
     const personsWithPayments = await Promise.all(
       results.map(async (person) => {
         if (person.type === "student") {
-          const personWithPayments = await getPersonWithPayments(person.rfid_uuid);
+          const personWithPayments = await getPersonWithPayments(
+            person.rfid_uuid,
+          );
           return personWithPayments || person;
         }
         return person;
-      })
+      }),
     );
 
     const filtered = personsWithPayments.filter(
-      (p): p is PersonWithPayments => p !== null
+      (p): p is PersonWithPayments => p !== null,
     ) as PersonWithPayments[];
 
     // console.log(`🔍 Search: "${query}" - ${filtered.length} results`);

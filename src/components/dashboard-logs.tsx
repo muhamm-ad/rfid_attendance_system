@@ -2,18 +2,18 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { AttendanceLog, PersonWithPayments } from "@/lib/db";
-import {
-  Clock,
-  RefreshCw,
-  LogIn,
-  LogOut,
-  UserCircle2,
-} from "lucide-react";
+import { AttendanceLog, PersonWithPayments } from "@/types";
+import { Clock, RefreshCw, LogIn, LogOut, UserCircle2 } from "lucide-react";
 import DataTable, { Column } from "./shared/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
-import { statusColors, BadgeGray, formatLevel, inputClasses, selectClasses } from "@/lib/ui-utils";
+import {
+  statusColors,
+  BadgeGray,
+  formatLevel,
+  inputClasses,
+  selectClasses,
+} from "@/lib/client";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
@@ -107,7 +107,7 @@ export default function LogsTable() {
       in: <LogIn size={16} className="text-blue-600" />,
       out: <LogOut size={16} className="text-purple-600" />,
     }),
-    []
+    [],
   );
 
   const getSortValue = (log: AttendanceLog, key: string): any => {
@@ -298,9 +298,7 @@ export default function LogsTable() {
             </label>
             <select
               value={filters.type}
-              onChange={(e) =>
-                setFilters({ ...filters, type: e.target.value })
-              }
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
               className={selectClasses}
             >
               <option value="">All Types</option>
@@ -416,7 +414,7 @@ export default function LogsTable() {
               ),
             },
           ],
-          [actionIcons]
+          [actionIcons],
         )}
         loading={loading}
         emptyMessage="No records found"

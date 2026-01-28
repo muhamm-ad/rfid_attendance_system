@@ -1,11 +1,7 @@
 // app/api/scan/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { ScanResult } from "@/lib/db";
-import {
-  getCurrentTrimester,
-  getPersonWithPayments,
-  logAccess,
-} from "@/lib/utils";
+import { ScanResult } from "@/types";
+import { getCurrentTrimester, getPersonWithPayments, logAccess } from "@/lib";
 
 // In-memory store for latest registration scan (UUID only, no attendance logging)
 // In production, consider using Redis or a database for this
@@ -25,18 +21,18 @@ export async function POST(request: NextRequest) {
     if (!rfid_uuid || typeof rfid_uuid !== "string") {
       return NextResponse.json(
         { error: "Invalid or missing RFID UUID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // If action is provided, it must be 'in' or 'out'
     // If action is not provided (undefined/null), we're in registration mode (just return UUID)
     const isRegistrationMode = action === undefined || action === null;
-    
+
     if (!isRegistrationMode && action !== "in" && action !== "out") {
       return NextResponse.json(
         { error: 'Action must be "in" or "out"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -139,7 +135,7 @@ export async function POST(request: NextRequest) {
     console.error("❌ Error during scan:", error);
     return NextResponse.json(
       { error: "Server error during scan" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -180,7 +176,7 @@ export async function GET(request: NextRequest) {
     console.error("❌ Error retrieving latest scan:", error);
     return NextResponse.json(
       { error: "Server error retrieving latest scan" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

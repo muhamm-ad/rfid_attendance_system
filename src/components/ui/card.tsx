@@ -3,7 +3,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/cn-utils";
+import { cn } from "@/lib/client";
 
 const Card = React.forwardRef<
   HTMLDivElement,

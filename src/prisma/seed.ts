@@ -1,5 +1,4 @@
-import prisma from "@/lib/db";
-import { hashPassword } from "@/lib/utils";
+import { prisma, hashPassword } from "@/lib";
 
 export async function seedUsers() {
   // const userCount = await prisma.user.count();

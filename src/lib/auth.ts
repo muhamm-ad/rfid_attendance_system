@@ -1,9 +1,9 @@
 // lib/auth.ts
 
-import NextAuth, { NextAuthConfig } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/lib";
 import { getUserByEmail, verifyPassword, hasRequiredRole } from "@/data/user";
 import { loginSchema } from "@/schemas";
 import { authConfig } from "#/auth.config";

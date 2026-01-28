@@ -1,7 +1,6 @@
 // app/api/persons/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/db";
-import { getPersonWithPayments } from "@/lib/utils";
+import { prisma, getPersonWithPayments } from "@/lib";
 
 // GET: Retrieve a person by ID
 export async function GET(

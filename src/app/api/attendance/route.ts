@@ -1,6 +1,7 @@
 // app/api/attendance/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, type AttendanceLog } from "@/lib/db";
+import { prisma } from "@/lib";
+import { AttendanceLog } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {

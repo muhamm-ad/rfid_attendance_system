@@ -1,10 +1,49 @@
-import { authConfig } from "#/auth.config";
-import NextAuth from "next-auth";
+// import { authConfig } from "#/auth.config";
+// import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
 
-export const { auth } = NextAuth(authConfig);
+// export const { auth } = NextAuth(authConfig);
+
+import { auth } from "@/lib";
+
+export const PUBLIC_ROUTES = ["/docs"];
+export const ADMIN_ROUTES = ["/settings"];
+export const AUTH_ROUTES = ["/login", "/logout"];
+export const API_AUTH_PREFIX = "/api/auth"; // Use for api authentication purpose
+export const DEFAULT_REDIRECT = "/dashboard";
 
 export default auth((req) => {
+  const { nextUrl } = req;
+
+  const isApiAuthRoute = nextUrl.pathname.startsWith(API_AUTH_PREFIX);
+  if (isApiAuthRoute) {
+    return null;
+  }
+
+  const isAuthRoute = AUTH_ROUTES.includes(nextUrl.pathname);
   const isLoggedIn = !!req.auth;
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
+    }
+    return null;
+  }
+
+  const isPublicRoute = PUBLIC_ROUTES.includes(nextUrl.pathname);
+  if (!isLoggedIn && !isPublicRoute) {
+    return NextResponse.redirect(new URL("/login", nextUrl));
+  }
+
+  const isAdminRoute = ADMIN_ROUTES.includes(nextUrl.pathname);
+  if (isAdminRoute) {
+    console.log("USER: ", req.auth?.user);
+    const isAdmin = req.auth?.user?.role === "ADMIN";
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
+    }
+    return null;
+  }
+
   console.log("ROUTE: ", req.nextUrl.pathname);
   console.log("IS LOGGED IN: ", isLoggedIn);
 });

@@ -1,11 +1,21 @@
 // app/api/persons/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, type PersonWithPayments } from "@/lib/db";
-import { getPersonWithPayments } from "@/lib/utils";
+import { PersonWithPayments } from "@/types";
+import { prisma, auth, getPersonWithPayments } from "@/lib";
 
 // GET: Retrieve all persons
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // TODO: Get user role from database and check if it is ADMIN
+    if (session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type"); // Filter by type if provided
 
@@ -34,7 +44,7 @@ export async function GET(request: NextRequest) {
           trimester2_paid: true,
           trimester3_paid: true,
         } as PersonWithPayments;
-      })
+      }),
     );
 
     // console.log(`📋 ${personsWithPayments.length} persons retrieved`);
@@ -43,7 +53,7 @@ export async function GET(request: NextRequest) {
     console.error("❌ Error while retrieving persons:", error);
     return NextResponse.json(
       { error: "Error while retrieving persons" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -69,7 +79,7 @@ export async function POST(request: NextRequest) {
           error:
             "Missing required fields (rfid_uuid, type, nom, prenom, photo_path)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -80,7 +90,7 @@ export async function POST(request: NextRequest) {
           error:
             "Invalid type. Allowed values: student, teacher, staff, visitor",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -88,14 +98,14 @@ export async function POST(request: NextRequest) {
     if (level && type !== "student") {
       return NextResponse.json(
         { error: "Level can only be set for students" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (
       level &&
       !["License_1", "License_2", "License_3", "Master_1", "Master_2"].includes(
-        level
+        level,
       )
     ) {
       return NextResponse.json(
@@ -103,7 +113,7 @@ export async function POST(request: NextRequest) {
           error:
             "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -127,7 +137,7 @@ export async function POST(request: NextRequest) {
         created_at: newPerson.created_at.toISOString(),
         updated_at: newPerson.updated_at.toISOString(),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("❌ Error while creating the person:", error);
@@ -137,20 +147,20 @@ export async function POST(request: NextRequest) {
       if (error.meta?.target?.includes("rfid_uuid")) {
         return NextResponse.json(
           { error: "This RFID UUID is already associated with a person" },
-          { status: 409 }
+          { status: 409 },
         );
       }
       if (error.meta?.target?.includes("photo_path")) {
         return NextResponse.json(
           { error: "This photo path is already used" },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }
 
     return NextResponse.json(
       { error: "Error while creating the person" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

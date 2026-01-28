@@ -4,9 +4,9 @@
 import React, { useRef, useState } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 import { useClickOutside } from "@/hooks/use-click-outside";
-import { filterPersons } from "@/lib/ui-utils";
+import { filterPersons } from "@/lib/client";
 import PersonAvatar from "./person-avatar";
-import { PersonWithPayments } from "@/lib/db";
+import { PersonWithPayments } from "@/types";
 
 interface PersonSearchDropdownProps {
   persons: PersonWithPayments[];
@@ -38,8 +38,15 @@ export default function PersonSearchDropdown({
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
   const filteredPersons = filterPersons(
-    persons as Array<PersonWithPayments & { nom: string; prenom: string; id: number; rfid_uuid: string }>,
-    searchTerm
+    persons as Array<
+      PersonWithPayments & {
+        nom: string;
+        prenom: string;
+        id: number;
+        rfid_uuid: string;
+      }
+    >,
+    searchTerm,
   );
 
   const handleInputChange = (value: string) => {
@@ -149,4 +156,3 @@ export default function PersonSearchDropdown({
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 // app/api/reports/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/db";
+import { prisma } from "@/lib";
 
 export async function GET(request: NextRequest) {
   try {
