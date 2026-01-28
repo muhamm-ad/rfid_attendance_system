@@ -1,15 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { Camera, Users, Clock, FileText, CreditCard, BarChart3 } from "lucide-react";
+import { useState, useTransition } from "react";
+import {
+  BarChart3,
+  Camera,
+  Clock,
+  CreditCard,
+  FileText,
+  LogOutIcon,
+  Settings,
+  Users,
+} from "lucide-react";
 import PersonManagement from "@/components/dashboard-person";
 import LogsTable from "@/components/dashboard-logs";
 import PaymentManagement from "@/components/dashboard-payment";
 import Statistics from "@/components/dashboard-statistics";
 import Reports from "@/components/dashboard-reports";
+import { UserRole } from "@/prisma/generated/client";
+import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export function Dashboard() {
+export function Dashboard( { userRole = "VIEWER" }: { userRole?: UserRole }) {
   const [activeTab, setActiveTab] = useState("logs");
+  const router = useRouter();
+  const [isSigningOut, startSignOut] = useTransition();
+
+  const handleLogout = () => {
+    startSignOut(async () => {
+      await signOut({ redirect: false });
+      router.push("/login");
+      router.refresh();
+    });
+  };
 
   const tabs = [
     { id: "logs", label: "Attendance", icon: Clock },
@@ -24,13 +48,37 @@ export function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
-            <Camera className="text-indigo-600" size={40} />
-            RFID Access Control System
-          </h1>
-          <p className="text-gray-600 mt-2 text-lg">
-            Automated entry and exit management with payment tracking
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
+                <Camera className="text-indigo-600" size={40} />
+                RFID Access Control System
+              </h1>
+              <p className="text-gray-600 mt-2 text-lg">
+                Automated entry and exit management with payment tracking
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {userRole === "ADMIN" && (
+                <Button asChild variant="outline">
+                  <Link href="/settings">
+                    <Settings className="size-4" />
+                    Settings
+                  </Link>
+                </Button>
+              )}
+
+              <Button
+                onClick={handleLogout}
+                disabled={isSigningOut}
+                variant="destructive"
+              >
+                <LogOutIcon className="size-4" />
+                {isSigningOut ? "Logging out..." : "Logout"}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}

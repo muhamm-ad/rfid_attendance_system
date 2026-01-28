@@ -7,11 +7,11 @@ export default async function DashboardPage() {
     const session = await auth();
 
     const userRole = session?.user.role;
-    const userId = session?.user.id;
+    // const userId = session?.user.id;
 
-    const isUserAdmin = userRole === "ADMIN";
-    const isUserStaff = userRole === "STAFF";
-    const isUserViewer = userRole === "VIEWER";
+    // const isUserAdmin = userRole === "ADMIN";
+    // const isUserStaff = userRole === "STAFF";
+    // const isUserViewer = userRole === "VIEWER";
 
-  return <Dashboard />;
+  return <Dashboard userRole={userRole} />;
 }
