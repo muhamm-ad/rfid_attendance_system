@@ -2,21 +2,15 @@
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib";
+// import { PrismaAdapter } from "@auth/prisma-adapter";
+// import { prisma } from "@/lib";
 import { getUserByEmail, verifyPassword } from "@/data/user";
 import { loginSchema } from "@/schemas";
 import { authConfig } from "#/auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-
-  adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt",
-    maxAge: 8 * 60 * 60, // 8 hours
-    updateAge: 1 * 60 * 60, // 1 hour
-  },
+  // adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       name: "credentials",
@@ -52,20 +46,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role;
-      }
-      return session;
-    },
-  },
 });
