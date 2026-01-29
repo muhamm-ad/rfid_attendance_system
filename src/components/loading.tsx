@@ -21,3 +21,5 @@ export function Loading({ label = "Loading..." }: { label?: string }) {
     </div>
   );
 }
+
+export default Loading;

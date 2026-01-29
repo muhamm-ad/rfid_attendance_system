@@ -71,8 +71,7 @@ export function Dashboard() {
     }
   };
 
-  // return status === "loading" ? (
-  return true ? (
+  return status === "loading" ? (
     <Loading />
   ) : session ? (
     <div className="min-h-screen theme-page p-4 md:p-6">

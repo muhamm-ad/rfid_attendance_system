@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib";
 
-export const PUBLIC_ROUTES = ["/docs"];
+export const PUBLIC_ROUTES = ["/docs", "/demo"];
 export const ADMIN_ROUTES = ["/settings"];
 export const AUTH_ROUTES = ["/login", "/logout"];
 export const API_AUTH_PREFIX = "/api/auth"; // Use for api authentication purpose
