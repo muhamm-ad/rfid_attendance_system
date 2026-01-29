@@ -1,4 +1,4 @@
-// src/app/ui-test/page.tsx — Test error, not-found, and loading pages
+// @/app/demo/page.tsx — Test error, not-found, and loading pages
 
 "use client";
 

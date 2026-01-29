@@ -1,4 +1,5 @@
-// app/api/search/route.ts
+// @/app/api/search/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
 import { prisma, getPersonWithPayments } from "@/lib";

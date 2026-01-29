@@ -1,4 +1,4 @@
-// lib/utils.ts
+// @/lib/utils.ts
 
 export * from "./cn-utils";
 export * from "./ui-utils";

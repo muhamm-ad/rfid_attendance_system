@@ -1,3 +1,5 @@
+// @/prisma/seed.ts
+
 import { prisma, hashPassword } from "@/lib";
 
 export async function seedUsers() {
@@ -44,8 +46,6 @@ export async function seedUsers() {
   console.log("   VIEWER: viewer@rfid.local / Viewer123!@#");
   console.log("   ⚠️  Please change these passwords after first login!");
 }
-
-
 
 type PersonType = "student" | "teacher" | "staff" | "visitor";
 

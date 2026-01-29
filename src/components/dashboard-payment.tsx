@@ -1,8 +1,19 @@
-// components/PaymentManagement.tsx
+// @/components/dashboard-payment.tsx
+
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { CreditCard, Plus, Calendar, Search, ChevronDown, X, User, Edit2, Trash2 } from "lucide-react";
+import {
+  CreditCard,
+  Plus,
+  Calendar,
+  Search,
+  ChevronDown,
+  X,
+  User,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 // import Image from "next/image";
 
 type Payment = {
@@ -30,7 +41,9 @@ export default function PaymentManagement() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null,
+  );
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [formStudentSearchTerm, setFormStudentSearchTerm] = useState("");
@@ -59,10 +72,16 @@ export default function PaymentManagement() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
-      if (formDropdownRef.current && !formDropdownRef.current.contains(event.target as Node)) {
+      if (
+        formDropdownRef.current &&
+        !formDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsFormDropdownOpen(false);
       }
     }
@@ -195,7 +214,7 @@ export default function PaymentManagement() {
     const prenomLower = student.prenom.toLowerCase();
     const fullName = `${prenomLower} ${nomLower}`;
     const fullNameReverse = `${nomLower} ${prenomLower}`;
-    
+
     return (
       nomLower.includes(search) ||
       prenomLower.includes(search) ||
@@ -248,7 +267,7 @@ export default function PaymentManagement() {
     const prenomLower = student.prenom.toLowerCase();
     const fullName = `${prenomLower} ${nomLower}`;
     const fullNameReverse = `${nomLower} ${prenomLower}`;
-    
+
     return (
       nomLower.includes(search) ||
       prenomLower.includes(search) ||
@@ -317,7 +336,10 @@ export default function PaymentManagement() {
         </label>
         <div className="w-full md:w-1/3 relative" ref={dropdownRef}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+              size={18}
+            />
             <input
               ref={inputRef}
               type="text"
@@ -340,13 +362,13 @@ export default function PaymentManagement() {
                   <X size={18} />
                 </button>
               )}
-              <ChevronDown 
-                size={18} 
-                className={`text-gray-400 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+              <ChevronDown
+                size={18}
+                className={`text-gray-400 transition-transform ${isDropdownOpen ? "transform rotate-180" : ""}`}
               />
             </div>
           </div>
-          
+
           {/* Dropdown List */}
           {isDropdownOpen && (
             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -419,7 +441,10 @@ export default function PaymentManagement() {
                     </p>
                   )}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+                      size={18}
+                    />
                     <input
                       ref={formInputRef}
                       type="text"
@@ -444,13 +469,13 @@ export default function PaymentManagement() {
                           <X size={18} />
                         </button>
                       )}
-                      <ChevronDown 
-                        size={18} 
-                        className={`text-gray-400 transition-transform ${isFormDropdownOpen ? 'transform rotate-180' : ''}`}
+                      <ChevronDown
+                        size={18}
+                        className={`text-gray-400 transition-transform ${isFormDropdownOpen ? "transform rotate-180" : ""}`}
                       />
                     </div>
                   </div>
-                  
+
                   {/* Dropdown List */}
                   {isFormDropdownOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -463,9 +488,13 @@ export default function PaymentManagement() {
                           {filteredFormStudents.map((student) => (
                             <li
                               key={student.id}
-                              onClick={() => handleFormStudentSelect(student.id)}
+                              onClick={() =>
+                                handleFormStudentSelect(student.id)
+                              }
                               className={`px-4 py-2 cursor-pointer hover:bg-indigo-50 ${
-                                formData.student_id === student.id.toString() ? "bg-indigo-100" : ""
+                                formData.student_id === student.id.toString()
+                                  ? "bg-indigo-100"
+                                  : ""
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -490,7 +519,12 @@ export default function PaymentManagement() {
                 </label>
                 <select
                   value={formData.trimester}
-                  onChange={(e) => setFormData({ ...formData, trimester: e.target.value as any })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      trimester: e.target.value as any,
+                    })
+                  }
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
@@ -507,7 +541,9 @@ export default function PaymentManagement() {
                   type="number"
                   step="0.01"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amount: e.target.value })
+                  }
                   required
                   placeholder="0.00 XOF"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -519,7 +555,12 @@ export default function PaymentManagement() {
                 </label>
                 <select
                   value={formData.payment_method}
-                  onChange={(e) => setFormData({ ...formData, payment_method: e.target.value as any })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payment_method: e.target.value as any,
+                    })
+                  }
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
@@ -554,7 +595,8 @@ export default function PaymentManagement() {
           {selectedStudent && (
             <div className="mb-4 p-4 bg-indigo-50 rounded-lg">
               <div className="flex items-center gap-3">
-                {selectedStudent.photo_path && selectedStudent.photo_path.trim() !== "" ? (
+                {selectedStudent.photo_path &&
+                selectedStudent.photo_path.trim() !== "" ? (
                   <img
                     src={selectedStudent.photo_path}
                     alt={`${selectedStudent.prenom} ${selectedStudent.nom}`}
@@ -563,7 +605,9 @@ export default function PaymentManagement() {
                       // If image fails to load, hide image and show icon
                       const target = e.target as HTMLImageElement;
                       target.style.display = "none";
-                      const iconContainer = target.parentElement?.querySelector(".photo-icon-container") as HTMLElement;
+                      const iconContainer = target.parentElement?.querySelector(
+                        ".photo-icon-container",
+                      ) as HTMLElement;
                       if (iconContainer) {
                         iconContainer.style.display = "flex";
                       }
@@ -572,7 +616,10 @@ export default function PaymentManagement() {
                 ) : null}
                 <div
                   className={`w-12 h-12 rounded-full bg-indigo-200 flex items-center justify-center photo-icon-container ${
-                    selectedStudent.photo_path && selectedStudent.photo_path.trim() !== "" ? "hidden" : ""
+                    selectedStudent.photo_path &&
+                    selectedStudent.photo_path.trim() !== ""
+                      ? "hidden"
+                      : ""
                   }`}
                 >
                   <User size={24} className="text-indigo-600" />
@@ -582,8 +629,18 @@ export default function PaymentManagement() {
                     Payments for: {selectedStudent.prenom} {selectedStudent.nom}
                   </h3>
                   <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                    <p>ID: <span className="font-mono font-medium">{selectedStudent.id}</span></p>
-                    <p>RFID: <span className="font-mono font-medium">{selectedStudent.rfid_uuid}</span></p>
+                    <p>
+                      ID:{" "}
+                      <span className="font-mono font-medium">
+                        {selectedStudent.id}
+                      </span>
+                    </p>
+                    <p>
+                      RFID:{" "}
+                      <span className="font-mono font-medium">
+                        {selectedStudent.rfid_uuid}
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -591,7 +648,9 @@ export default function PaymentManagement() {
           )}
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading payments...</div>
+            <div className="text-center py-8 text-gray-500">
+              Loading payments...
+            </div>
           ) : payments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No payments recorded for this student
@@ -682,4 +741,3 @@ export default function PaymentManagement() {
     </div>
   );
 }
-

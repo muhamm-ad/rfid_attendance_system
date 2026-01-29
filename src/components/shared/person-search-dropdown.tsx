@@ -1,4 +1,5 @@
-// components/PersonSearchDropdown.tsx
+// @/components/shared/person-search-dropdown.tsx
+
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
@@ -70,7 +71,7 @@ export default function PersonSearchDropdown({
   // Function to calculate and update dropdown position
   const updateDropdownPosition = useCallback(() => {
     if (!isOpen || !inputRef.current) return;
-    
+
     const inputRect = inputRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
@@ -81,23 +82,27 @@ export default function PersonSearchDropdown({
 
     // Position above if there's not enough space below
     // Prefer above if space below is less than dropdown height
-    const shouldPositionAbove = spaceBelow < dropdownHeight && spaceAbove >= dropdownHeight;
+    const shouldPositionAbove =
+      spaceBelow < dropdownHeight && spaceAbove >= dropdownHeight;
     setPositionAbove(shouldPositionAbove);
 
     // Calculate position for dropdown
     const left = inputRect.left;
-    const top = shouldPositionAbove 
+    const top = shouldPositionAbove
       ? inputRect.top - dropdownHeight - 4 // 4px for mb-1
       : inputRect.bottom + 4; // 4px for mt-1
 
     // Ensure dropdown stays within viewport
-    const adjustedLeft = Math.max(8, Math.min(left, viewportWidth - inputWidth - 8));
+    const adjustedLeft = Math.max(
+      8,
+      Math.min(left, viewportWidth - inputWidth - 8),
+    );
     const adjustedTop = shouldPositionAbove
       ? Math.max(8, top)
       : Math.min(top, viewportHeight - dropdownHeight - 8);
 
     setDropdownStyle({
-      position: 'fixed',
+      position: "fixed",
       left: `${adjustedLeft}px`,
       top: `${adjustedTop}px`,
       width: `${inputWidth}px`,
@@ -116,8 +121,8 @@ export default function PersonSearchDropdown({
         setTimeout(() => {
           if (inputRef.current) {
             inputRef.current.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
+              behavior: "smooth",
+              block: "center",
             });
           }
         }, 50);
@@ -137,12 +142,12 @@ export default function PersonSearchDropdown({
       updateDropdownPosition();
     };
 
-    window.addEventListener('scroll', handleScroll, true);
-    window.addEventListener('resize', handleResize);
-    
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
+
     return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
     };
   }, [isOpen, updateDropdownPosition]);
 
@@ -220,53 +225,56 @@ export default function PersonSearchDropdown({
       </div>
 
       {/* Dropdown List - Rendered via Portal to avoid overflow issues */}
-      {isOpen && mounted && typeof window !== 'undefined' && createPortal(
-        <div
-          ref={dropdownListRef}
-          style={dropdownStyle}
-          className="bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
-        >
-          {filteredPersons.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
-              No persons found
-            </div>
-          ) : (
-            <ul className="py-1">
-              {filteredPersons.slice(0, 20).map((person) => (
-                <li
-                  key={person.id}
-                  onClick={() => handlePersonSelect(person.id)}
-                  className={`px-4 py-2 cursor-pointer hover:bg-indigo-50 ${
-                    selectedPersonId === person.id ? "bg-indigo-100" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <PersonAvatar
-                        photoPath={person.photo_path}
-                        name={`${person.prenom} ${person.nom}`}
-                        size="sm"
-                      />
-                      <span className="text-sm font-medium text-gray-900">
-                        {person.prenom} {person.nom}
-                      </span>
+      {isOpen &&
+        mounted &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div
+            ref={dropdownListRef}
+            style={dropdownStyle}
+            className="bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+          >
+            {filteredPersons.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                No persons found
+              </div>
+            ) : (
+              <ul className="py-1">
+                {filteredPersons.slice(0, 20).map((person) => (
+                  <li
+                    key={person.id}
+                    onClick={() => handlePersonSelect(person.id)}
+                    className={`px-4 py-2 cursor-pointer hover:bg-indigo-50 ${
+                      selectedPersonId === person.id ? "bg-indigo-100" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <PersonAvatar
+                          photoPath={person.photo_path}
+                          name={`${person.prenom} ${person.nom}`}
+                          size="sm"
+                        />
+                        <span className="text-sm font-medium text-gray-900">
+                          {person.prenom} {person.nom}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-gray-500 font-mono">
+                          ID: {person.id}
+                        </span>
+                        <span className="text-xs text-gray-400 font-mono">
+                          {person.rfid_uuid}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-500 font-mono">
-                        ID: {person.id}
-                      </span>
-                      <span className="text-xs text-gray-400 font-mono">
-                        {person.rfid_uuid}
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>,
-        document.body
-      )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

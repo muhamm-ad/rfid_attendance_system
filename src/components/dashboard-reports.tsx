@@ -1,8 +1,17 @@
-// components/Reports.tsx
+// @/components/dashboard-reports.tsx
+
 "use client";
 
 import { useState } from "react";
-import { FileText, Download, Calendar, TrendingUp, DollarSign, Users, User } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Calendar,
+  TrendingUp,
+  DollarSign,
+  Users,
+  User,
+} from "lucide-react";
 // import Image from "next/image";
 
 type ReportData = {
@@ -37,7 +46,7 @@ export default function Reports() {
 
     try {
       const res = await fetch(
-        `/api/reports?start_date=${formData.start_date}&end_date=${formData.end_date}&type=${formData.type}`
+        `/api/reports?start_date=${formData.start_date}&end_date=${formData.end_date}&type=${formData.type}`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to generate report");
@@ -68,7 +77,9 @@ export default function Reports() {
           <FileText size={28} />
           Reports Generator
         </h2>
-        <p className="text-gray-600 mt-1">Generate detailed reports by period</p>
+        <p className="text-gray-600 mt-1">
+          Generate detailed reports by period
+        </p>
       </div>
 
       {/* Report Form */}
@@ -81,7 +92,9 @@ export default function Reports() {
             <input
               type="date"
               value={formData.start_date}
-              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, start_date: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -92,7 +105,9 @@ export default function Reports() {
             <input
               type="date"
               value={formData.end_date}
-              onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, end_date: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -102,7 +117,9 @@ export default function Reports() {
             </label>
             <select
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, type: e.target.value })
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="attendance">Attendance Report</option>
@@ -132,7 +149,8 @@ export default function Reports() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-gray-800">
-                {formData.type.charAt(0).toUpperCase() + formData.type.slice(1)} Report
+                {formData.type.charAt(0).toUpperCase() + formData.type.slice(1)}{" "}
+                Report
               </h3>
               <p className="text-sm text-gray-600 mt-1">
                 Period: {new Date(formData.start_date).toLocaleDateString()} -{" "}
@@ -185,22 +203,30 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {reportData.daily_summary.map((day: any, index: number) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              {new Date(day.date).toLocaleDateString()}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{day.total_scans}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-green-600 font-medium">
-                              {day.successful}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-red-600 font-medium">
-                              {day.failed}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{day.entries}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{day.exits}</td>
-                          </tr>
-                        ))}
+                        {reportData.daily_summary.map(
+                          (day: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {new Date(day.date).toLocaleDateString()}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {day.total_scans}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-green-600 font-medium">
+                                {day.successful}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-red-600 font-medium">
+                                {day.failed}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {day.entries}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {day.exits}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -245,16 +271,21 @@ export default function Reports() {
                           <tr key={person.id} className="hover:bg-gray-50">
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="flex items-center gap-3">
-                                {person.photo_path && person.photo_path.trim() !== "" ? (
+                                {person.photo_path &&
+                                person.photo_path.trim() !== "" ? (
                                   <img
                                     src={person.photo_path}
                                     alt={`${person.prenom} ${person.nom}`}
                                     className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                                     onError={(e) => {
                                       // If image fails to load, hide image and show icon
-                                      const target = e.target as HTMLImageElement;
+                                      const target =
+                                        e.target as HTMLImageElement;
                                       target.style.display = "none";
-                                      const iconContainer = target.parentElement?.querySelector(".photo-icon-container") as HTMLElement;
+                                      const iconContainer =
+                                        target.parentElement?.querySelector(
+                                          ".photo-icon-container",
+                                        ) as HTMLElement;
                                       if (iconContainer) {
                                         iconContainer.style.display = "flex";
                                       }
@@ -263,7 +294,10 @@ export default function Reports() {
                                 ) : null}
                                 <div
                                   className={`w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center photo-icon-container ${
-                                    person.photo_path && person.photo_path.trim() !== "" ? "hidden" : ""
+                                    person.photo_path &&
+                                    person.photo_path.trim() !== ""
+                                      ? "hidden"
+                                      : ""
                                   }`}
                                 >
                                   <User size={20} className="text-gray-500" />
@@ -278,16 +312,24 @@ export default function Reports() {
                                 {person.type}
                               </span>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{person.total_scans}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {person.total_scans}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap text-green-600 font-medium">
                               {person.successful_scans}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{person.entries}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                              {person.first_scan ? new Date(person.first_scan).toLocaleString() : "-"}
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {person.entries}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                              {person.last_scan ? new Date(person.last_scan).toLocaleString() : "-"}
+                              {person.first_scan
+                                ? new Date(person.first_scan).toLocaleString()
+                                : "-"}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                              {person.last_scan
+                                ? new Date(person.last_scan).toLocaleString()
+                                : "-"}
                             </td>
                           </tr>
                         ))}
@@ -337,14 +379,18 @@ export default function Reports() {
                                 T{item.trimester}
                               </span>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{item.students_paid}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {item.students_paid}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap font-medium">
                               {item.total_amount.toLocaleString()}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap capitalize">
                               {item.payment_method.replace("_", " ")}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{item.payment_count}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {item.payment_count}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -355,7 +401,9 @@ export default function Reports() {
 
               {reportData.details && (
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Payment Details</h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                    Payment Details
+                  </h4>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -378,54 +426,66 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {reportData.details.map((payment: any, index: number) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="flex items-center gap-3">
-                                {payment.photo_path && payment.photo_path.trim() !== "" ? (
-                                  <img
-                                    src={payment.photo_path}
-                                    alt={`${payment.prenom} ${payment.nom}`}
-                                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                                    onError={(e) => {
-                                      // If image fails to load, hide image and show icon
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                      const iconContainer = target.parentElement?.querySelector(".photo-icon-container") as HTMLElement;
-                                      if (iconContainer) {
-                                        iconContainer.style.display = "flex";
-                                      }
-                                    }}
-                                  />
-                                ) : null}
-                                <div
-                                  className={`w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center photo-icon-container ${
-                                    payment.photo_path && payment.photo_path.trim() !== "" ? "hidden" : ""
-                                  }`}
-                                >
-                                  <User size={20} className="text-gray-500" />
+                        {reportData.details.map(
+                          (payment: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  {payment.photo_path &&
+                                  payment.photo_path.trim() !== "" ? (
+                                    <img
+                                      src={payment.photo_path}
+                                      alt={`${payment.prenom} ${payment.nom}`}
+                                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                      onError={(e) => {
+                                        // If image fails to load, hide image and show icon
+                                        const target =
+                                          e.target as HTMLImageElement;
+                                        target.style.display = "none";
+                                        const iconContainer =
+                                          target.parentElement?.querySelector(
+                                            ".photo-icon-container",
+                                          ) as HTMLElement;
+                                        if (iconContainer) {
+                                          iconContainer.style.display = "flex";
+                                        }
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div
+                                    className={`w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center photo-icon-container ${
+                                      payment.photo_path &&
+                                      payment.photo_path.trim() !== ""
+                                        ? "hidden"
+                                        : ""
+                                    }`}
+                                  >
+                                    <User size={20} className="text-gray-500" />
+                                  </div>
+                                  <div className="font-medium text-gray-900">
+                                    {payment.prenom} {payment.nom}
+                                  </div>
                                 </div>
-                                <div className="font-medium text-gray-900">
-                                  {payment.prenom} {payment.nom}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
-                                T{payment.trimester}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap font-medium">
-                              {payment.amount.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap capitalize">
-                              {payment.payment_method.replace("_", " ")}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                              {new Date(payment.payment_date).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
+                                  T{payment.trimester}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap font-medium">
+                                {payment.amount.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap capitalize">
+                                {payment.payment_method.replace("_", " ")}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                {new Date(
+                                  payment.payment_date,
+                                ).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -445,7 +505,9 @@ export default function Reports() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Scans</span>
-                    <span className="font-bold">{reportData.attendance?.total_scans}</span>
+                    <span className="font-bold">
+                      {reportData.attendance?.total_scans}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Successful</span>
@@ -455,11 +517,15 @@ export default function Reports() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Failed</span>
-                    <span className="font-bold text-red-600">{reportData.attendance?.failed}</span>
+                    <span className="font-bold text-red-600">
+                      {reportData.attendance?.failed}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Unique Persons</span>
-                    <span className="font-bold">{reportData.attendance?.unique_persons}</span>
+                    <span className="font-bold">
+                      {reportData.attendance?.unique_persons}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Success Rate</span>
@@ -477,7 +543,9 @@ export default function Reports() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Payments</span>
-                    <span className="font-bold">{reportData.payments?.total_payments}</span>
+                    <span className="font-bold">
+                      {reportData.payments?.total_payments}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total Amount</span>
@@ -494,4 +562,3 @@ export default function Reports() {
     </div>
   );
 }
-

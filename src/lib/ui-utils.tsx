@@ -1,4 +1,5 @@
-// lib/ui-utils.tsx
+// @/lib/ui-utils.tsx
+
 import React from "react";
 
 // Common CSS classes
@@ -19,16 +20,16 @@ export const Badge: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = "" }) => (
-  <span
-    className={`px-2 py-1 text-xs font-medium rounded-full ${className}`}
-  >
+  <span className={`px-2 py-1 text-xs font-medium rounded-full ${className}`}>
     {children}
   </span>
 );
 
 export const BadgeGray: React.FC<{ children: React.ReactNode }> = ({
   children,
-}) => <Badge className="bg-gray-100 text-gray-800 capitalize">{children}</Badge>;
+}) => (
+  <Badge className="bg-gray-100 text-gray-800 capitalize">{children}</Badge>
+);
 
 export const BadgeBlue: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -55,28 +56,24 @@ export function formatLevel(level: string | null | undefined): string {
 }
 
 // Helper to filter persons (case-insensitive)
-export function filterPersons<T extends { nom: string; prenom: string; id: number; rfid_uuid: string }>(
-  persons: T[],
-  searchTerm: string
-): T[] {
+export function filterPersons<
+  T extends { nom: string; prenom: string; id: number; rfid_uuid: string },
+>(persons: T[], searchTerm: string): T[] {
   if (!searchTerm) return persons;
   const search = searchTerm.toLowerCase().trim();
-  return persons.filter(
-    (person) => {
-      const nomLower = person.nom.toLowerCase();
-      const prenomLower = person.prenom.toLowerCase();
-      const fullName = `${prenomLower} ${nomLower}`;
-      const fullNameReverse = `${nomLower} ${prenomLower}`;
-      
-      return (
+  return persons.filter((person) => {
+    const nomLower = person.nom.toLowerCase();
+    const prenomLower = person.prenom.toLowerCase();
+    const fullName = `${prenomLower} ${nomLower}`;
+    const fullNameReverse = `${nomLower} ${prenomLower}`;
+
+    return (
       nomLower.includes(search) ||
       prenomLower.includes(search) ||
       fullName.includes(search) ||
       fullNameReverse.includes(search) ||
       person.id.toString().includes(search) ||
       person.rfid_uuid.toLowerCase().includes(search)
-      );
-    }
-  );
+    );
+  });
 }
-

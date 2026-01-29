@@ -1,4 +1,4 @@
-// lib/db.ts
+// @/lib/db.ts
 
 import { PrismaClient } from "@/prisma/generated/client";
 import { withAccelerate } from "@prisma/extension-accelerate";

@@ -1,4 +1,5 @@
-// src/components/providers/session-provider.tsx
+// @/components/providers/session-provider.tsx
+
 "use client";
 
 import { Session } from "next-auth";

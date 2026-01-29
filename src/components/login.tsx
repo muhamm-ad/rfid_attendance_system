@@ -1,4 +1,4 @@
-// components/login.tsx
+// @/components/login.tsx
 
 "use client";
 
@@ -187,11 +187,7 @@ export function LoginForm() {
   );
 }
 
-export function Login({
-  className,
-}: {
-  className?: string;
-}) {
+export function Login({ className }: { className?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

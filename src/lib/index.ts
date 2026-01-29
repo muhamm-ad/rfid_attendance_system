@@ -1,3 +1,5 @@
+// @/lib/index.ts
+
 // SERVER-ONLY barrel.
 // Do not import from "@/lib" inside Client Components.
 import "server-only";

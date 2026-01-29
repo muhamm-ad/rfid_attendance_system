@@ -1,4 +1,4 @@
-// src/app/not-found.tsx
+// @/app/not-found.tsx
 
 "use client";
 
