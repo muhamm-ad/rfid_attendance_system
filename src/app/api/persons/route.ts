@@ -1,4 +1,5 @@
-// app/api/persons/route.ts
+// @/app/api/persons/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
 import { prisma, auth, getPersonWithPayments } from "@/lib";
@@ -73,11 +74,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!rfid_uuid || !type || !nom || !prenom || !photo_path) {
+    if (!rfid_uuid || !type || !nom || !prenom) {
       return NextResponse.json(
         {
           error:
-            "Missing required fields (rfid_uuid, type, nom, prenom, photo_path)",
+            "Missing required fields (rfid_uuid, type, nom, prenom)",
         },
         { status: 400 },
       );
@@ -117,6 +118,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate class if provided (only for students)
+    if (classField && type !== "student") {
+      return NextResponse.json(
+        { error: "Class can only be set for students" },
+        { status: 400 }
+      );
+    }
+
     // Insert the new person with rfid_uuid
     const newPerson = await prisma.person.create({
       data: {
@@ -124,7 +133,7 @@ export async function POST(request: NextRequest) {
         type: type as any,
         nom,
         prenom,
-        photo_path,
+        photo_path: photo_path || null,
         level: level || null,
         class: classField || null,
       },

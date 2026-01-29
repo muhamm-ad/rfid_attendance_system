@@ -1,4 +1,4 @@
-// src/app/dashboard/page.tsx
+// @/app/dashboard/page.tsx
 
 import{ Dashboard } from "@/components/dashboard";
 

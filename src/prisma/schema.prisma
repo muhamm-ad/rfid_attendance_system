@@ -1,3 +1,5 @@
+// @/prisma/schema.prisma
+
 generator client {
   provider               = "prisma-client-js"
   output                 = "./generated/client"
@@ -20,15 +22,15 @@ enum UserRole {
 }
 
 model User {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  password       String @map("hashed_password")
-  role           UserRole
-  is_active      Boolean     @default(true)
-  
-  first_name     String?
-  last_name      String?
-  image          String?
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   @map("hashed_password")
+  role      UserRole
+  is_active Boolean  @default(true)
+
+  first_name String?
+  last_name  String?
+  image      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -63,7 +65,7 @@ model Attendance {
   status          AttendanceStatus
   attendance_date DateTime         @default(now())
 
-  person Person @relation(fields: [person_id], references: [id])
+  person Person @relation(fields: [person_id], references: [id], onDelete: Cascade)
 
   @@map("attendance")
 }
@@ -86,7 +88,7 @@ model StudentPayment {
   trimester  Int
 
   student Person  @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  payment Payment @relation(fields: [payment_id], references: [id])
+  payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
 
   @@map("student_payments")
 }

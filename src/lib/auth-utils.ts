@@ -1,4 +1,4 @@
-// lib/auth-utils.ts
+// @/lib/auth-utils.ts
 
 // TODO : Update this file
 
@@ -39,7 +39,6 @@ export function validatePassword(password: string): {
   };
 }
 
-
 /**
  * Check if user can perform write operations
  */
@@ -58,11 +57,13 @@ export function canManageUsers(role: UserRole): boolean {
  * Get user from request (for API routes)
  */
 export async function getUserFromRequest(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<User | null> {
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET || "rfid-attendance-secret-key-change-in-production",
+    secret:
+      process.env.NEXTAUTH_SECRET ||
+      "rfid-attendance-secret-key-change-in-production",
   });
 
   if (!token) return null;
@@ -81,7 +82,6 @@ export async function getUserFromRequest(
   };
 }
 
-
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
     id: string;
@@ -95,11 +95,13 @@ export interface AuthenticatedRequest extends NextRequest {
  * Middleware to check authentication for API routes
  */
 export async function requireAuth(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET || "rfid-attendance-secret-key-change-in-production",
+    secret:
+      process.env.NEXTAUTH_SECRET ||
+      "rfid-attendance-secret-key-change-in-production",
   });
 
   if (!token) {
@@ -107,7 +109,7 @@ export async function requireAuth(
       user: null,
       error: NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       ),
     };
   }
@@ -126,7 +128,7 @@ export async function requireAuth(
  * Middleware to check if user has write permissions
  */
 export async function requireWriteAccess(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
   const authResult = await requireAuth(request);
   if (authResult.error) return authResult;
@@ -136,7 +138,7 @@ export async function requireWriteAccess(
       user: null,
       error: NextResponse.json(
         { error: "Insufficient permissions. Write access required." },
-        { status: 403 }
+        { status: 403 },
       ),
     };
   }
@@ -148,7 +150,7 @@ export async function requireWriteAccess(
  * Middleware to check if user is admin
  */
 export async function requireAdmin(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
   const authResult = await requireAuth(request);
   if (authResult.error) return authResult;
@@ -158,7 +160,7 @@ export async function requireAdmin(
       user: null,
       error: NextResponse.json(
         { error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       ),
     };
   }
@@ -171,8 +173,10 @@ export async function requireAdmin(
  */
 export async function requireRole(
   request: NextRequest,
-  requiredRole: UserRole
-): Promise<{ user: User | null; error: null } | { user: null; error: NextResponse }> {
+  requiredRole: UserRole,
+): Promise<
+  { user: User | null; error: null } | { user: null; error: NextResponse }
+> {
   const authResult = await requireAuth(request);
   if (authResult.error) return authResult;
 
@@ -182,18 +186,18 @@ export async function requireRole(
     ADMIN: 3,
   };
 
-  if (roleHierarchy[authResult.user.role as UserRole] < roleHierarchy[requiredRole]) {
+  if (
+    roleHierarchy[authResult.user.role as UserRole] <
+    roleHierarchy[requiredRole]
+  ) {
     return {
       user: null,
       error: NextResponse.json(
         { error: `Role '${requiredRole}' or higher required` },
-        { status: 403 }
+        { status: 403 },
       ),
     };
   }
 
   return authResult;
 }
-
-
-

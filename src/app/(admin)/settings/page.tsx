@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+// @/app/login/page.tsx
 
 import { auth } from "#/src/lib/auth";
 import { Settings } from "@/components/settings";

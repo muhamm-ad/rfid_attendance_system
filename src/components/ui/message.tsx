@@ -1,3 +1,5 @@
+// @/components/ui/message.tsx
+
 "use client";
 
 import { LucideIcon, AlertCircle, CheckCircle2, AlertTriangle, Info } from "lucide-react";

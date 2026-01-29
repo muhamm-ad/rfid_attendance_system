@@ -1,3 +1,5 @@
+// @/components/dashboard.tsx
+
 "use client";
 
 import { useState, useTransition } from "react";

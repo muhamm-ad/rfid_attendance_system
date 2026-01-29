@@ -1,4 +1,4 @@
-// app/api/auth/[...nextauth]/route.ts
+// @/app/api/auth/[...nextauth]/route.ts
 
 import { handlers } from "@/lib";
 

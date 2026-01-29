@@ -1,4 +1,5 @@
-// app/api/attendance/route.ts
+// @/app/api/attendance/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib";
 import { AttendanceLog } from "@/types";

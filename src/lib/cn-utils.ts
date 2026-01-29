@@ -1,4 +1,4 @@
-// lib/cn-utils.ts
+// @/lib/cn-utils.ts
 
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";

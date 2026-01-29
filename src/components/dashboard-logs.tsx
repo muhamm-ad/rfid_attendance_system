@@ -1,4 +1,5 @@
-// components/LogsTable.tsx
+// @/components/dashboard-logs.tsx
+
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";

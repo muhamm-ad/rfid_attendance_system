@@ -1,8 +1,19 @@
-// components/PaymentManagement.tsx
+// @/components/dashboard-payment.tsx
+
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { CreditCard, Plus, Calendar, Search, ChevronDown, X, User } from "lucide-react";
+import {
+  CreditCard,
+  Plus,
+  Calendar,
+  Search,
+  ChevronDown,
+  X,
+  User,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 // import Image from "next/image";
 
 type Payment = {
@@ -29,7 +40,10 @@ export default function PaymentManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null,
+  );
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [formStudentSearchTerm, setFormStudentSearchTerm] = useState("");
@@ -58,10 +72,16 @@ export default function PaymentManagement() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
-      if (formDropdownRef.current && !formDropdownRef.current.contains(event.target as Node)) {
+      if (
+        formDropdownRef.current &&
+        !formDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsFormDropdownOpen(false);
       }
     }
@@ -101,12 +121,46 @@ export default function PaymentManagement() {
     }
   }
 
+  function resetForm() {
+    setFormData({
+      student_id: "",
+      trimester: "1",
+      amount: "",
+      payment_method: "cash",
+    });
+    setFormStudentSearchTerm("");
+    setIsFormDropdownOpen(false);
+    setEditingPayment(null);
+    setShowForm(false);
+    setError(null);
+  }
+
+  function startEdit(payment: Payment) {
+    setEditingPayment(payment);
+    const student = students.find((s) => s.id === payment.student_id);
+    setFormData({
+      student_id: payment.student_id.toString(),
+      trimester: payment.trimester.toString() as "1" | "2" | "3",
+      amount: payment.amount.toString(),
+      payment_method: payment.payment_method,
+    });
+    if (student) {
+      setFormStudentSearchTerm(`${student.prenom} ${student.nom}`);
+    }
+    setShowForm(true);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      const res = await fetch("/api/payments", {
-        method: "POST",
+      const url = editingPayment
+        ? `/api/payments/${editingPayment.id}`
+        : "/api/payments";
+      const method = editingPayment ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           student_id: parseInt(formData.student_id),
@@ -116,17 +170,26 @@ export default function PaymentManagement() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Payment failed");
-      
-      setShowForm(false);
-      setFormData({
-        student_id: "",
-        trimester: "1",
-        amount: "",
-        payment_method: "cash",
+      if (!res.ok) throw new Error(data?.error || "Payment operation failed");
+
+      resetForm();
+      if (selectedStudentId) {
+        await loadPayments(selectedStudentId);
+      }
+    } catch (e: any) {
+      setError(e.message || "Unexpected error");
+    }
+  }
+
+  async function handleDelete(paymentId: number) {
+    if (!confirm("Are you sure you want to delete this payment?")) return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/payments/${paymentId}`, {
+        method: "DELETE",
       });
-      setFormStudentSearchTerm("");
-      setIsFormDropdownOpen(false);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Delete failed");
       if (selectedStudentId) {
         await loadPayments(selectedStudentId);
       }
@@ -143,13 +206,20 @@ export default function PaymentManagement() {
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
 
-  // Filter students based on search term
+  // Filter students based on search term (case-insensitive)
   const filteredStudents = students.filter((student) => {
     if (!studentSearchTerm) return true;
-    const search = studentSearchTerm.toLowerCase();
+    const search = studentSearchTerm.toLowerCase().trim();
+    const nomLower = student.nom.toLowerCase();
+    const prenomLower = student.prenom.toLowerCase();
+    const fullName = `${prenomLower} ${nomLower}`;
+    const fullNameReverse = `${nomLower} ${prenomLower}`;
+
     return (
-      student.nom.toLowerCase().includes(search) ||
-      student.prenom.toLowerCase().includes(search) ||
+      nomLower.includes(search) ||
+      prenomLower.includes(search) ||
+      fullName.includes(search) ||
+      fullNameReverse.includes(search) ||
       student.id.toString().includes(search)
     );
   });
@@ -189,13 +259,20 @@ export default function PaymentManagement() {
     setIsDropdownOpen(false);
   }
 
-  // Filter students for form dropdown
+  // Filter students for form dropdown (case-insensitive)
   const filteredFormStudents = students.filter((student) => {
     if (!formStudentSearchTerm) return true;
-    const search = formStudentSearchTerm.toLowerCase();
+    const search = formStudentSearchTerm.toLowerCase().trim();
+    const nomLower = student.nom.toLowerCase();
+    const prenomLower = student.prenom.toLowerCase();
+    const fullName = `${prenomLower} ${nomLower}`;
+    const fullNameReverse = `${nomLower} ${prenomLower}`;
+
     return (
-      student.nom.toLowerCase().includes(search) ||
-      student.prenom.toLowerCase().includes(search) ||
+      nomLower.includes(search) ||
+      prenomLower.includes(search) ||
+      fullName.includes(search) ||
+      fullNameReverse.includes(search) ||
       student.id.toString().includes(search)
     );
   });
@@ -210,6 +287,7 @@ export default function PaymentManagement() {
   }
 
   function handleFormInputChange(value: string) {
+    if (editingPayment) return; // Prevent changes when editing
     setFormStudentSearchTerm(value);
     setIsFormDropdownOpen(true);
     if (value === "") {
@@ -218,6 +296,7 @@ export default function PaymentManagement() {
   }
 
   function handleFormInputFocus() {
+    if (editingPayment) return; // Prevent dropdown when editing
     setIsFormDropdownOpen(true);
     // Load students if not already loaded
     if (students.length === 0) {
@@ -257,7 +336,10 @@ export default function PaymentManagement() {
         </label>
         <div className="w-full md:w-1/3 relative" ref={dropdownRef}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+              size={18}
+            />
             <input
               ref={inputRef}
               type="text"
@@ -280,13 +362,13 @@ export default function PaymentManagement() {
                   <X size={18} />
                 </button>
               )}
-              <ChevronDown 
-                size={18} 
-                className={`text-gray-400 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+              <ChevronDown
+                size={18}
+                className={`text-gray-400 transition-transform ${isDropdownOpen ? "transform rotate-180" : ""}`}
               />
             </div>
           </div>
-          
+
           {/* Dropdown List */}
           {isDropdownOpen && (
             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -331,7 +413,17 @@ export default function PaymentManagement() {
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Record New Payment</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">
+                {editingPayment ? "Edit Payment" : "Record New Payment"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
@@ -343,8 +435,16 @@ export default function PaymentManagement() {
                   Student *
                 </label>
                 <div className="relative" ref={formDropdownRef}>
+                  {editingPayment && (
+                    <p className="text-xs text-gray-500 mb-2">
+                      Note: Changing student is not allowed when editing
+                    </p>
+                  )}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"
+                      size={18}
+                    />
                     <input
                       ref={formInputRef}
                       type="text"
@@ -353,7 +453,8 @@ export default function PaymentManagement() {
                       onFocus={handleFormInputFocus}
                       placeholder="Search by name or ID..."
                       required={!formData.student_id}
-                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      disabled={!!editingPayment}
+                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                       {formData.student_id && (
@@ -368,13 +469,13 @@ export default function PaymentManagement() {
                           <X size={18} />
                         </button>
                       )}
-                      <ChevronDown 
-                        size={18} 
-                        className={`text-gray-400 transition-transform ${isFormDropdownOpen ? 'transform rotate-180' : ''}`}
+                      <ChevronDown
+                        size={18}
+                        className={`text-gray-400 transition-transform ${isFormDropdownOpen ? "transform rotate-180" : ""}`}
                       />
                     </div>
                   </div>
-                  
+
                   {/* Dropdown List */}
                   {isFormDropdownOpen && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -387,9 +488,13 @@ export default function PaymentManagement() {
                           {filteredFormStudents.map((student) => (
                             <li
                               key={student.id}
-                              onClick={() => handleFormStudentSelect(student.id)}
+                              onClick={() =>
+                                handleFormStudentSelect(student.id)
+                              }
                               className={`px-4 py-2 cursor-pointer hover:bg-indigo-50 ${
-                                formData.student_id === student.id.toString() ? "bg-indigo-100" : ""
+                                formData.student_id === student.id.toString()
+                                  ? "bg-indigo-100"
+                                  : ""
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -414,7 +519,12 @@ export default function PaymentManagement() {
                 </label>
                 <select
                   value={formData.trimester}
-                  onChange={(e) => setFormData({ ...formData, trimester: e.target.value as any })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      trimester: e.target.value as any,
+                    })
+                  }
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
@@ -431,7 +541,9 @@ export default function PaymentManagement() {
                   type="number"
                   step="0.01"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amount: e.target.value })
+                  }
                   required
                   placeholder="0.00 XOF"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -443,7 +555,12 @@ export default function PaymentManagement() {
                 </label>
                 <select
                   value={formData.payment_method}
-                  onChange={(e) => setFormData({ ...formData, payment_method: e.target.value as any })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payment_method: e.target.value as any,
+                    })
+                  }
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
@@ -457,14 +574,11 @@ export default function PaymentManagement() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                  Record Payment
+                  {editingPayment ? "Update Payment" : "Record Payment"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setError(null);
-                  }}
+                  onClick={resetForm}
                   className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -481,7 +595,8 @@ export default function PaymentManagement() {
           {selectedStudent && (
             <div className="mb-4 p-4 bg-indigo-50 rounded-lg">
               <div className="flex items-center gap-3">
-                {selectedStudent.photo_path && selectedStudent.photo_path.trim() !== "" ? (
+                {selectedStudent.photo_path &&
+                selectedStudent.photo_path.trim() !== "" ? (
                   <img
                     src={selectedStudent.photo_path}
                     alt={`${selectedStudent.prenom} ${selectedStudent.nom}`}
@@ -490,7 +605,9 @@ export default function PaymentManagement() {
                       // If image fails to load, hide image and show icon
                       const target = e.target as HTMLImageElement;
                       target.style.display = "none";
-                      const iconContainer = target.parentElement?.querySelector(".photo-icon-container") as HTMLElement;
+                      const iconContainer = target.parentElement?.querySelector(
+                        ".photo-icon-container",
+                      ) as HTMLElement;
                       if (iconContainer) {
                         iconContainer.style.display = "flex";
                       }
@@ -499,7 +616,10 @@ export default function PaymentManagement() {
                 ) : null}
                 <div
                   className={`w-12 h-12 rounded-full bg-indigo-200 flex items-center justify-center photo-icon-container ${
-                    selectedStudent.photo_path && selectedStudent.photo_path.trim() !== "" ? "hidden" : ""
+                    selectedStudent.photo_path &&
+                    selectedStudent.photo_path.trim() !== ""
+                      ? "hidden"
+                      : ""
                   }`}
                 >
                   <User size={24} className="text-indigo-600" />
@@ -509,8 +629,18 @@ export default function PaymentManagement() {
                     Payments for: {selectedStudent.prenom} {selectedStudent.nom}
                   </h3>
                   <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                    <p>ID: <span className="font-mono font-medium">{selectedStudent.id}</span></p>
-                    <p>RFID: <span className="font-mono font-medium">{selectedStudent.rfid_uuid}</span></p>
+                    <p>
+                      ID:{" "}
+                      <span className="font-mono font-medium">
+                        {selectedStudent.id}
+                      </span>
+                    </p>
+                    <p>
+                      RFID:{" "}
+                      <span className="font-mono font-medium">
+                        {selectedStudent.rfid_uuid}
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -518,7 +648,9 @@ export default function PaymentManagement() {
           )}
 
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading payments...</div>
+            <div className="text-center py-8 text-gray-500">
+              Loading payments...
+            </div>
           ) : payments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No payments recorded for this student
@@ -539,6 +671,9 @@ export default function PaymentManagement() {
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -572,6 +707,24 @@ export default function PaymentManagement() {
                           {new Date(payment.payment_date).toLocaleDateString()}
                         </div>
                       </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => startEdit(payment)}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Edit payment"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(payment.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete payment"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -588,4 +741,3 @@ export default function PaymentManagement() {
     </div>
   );
 }
-

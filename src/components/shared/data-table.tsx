@@ -1,4 +1,5 @@
-// components/DataTable.tsx
+// @/components/shared/data-table.tsx
+
 "use client";
 
 import React, { useMemo, ReactNode, useState } from "react";
@@ -39,11 +40,9 @@ export default function DataTable<T extends { id?: number | string }>({
   onSort,
   getSortValue,
 }: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<string | null>(
-    defaultSortKey || null
-  );
+  const [sortKey, setSortKey] = useState<string | null>(defaultSortKey || null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(
-    defaultSortKey && defaultSortDirection ? defaultSortDirection : null
+    defaultSortKey && defaultSortDirection ? defaultSortDirection : null,
   );
 
   const handleSort = (key: string) => {
@@ -105,7 +104,11 @@ export default function DataTable<T extends { id?: number | string }>({
     return (
       <ArrowUpDown
         size={14}
-        className={sortDirection === "asc" || sortDirection === "desc" ? "text-indigo-600" : "text-gray-400"}
+        className={
+          sortDirection === "asc" || sortDirection === "desc"
+            ? "text-indigo-600"
+            : "text-gray-400"
+        }
       />
     );
   };
@@ -124,12 +127,14 @@ export default function DataTable<T extends { id?: number | string }>({
                     : ""
                 } ${column.headerClassName || ""}`}
                 onClick={() =>
-                  column.sortable !== false && handleSort(column.sortKey || column.key)
+                  column.sortable !== false &&
+                  handleSort(column.sortKey || column.key)
                 }
               >
                 <div className="flex items-center justify-center gap-1">
                   {column.label}
-                  {column.sortable !== false && getSortIcon(column.sortKey || column.key)}
+                  {column.sortable !== false &&
+                    getSortIcon(column.sortKey || column.key)}
                 </div>
               </th>
             ))}
@@ -156,7 +161,10 @@ export default function DataTable<T extends { id?: number | string }>({
             </tr>
           ) : (
             sortedData.map((item) => (
-              <tr key={item.id || JSON.stringify(item)} className="hover:bg-gray-50">
+              <tr
+                key={item.id || JSON.stringify(item)}
+                className="hover:bg-gray-50"
+              >
                 {columns.map((column) => (
                   <td
                     key={column.key}
@@ -173,4 +181,3 @@ export default function DataTable<T extends { id?: number | string }>({
     </div>
   );
 }
-

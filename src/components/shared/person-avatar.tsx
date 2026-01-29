@@ -1,4 +1,5 @@
-// components/PersonAvatar.tsx
+// @/components/shared/person-avatar.tsx
+
 "use client";
 
 import { User } from "lucide-react";
@@ -41,10 +42,9 @@ export default function PersonAvatar({
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.style.display = "none";
-            const iconContainer =
-              target.parentElement?.querySelector(
-                ".photo-icon-container"
-              ) as HTMLElement;
+            const iconContainer = target.parentElement?.querySelector(
+              ".photo-icon-container",
+            ) as HTMLElement;
             if (iconContainer) {
               iconContainer.style.display = "flex";
             }
@@ -61,4 +61,3 @@ export default function PersonAvatar({
     </>
   );
 }
-

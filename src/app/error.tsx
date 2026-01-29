@@ -1,4 +1,4 @@
-// src/app/error.tsx
+// @/app/error.tsx
 
 "use client";
 

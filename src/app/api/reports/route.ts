@@ -1,4 +1,5 @@
-// app/api/reports/route.ts
+// @/app/api/reports/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib";
 
