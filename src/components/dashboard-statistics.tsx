@@ -1,4 +1,5 @@
-// components/StatisticsDashboard.tsx
+// @/components/dashboard-statistics.tsx
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -106,7 +107,9 @@ export default function Statistics() {
   if (loading && !stats) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-8">
-        <div className="text-center py-12 text-gray-500">Loading statistics...</div>
+        <div className="text-center py-12 text-gray-500">
+          Loading statistics...
+        </div>
       </div>
     );
   }
@@ -141,7 +144,9 @@ export default function Statistics() {
               <BarChart3 size={28} />
               Statistics Dashboard
             </h2>
-            <p className="text-gray-600 mt-1">Comprehensive system statistics and analytics</p>
+            <p className="text-gray-600 mt-1">
+              Comprehensive system statistics and analytics
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -252,7 +257,9 @@ export default function Statistics() {
         <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <Calendar size={24} />
           Attendance from{" "}
-          {new Date(`${stats.range.start}T00:00:00`).toLocaleDateString()} to{" "}
+          {new Date(
+            `${stats.range.start}T00:00:00`,
+          ).toLocaleDateString()} to{" "}
           {new Date(`${stats.range.end}T00:00:00`).toLocaleDateString()}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -295,8 +302,12 @@ export default function Statistics() {
         </div>
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Success Rate</span>
-            <span className="text-sm font-bold text-indigo-600">{successRate}%</span>
+            <span className="text-sm font-medium text-gray-700">
+              Success Rate
+            </span>
+            <span className="text-sm font-bold text-indigo-600">
+              {successRate}%
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -310,7 +321,9 @@ export default function Statistics() {
       {/* Attendance by Type */}
       {stats.attendance_by_type.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">Attendance by Type</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">
+            Attendance by Type
+          </h3>
           <AttendanceByTypeChart data={stats.attendance_by_type} />
         </div>
       )}
@@ -421,7 +434,9 @@ export default function Statistics() {
       {/* Recent Activity */}
       {stats.recent_activity.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Activity</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">
+            Recent Activity
+          </h3>
           <div className="space-y-3">
             {stats.recent_activity.slice(0, 10).map((activity) => (
               <div
@@ -439,7 +454,11 @@ export default function Statistics() {
                     {activity.status === "success" ? (
                       <CheckCircle
                         size={16}
-                        className={activity.status === "success" ? "text-green-600" : "text-red-600"}
+                        className={
+                          activity.status === "success"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
                       />
                     ) : (
                       <XCircle size={16} className="text-red-600" />
@@ -480,7 +499,7 @@ function AttendanceByTypeChart({ data }: { data: AttendanceByTypeItem[] }) {
   const padding = { top: 20, right: 40, bottom: 60, left: 60 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
-  
+
   const maxValue = Math.max(...data.map((item) => item.count)) || 1;
   const barWidth = innerWidth / data.length - 20;
   const barSpacing = 20;
@@ -488,8 +507,8 @@ function AttendanceByTypeChart({ data }: { data: AttendanceByTypeItem[] }) {
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-full">
-        <svg 
-          viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           className="w-full h-auto"
           preserveAspectRatio="xMidYMid meet"
         >
@@ -529,7 +548,8 @@ function AttendanceByTypeChart({ data }: { data: AttendanceByTypeItem[] }) {
 
           {/* Bars */}
           {data.map((item, index) => {
-            const x = padding.left + index * (barWidth + barSpacing) + barSpacing / 2;
+            const x =
+              padding.left + index * (barWidth + barSpacing) + barSpacing / 2;
             const totalHeight = (item.count / maxValue) * innerHeight;
             const successHeight = (item.success / maxValue) * innerHeight;
             const failedHeight = (item.failed / maxValue) * innerHeight;
@@ -615,15 +635,24 @@ function AttendanceByTypeChart({ data }: { data: AttendanceByTypeItem[] }) {
       </div>
       <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
         <div className="flex items-center gap-2 text-gray-600">
-          <span className="inline-block h-3 w-6 rounded" style={{ backgroundColor: "#10b981" }} />
+          <span
+            className="inline-block h-3 w-6 rounded"
+            style={{ backgroundColor: "#10b981" }}
+          />
           Successful
         </div>
         <div className="flex items-center gap-2 text-gray-600">
-          <span className="inline-block h-3 w-6 rounded" style={{ backgroundColor: "#ef4444" }} />
+          <span
+            className="inline-block h-3 w-6 rounded"
+            style={{ backgroundColor: "#ef4444" }}
+          />
           Failed
         </div>
         <div className="flex items-center gap-2 text-gray-600">
-          <span className="inline-block h-3 w-6 rounded" style={{ backgroundColor: "#e5e7eb" }} />
+          <span
+            className="inline-block h-3 w-6 rounded"
+            style={{ backgroundColor: "#e5e7eb" }}
+          />
           Total
         </div>
       </div>
@@ -653,8 +682,11 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   // Maximum 80px pour éviter un graphique trop large
   const minSpacing = isOneMonthOrLess ? 40 : 60;
   const maxSpacing = isOneMonthOrLess ? 80 : 100;
-  const optimalSpacing = Math.min(maxSpacing, Math.max(minSpacing, 800 / data.length));
-  
+  const optimalSpacing = Math.min(
+    maxSpacing,
+    Math.max(minSpacing, 800 / data.length),
+  );
+
   // Calculer la largeur optimale
   const calculatedWidth = data.length * optimalSpacing;
   const chartWidth = Math.max(800, Math.min(calculatedWidth, 2000)); // Min 800px, Max 2000px
@@ -662,21 +694,26 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   const padding = { top: 30, right: 50, bottom: 80, left: 70 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
-  
+
   // Couleurs plus distinctes et visibles avec épaisseur augmentée
-  const lineConfig: Array<{ key: keyof TrendPoint; color: string; label: string; strokeWidth: number }> = [
+  const lineConfig: Array<{
+    key: keyof TrendPoint;
+    color: string;
+    label: string;
+    strokeWidth: number;
+  }> = [
     { key: "total", color: "#6366f1", label: "Total scans", strokeWidth: 4 },
     { key: "entries", color: "#10b981", label: "Entrées", strokeWidth: 3 },
     { key: "exits", color: "#f59e0b", label: "Sorties", strokeWidth: 3 },
   ];
-  
+
   const maxValue =
     Math.max(
       ...lineConfig.flatMap((config) =>
-        data.map((point) => Number(point[config.key]) || 0)
-      )
+        data.map((point) => Number(point[config.key]) || 0),
+      ),
     ) || 1;
-  
+
   const stepX = data.length > 1 ? innerWidth / (data.length - 1) : innerWidth;
 
   const buildPath = (key: keyof TrendPoint) => {
@@ -708,48 +745,48 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   // Afficher les dates selon la période
   const getDatesToShow = () => {
     if (data.length === 0) return [];
-    
+
     // Si période <= 1 mois, afficher les jours
     if (isOneMonthOrLess) {
       const datesToShow: number[] = [];
       // Afficher un jour sur 2 ou 3 selon le nombre de jours pour éviter la condensation
       const interval = totalDays > 15 ? 2 : 1; // Si plus de 15 jours, afficher un jour sur 2
-      
+
       for (let i = 0; i < data.length; i += interval) {
         datesToShow.push(i);
       }
-      
+
       // Toujours afficher la dernière date si elle n'est pas déjà incluse
       if (datesToShow[datesToShow.length - 1] !== data.length - 1) {
         datesToShow.push(data.length - 1);
       }
-      
+
       return datesToShow;
     }
-    
+
     // Sinon, afficher avec un intervalle d'un mois
     const datesToShow: number[] = [0]; // Toujours afficher la première date
-    
+
     let lastShownDate = new Date(`${data[0].date}T00:00:00`);
-    
+
     for (let i = 1; i < data.length; i++) {
       const currentDate = new Date(`${data[i].date}T00:00:00`);
-      const monthsDiff = 
+      const monthsDiff =
         (currentDate.getFullYear() - lastShownDate.getFullYear()) * 12 +
         (currentDate.getMonth() - lastShownDate.getMonth());
-      
+
       // Afficher si c'est le premier jour du mois ou si un mois s'est écoulé
       if (monthsDiff >= 1 || currentDate.getDate() === 1) {
         datesToShow.push(i);
         lastShownDate = currentDate;
       }
     }
-    
+
     // Toujours afficher la dernière date si elle n'est pas déjà incluse
     if (datesToShow[datesToShow.length - 1] !== data.length - 1) {
       datesToShow.push(data.length - 1);
     }
-    
+
     return datesToShow;
   };
 
@@ -759,7 +796,7 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <div className="w-full overflow-x-auto">
       <div style={{ minWidth: `${chartWidth}px` }}>
-        <svg 
+        <svg
           width={chartWidth}
           height={chartHeight}
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -819,7 +856,8 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
               const value = Number(point[config.key]) || 0;
               if (value === 0) return null;
               const x = padding.left + index * stepX;
-              const y = padding.top + innerHeight - (value / maxValue) * innerHeight;
+              const y =
+                padding.top + innerHeight - (value / maxValue) * innerHeight;
               return (
                 <circle
                   key={`${config.key}-${point.date}-${index}`}
@@ -831,7 +869,7 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
                   strokeWidth="2.5"
                 />
               );
-            })
+            }),
           )}
 
           {/* Y-axis line */}
@@ -860,7 +898,10 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
             const x = padding.left + index * stepX;
             const y = chartHeight - padding.bottom + 25;
             return (
-              <g key={`x-label-${point.date}-${index}`} transform={`translate(${x}, ${y}) rotate(-45)`}>
+              <g
+                key={`x-label-${point.date}-${index}`}
+                transform={`translate(${x}, ${y}) rotate(-45)`}
+              >
                 <text
                   x={0}
                   y={0}
@@ -877,7 +918,10 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
       </div>
       <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
         {lineConfig.map((config) => (
-          <div key={config.key as string} className="flex items-center gap-2 text-gray-700 font-medium">
+          <div
+            key={config.key as string}
+            className="flex items-center gap-2 text-gray-700 font-medium"
+          >
             <span
               className="inline-block h-3 w-8 rounded-full"
               style={{ backgroundColor: config.color }}
@@ -889,4 +933,3 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
     </div>
   );
 }
-

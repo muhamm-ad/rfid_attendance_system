@@ -1,3 +1,5 @@
+// @/components/loading.tsx
+
 "use client";
 
 import { Loader2 } from "lucide-react";

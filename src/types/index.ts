@@ -1,3 +1,5 @@
+// @/types/index.ts
+
 import {
   Person as PrismaPerson,
   Attendance as PrismaAttendance,

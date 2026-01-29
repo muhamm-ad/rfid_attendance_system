@@ -1,145 +1,181 @@
-// app/api/payments/route.ts
+// @/app/api/payments/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib";
 
-
-// POST: Register a payment for a student
-export async function POST(request: NextRequest) {
+// PUT: Update a payment
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     const body = await request.json();
-    const { student_id, trimester, amount, payment_method } = body;
 
-    // Validation
-    if (!student_id || !trimester || !amount || !payment_method) {
-      return NextResponse.json(
-        {
-          error:
-            "Missing required fields (student_id, trimester, amount, payment_method)",
-        },
-        { status: 400 }
-      );
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    if (![1, 2, 3].includes(trimester)) {
-      return NextResponse.json(
-        { error: "Invalid trimester. Allowed values: 1, 2, 3" },
-        { status: 400 }
-      );
+    const { amount, payment_method, trimester } = body;
+
+    // Check that the student payment exists
+    const existingStudentPayment = await prisma.studentPayment.findUnique({
+      where: { id },
+      include: { payment: true },
+    });
+
+    if (!existingStudentPayment) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     }
 
-    if (!["cash", "card", "bank_transfer"].includes(payment_method)) {
+    // Validate payment method if provided
+    if (
+      payment_method !== undefined &&
+      !["cash", "card", "bank_transfer"].includes(payment_method)
+    ) {
       return NextResponse.json(
         { error: "Invalid payment method" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Check that the student exists and is of type student
-    const person = await prisma.person.findFirst({
-      where: {
-        id: student_id,
-        type: "student",
-      },
-    });
-
-    if (!person) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
-
-    // Check if a payment already exists for this trimester
-    const existingPayment = await prisma.studentPayment.findFirst({
-      where: {
-        student_id: student_id,
-        trimester: trimester,
-      },
-    });
-
-    if (existingPayment) {
+    // Validate trimester if provided
+    if (trimester !== undefined && ![1, 2, 3].includes(trimester)) {
       return NextResponse.json(
-        { error: `Payment for trimester ${trimester} already exists` },
-        { status: 409 }
+        { error: "Invalid trimester. Allowed values: 1, 2, 3" },
+        { status: 400 },
       );
     }
 
-    // Create the payment and link it to the student in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.create({
-        data: {
-          amount: amount,
-          payment_method: payment_method as any,
-        },
-      });
-
-      const studentPayment = await tx.studentPayment.create({
-        data: {
-          student_id: student_id,
-          payment_id: payment.id,
+    // If trimester is being changed, check for conflicts
+    if (
+      trimester !== undefined &&
+      trimester !== existingStudentPayment.trimester
+    ) {
+      const conflictingPayment = await prisma.studentPayment.findFirst({
+        where: {
+          student_id: existingStudentPayment.student_id,
           trimester: trimester,
+          id: { not: id },
         },
       });
 
-      return { payment, studentPayment };
+      if (conflictingPayment) {
+        return NextResponse.json(
+          {
+            error: `Payment for trimester ${trimester} already exists for this student`,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // Build update data
+    const updateData: any = {};
+    if (amount !== undefined) updateData.amount = amount;
+    if (payment_method !== undefined)
+      updateData.payment_method = payment_method;
+
+    // Update in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Update payment if amount or method changed
+      if (Object.keys(updateData).length > 0) {
+        await tx.payment.update({
+          where: { id: existingStudentPayment.payment_id },
+          data: updateData,
+        });
+      }
+
+      // Update student payment if trimester changed
+      if (trimester !== undefined) {
+        await tx.studentPayment.update({
+          where: { id },
+          data: { trimester },
+        });
+      }
+
+      // Fetch updated student payment with payment relation
+      const updatedStudentPayment = await tx.studentPayment.findUnique({
+        where: { id },
+        include: { payment: true },
+      });
+
+      if (!updatedStudentPayment) {
+        throw new Error("Failed to fetch updated payment");
+      }
+
+      return {
+        id: updatedStudentPayment.id,
+        student_id: updatedStudentPayment.student_id,
+        trimester: updatedStudentPayment.trimester,
+        payment_id: updatedStudentPayment.payment.id,
+        amount: updatedStudentPayment.payment.amount,
+        payment_method: updatedStudentPayment.payment.payment_method,
+        payment_date: updatedStudentPayment.payment.payment_date.toISOString(),
+      };
     });
 
-    // console.log(`✅ Payment registered for student ${student_id}, trimester ${trimester}`);
-
+    // console.log(`✅ Payment updated (ID: ${id})`);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("❌ Error while updating payment:", error);
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "Conflict: Payment already exists for this trimester" },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
-      {
-        payment: result.payment,
-        student_payment: result.studentPayment,
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("❌ Error while registering payment:", error);
-    return NextResponse.json(
-      { error: "Error while registering payment" },
-      { status: 500 }
+      { error: "Error while updating payment" },
+      { status: 500 },
     );
   }
 }
 
-// GET: Retrieve payments for a student
-export async function GET(request: NextRequest) {
+// DELETE: Delete a payment
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const student_id = searchParams.get("student_id");
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
-    if (!student_id) {
-      return NextResponse.json(
-        { error: "student_id is required" },
-        { status: 400 }
-      );
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
-    const payments = await prisma.studentPayment.findMany({
-      where: {
-        student_id: parseInt(student_id),
-      },
-      include: {
-        payment: true,
-      },
-      orderBy: {
-        trimester: "asc",
-      },
+    // Check that the student payment exists
+    const existingStudentPayment = await prisma.studentPayment.findUnique({
+      where: { id },
+      include: { payment: true },
     });
 
-    const formattedPayments = payments.map((sp) => ({
-      id: sp.id,
-      student_id: sp.student_id,
-      trimester: sp.trimester,
-      payment_id: sp.payment.id,
-      amount: sp.payment.amount,
-      payment_method: sp.payment.payment_method,
-      payment_date: sp.payment.payment_date.toISOString(),
-    }));
+    if (!existingStudentPayment) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+    }
 
-    return NextResponse.json(formattedPayments);
+    // Delete in transaction
+    await prisma.$transaction(async (tx) => {
+      // Delete student payment (this will cascade or we need to delete payment too)
+      await tx.studentPayment.delete({
+        where: { id },
+      });
+
+      // Delete the associated payment
+      await tx.payment.delete({
+        where: { id: existingStudentPayment.payment_id },
+      });
+    });
+
+    // console.log(`🗑️ Payment deleted (ID: ${id})`);
+    return NextResponse.json({ message: "Payment successfully deleted" });
   } catch (error) {
-    console.error("❌ Error while retrieving payments:", error);
+    console.error("❌ Error while deleting payment:", error);
     return NextResponse.json(
-      { error: "Error while retrieving payments" },
-      { status: 500 }
+      { error: "Error while deleting payment" },
+      { status: 500 },
     );
   }
 }

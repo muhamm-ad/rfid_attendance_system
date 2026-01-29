@@ -1,4 +1,5 @@
-// components/PersonManagement.tsx
+// @/components/dashboard-person.tsx
+
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -383,7 +384,7 @@ export default function PersonManagement() {
         ...restFormData,
         photo_path: photoPath || formData.photo_path || null,
       };
-      
+
       // Only include level and class if type is student
       if (formData.type === "student") {
         requestBody.level = formData.level || null;

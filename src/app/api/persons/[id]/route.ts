@@ -1,4 +1,5 @@
-// app/api/persons/[id]/route.ts
+// @/app/api/persons/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, getPersonWithPayments } from "@/lib";
 
