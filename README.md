@@ -267,11 +267,10 @@ See the [LICENSE](LICENSE) file for more details.
 
 ## Known Issues / Future Improvements
 
-- [ ] Add user authentication
+- [X] Add user authentication
 - [ ] Multi-institution support
 - [ ] Email/SMS notifications
 - [ ] Excel/PDF report export
-- [ ] Mobile application
 - [ ] Integration with external payment systems
 - [ ] Multi-language support
 
