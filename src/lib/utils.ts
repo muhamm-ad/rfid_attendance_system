@@ -1,4 +1,4 @@
-// @/lib/utils.ts - CLIENT COMPONENTS MUST IMPORT FROM HERE
+// @/lib/utils.ts
 
 export * from "./cn-utils";
 export * from "./ui-utils";

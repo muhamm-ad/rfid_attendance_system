@@ -14,7 +14,7 @@ import {
   formatLevel,
   inputClasses,
   selectClasses,
-} from "@/lib/utils";
+} from "@/lib/ui-utils";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
