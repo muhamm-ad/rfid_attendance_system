@@ -2,18 +2,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
-import { prisma, auth, getPersonWithPayments } from "@/lib";
+import { prisma, getPersonWithPayments, requireAuth } from "@/lib";
 
-// GET: Retrieve all persons
+// GET: Retrieve all persons (session, API Key, or JWT; ADMIN only)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult.error) return authResult.error;
 
-    // TODO: Get user role from database and check if it is ADMIN
-    if (session.user.role !== "ADMIN") {
+    if (authResult.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

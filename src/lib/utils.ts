@@ -1,9 +1,9 @@
-// @/lib/utils.ts
+// @/lib/utils.ts - CLIENT COMPONENTS MUST IMPORT FROM HERE
 
 export * from "./cn-utils";
 export * from "./ui-utils";
-export * from "./auth-utils";
 
+import { prisma } from "@/lib/db";
 import { PersonWithPayments } from "@/types";
 
 /**
