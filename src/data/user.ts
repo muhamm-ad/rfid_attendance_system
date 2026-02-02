@@ -92,7 +92,6 @@ export const verifyPassword = async (
   password: string,
 ): Promise<boolean> => {
   try {
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
     const isPasswordValid = await bcrypt.compare(password, user.password);
     return isPasswordValid;
   } catch (error) {

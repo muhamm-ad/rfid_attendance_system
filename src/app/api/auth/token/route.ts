@@ -1,8 +1,11 @@
 // @/app/api/auth/token/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, SignJWT, JWT_EXPIRES_IN } from "@/lib";
+import { auth, SignJWT, DEFAULT_JWT_EXPIRES_IN, JWT_SECRET } from "@/lib";
 
+/**
+ * POST: Generate a JWT token for the current user.
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -11,11 +14,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const expiresIn = (body.expiresIn as string) ?? JWT_EXPIRES_IN;
+    const rawExpiresIn =
+      typeof body.expiresIn === "string" ? body.expiresIn.trim() : null;
+    const EXPIRES_IN_REGEX = /^[1-9]\d{0,2}[smhd]$/;
+    const expiresIn =
+      rawExpiresIn && EXPIRES_IN_REGEX.test(rawExpiresIn)
+        ? rawExpiresIn
+        : DEFAULT_JWT_EXPIRES_IN;
 
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
-    );
+    const secret = new TextEncoder().encode(JWT_SECRET);
     if (!secret.byteLength) {
       return NextResponse.json(
         { error: "Server misconfiguration: JWT secret not set" },

@@ -6,7 +6,7 @@ import { auth } from "@/lib";
 export const PUBLIC_ROUTES = ["/docs", "/demo"];
 export const ADMIN_ROUTES = ["/settings"];
 export const AUTH_ROUTES = ["/login", "/logout"];
-export const API_AUTH_PREFIX = "/api/auth"; // Use for api authentication purpose
+export const API_AUTH_PREFIX = "/api"; // Use for api authentication purpose
 export const DEFAULT_REDIRECT = "/dashboard";
 
 export default auth((req) => {

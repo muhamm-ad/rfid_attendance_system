@@ -62,10 +62,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const name =
-      typeof body.name === "string" && body.name.trim()
-        ? body.name.trim()
-        : "API Key";
+    const MAX_KEY_NAME_LENGTH = 100;
+    const sanitizeKeyName = (s: string) =>
+      s.replace(/[\x00-\x1F\x7F]/g, "").slice(0, MAX_KEY_NAME_LENGTH).trim();
+    const rawName =
+      typeof body.name === "string" ? sanitizeKeyName(body.name) : "";
+    const name = rawName || "API Key";
 
     const { rawKey, keyHash, keyPrefix } = generateApiKey();
 

@@ -5,6 +5,7 @@ import {
   Attendance as PrismaAttendance,
   Payment as PrismaPayment,
   StudentPayment as PrismaStudentPayment,
+  UserRole,
 } from "@/prisma/generated/client";
 
 /**
@@ -67,3 +68,19 @@ export interface AttendanceLog {
   level?: string | null;
   class?: string | null;
 }
+
+// ======================= AUTHENTICATION TYPES ======================
+
+export type AuthMethod = "SESSION" | "API_KEY" | "JWT";
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role: UserRole;
+  authMethod: AuthMethod;
+  iat?: number;
+  exp?: number;
+};
+
