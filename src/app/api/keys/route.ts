@@ -1,20 +1,22 @@
 // @/app/api/keys/route.ts
 
+// * API should be only used by session authenticated users in the UI to manage their own keys.
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, auth, generateApiKey } from "@/lib";
+import { prisma, generateApiKey, authenticateSession } from "@/lib";
 
 /**
- * GET: List API keys for the current user (session only).
+ * GET: List API keys for the current user (any authenticated user).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const auth_user = await authenticateSession();
+    if (!auth_user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const keys = await prisma.apiKey.findMany({
-      where: { user_id: session.user.id },
+      where: { user_id: auth_user!.id },
       orderBy: { created_at: "desc" },
       select: {
         id: true,
@@ -52,19 +54,22 @@ export async function GET() {
 }
 
 /**
- * POST: Create a new API key. Requires session. Returns raw key once.
+ * POST: Create a new API key (any authenticated user). Returns raw key once.
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const auth_user = await authenticateSession();
+    if (!auth_user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));
     const MAX_KEY_NAME_LENGTH = 100;
     const sanitizeKeyName = (s: string) =>
-      s.replace(/[\x00-\x1F\x7F]/g, "").slice(0, MAX_KEY_NAME_LENGTH).trim();
+      s
+        .replace(/[\x00-\x1F\x7F]/g, "")
+        .slice(0, MAX_KEY_NAME_LENGTH)
+        .trim();
     const rawName =
       typeof body.name === "string" ? sanitizeKeyName(body.name) : "";
     const name = rawName || "API Key";
@@ -73,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.apiKey.create({
       data: {
-        user_id: session.user.id,
+        user_id: auth_user!.id,
         name,
         key_hash: keyHash,
         key_prefix: keyPrefix,

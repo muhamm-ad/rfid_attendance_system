@@ -3,11 +3,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   prisma,
-  requireAuth,
-  requireWrite,
+  requireViewerAuth,
+  requireStaffAuth,
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
 } from "@/lib";
+
+/** Find a person by numeric id or rfid_uuid (path param). Returns null if not found. */
+async function findPersonByIdOrRfid(param: string) {
+  const trimmed = param.trim();
+  const numericId = parseInt(trimmed, 10);
+  const isNumeric = !Number.isNaN(numericId) && String(numericId) === trimmed;
+
+  if (isNumeric) {
+    const person = await prisma.person.findUnique({
+      where: { id: numericId },
+    });
+    if (person) return person;
+    return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
+  }
+  return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
+}
 
 // GET: Retrieve a person by ID (any authenticated user)
 export async function GET(
@@ -15,20 +31,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireAuth(request);
+    const { error } = await requireViewerAuth(request);
     if (error) return error;
 
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
-
-    const person = await prisma.person.findUnique({
-      where: { id },
-    });
-
+    const person = await findPersonByIdOrRfid(idParam);
     if (!person) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
@@ -57,23 +64,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
+
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
-    const body = await request.json();
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
-
-    const { rfid_uuid, type, last_name, first_name, photo } = body;
-
-    // Check that the person exists
-    const existing = await prisma.person.findUnique({
-      where: { id },
-    });
-    if (!existing) {
+    const person = await findPersonByIdOrRfid(idParam);
+    if (!person) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
+
+    const body = await request.json();
+    const { rfid_uuid, type, last_name, first_name, photo } = body;
 
     // Build update data
     const updateData: Record<string, unknown> = {};
@@ -91,12 +92,12 @@ export async function PUT(
       );
     }
 
-    const updatedPerson = await prisma.person.update({
-      where: { id },
+    const updated_person = await prisma.person.update({
+      where: { id: person.id },
       data: updateData,
     });
 
-    return NextResponse.json(updatedPerson);
+    return NextResponse.json(updated_person);
   } catch (error: any) {
     console.error("Error:", error);
     const uniqueConstraintResponse = handlePrismaUniqueConstraintError(error);
@@ -113,18 +114,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireWrite(request);
+    const { error } = await requireStaffAuth(request);
     if (error) return error;
 
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    const person = await findPersonByIdOrRfid(idParam);
+    if (!person) {
+      return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
     await prisma.person.delete({
-      where: { id },
+      where: { id: person.id },
     });
 
     return NextResponse.json({ message: "Person successfully deleted" });

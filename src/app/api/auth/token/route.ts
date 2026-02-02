@@ -1,16 +1,22 @@
 // @/app/api/auth/token/route.ts
 
+// * API should be only used by session authenticated users in the UI to generate a JWT token.
+
 import { NextRequest, NextResponse } from "next/server";
-import { auth, SignJWT, DEFAULT_JWT_EXPIRES_IN, JWT_SECRET } from "@/lib";
-import { User, UserRole, AuthMethod, AuthUser } from "@/types";
+import {
+  SignJWT,
+  DEFAULT_JWT_EXPIRES_IN,
+  JWT_SECRET,
+  authenticateSession,
+} from "@/lib";
 
 /**
  * POST: Generate a JWT token for the current user.
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const auth_user = await authenticateSession();
+    if (!auth_user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -31,15 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const u = session.user as User;
-    const token = await new SignJWT({
-      id: u.id as string,
-      email: u.email as string,
-      first_name: u.first_name as string | undefined,
-      last_name: u.last_name as string | undefined,
-      role: u.role as UserRole,
-      authMethod: "SESSION" as AuthMethod,
-    } as AuthUser)
+    const token = await new SignJWT({ ...auth_user, authMethod: "JWT" })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime(expiresIn)
       .setIssuedAt()

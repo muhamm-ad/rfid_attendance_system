@@ -1,6 +1,6 @@
 // @/data/user.ts
 
-import { prisma } from "@/lib";
+import { prisma } from "@/lib/db";
 import { User, UserRole } from "@/types";
 import bcrypt from "bcryptjs";
 

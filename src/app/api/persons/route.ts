@@ -8,11 +8,11 @@
 // - [ ] fix photo field
 
 import { NextRequest, NextResponse } from "next/server";
-import { PersonWithPayments } from "@/types";
+import { PersonWithPayments, PersonType } from "@/types";
 import {
   prisma,
-  requireAuth,
-  requireWrite,
+  requireViewerAuth,
+  requireStaffAuth,
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
 } from "@/lib";
@@ -20,7 +20,7 @@ import {
 // GET: Retrieve all persons (any authenticated user)
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireAuth(request);
+    const { error } = await requireViewerAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);
@@ -37,24 +37,25 @@ export async function GET(request: NextRequest) {
     });
 
     // For students, add payment info
-    const personsWithPayments = await Promise.all(
-      persons.map(async (person) => {
-        if (person.type === "student") {
-          return await getPersonWithPayments(person.rfid_uuid);
-        }
-        // For non-students, convert dates and add payment fields
-        return {
-          ...person,
-          created_at: person.created_at.toISOString(),
-          updated_at: person.updated_at.toISOString(),
-          trimester1_paid: true,
-          trimester2_paid: true,
-          trimester3_paid: true,
-        } as PersonWithPayments;
-      }),
-    );
+    // const personsWithPayments = await Promise.all(
+    //   persons.map(async (person) => {
+    //     if (person.type === "student") {
+    //       return await getPersonWithPayments(person.rfid_uuid);
+    //     }
+    //     // For non-students, convert dates and add payment fields
+    //     return {
+    //       ...person,
+    //       created_at: person.created_at.toISOString(),
+    //       updated_at: person.updated_at.toISOString(),
+    //       trimester1_paid: true,
+    //       trimester2_paid: true,
+    //       trimester3_paid: true,
+    //     } as PersonWithPayments;
+    //   }),
+    // );
 
-    return NextResponse.json(personsWithPayments);
+    // return NextResponse.json(personsWithPayments);
+    return NextResponse.json(persons);
   } catch (error) {
     console.error("Error:", error);
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 // POST: Create a new person (Admin or Staff only)
 export async function POST(request: NextRequest) {
   try {
-    const { auth_user, error } = await requireWrite(request);
+    const { error } = await requireStaffAuth(request);
     if (error) return error;
 
     const body = await request.json();
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     const newPerson = await prisma.person.create({
       data: {
         rfid_uuid,
-        type: type as any,
+        type: type as PersonType,
         last_name,
         first_name,
         photo: photo || null,
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error:", error);
-    
+
     const uniqueConstraintResponse = handlePrismaUniqueConstraintError(error);
     if (uniqueConstraintResponse) {
       return uniqueConstraintResponse;

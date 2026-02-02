@@ -111,8 +111,7 @@ export async function verifyJWT(token: string): Promise<AuthUser | null> {
 
 // ======================= AUTHENTICATION UTILS ======================
 
-async function authenticate(request: NextRequest): Promise<AuthUser | null> {
-  // 1. Session Auth.js (priority for UI)
+export async function authenticateSession(): Promise<AuthUser | null> {
   const session = await auth();
   if (session?.user) {
     const u = session.user as User;
@@ -124,6 +123,16 @@ async function authenticate(request: NextRequest): Promise<AuthUser | null> {
       role: u.role as UserRole,
       authMethod: "SESSION" as AuthMethod,
     };
+  }
+  return null;
+}
+
+
+async function authenticate(request: NextRequest): Promise<AuthUser | null> {
+  // 1. Session Auth.js (priority for UI)
+  const session = await authenticateSession();
+  if (session) {
+    return session;
   }
 
   // 2. API Key (x-api-key header)
