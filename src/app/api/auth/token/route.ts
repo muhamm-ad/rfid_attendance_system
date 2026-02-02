@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth, SignJWT, DEFAULT_JWT_EXPIRES_IN, JWT_SECRET } from "@/lib";
+import { User, UserRole, AuthMethod, AuthUser } from "@/types";
 
 /**
  * POST: Generate a JWT token for the current user.
@@ -30,14 +31,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const role = (session.user as { role?: string }).role ?? "VIEWER";
-
+    const u = session.user as User;
     const token = await new SignJWT({
-      userId: session.user.id,
-      email: session.user.email,
-      name: session.user.name ?? undefined,
-      role,
-    })
+      id: u.id as string,
+      email: u.email as string,
+      first_name: u.first_name as string | undefined,
+      last_name: u.last_name as string | undefined,
+      role: u.role as UserRole,
+      authMethod: "SESSION" as AuthMethod,
+    } as AuthUser)
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime(expiresIn)
       .setIssuedAt()

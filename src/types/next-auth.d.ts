@@ -1,6 +1,6 @@
 // @/types/next-auth.d.ts
 
-import { UserRole } from "@/prisma/generated/client";
+import { UserRole } from "@/types";
 
 declare module "next-auth" {
   interface User {

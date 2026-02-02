@@ -18,7 +18,7 @@ import LogsTable from "@/components/dashboard-logs";
 import PaymentManagement from "@/components/dashboard-payment";
 import Statistics from "@/components/dashboard-statistics";
 import Reports from "@/components/dashboard-reports";
-import { UserRole } from "@/prisma/generated/client";
+import { UserRole } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "#/src/components/loading";

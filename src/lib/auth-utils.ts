@@ -4,11 +4,18 @@ import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { User, UserRole } from "../prisma/generated/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { jwtVerify, SignJWT } from "jose";
-import { AuthMethod, AuthUser } from "@/types";
+import {
+  User,
+  UserRole,
+  AuthMethod,
+  AuthUser,
+  WithRole,
+  ROLE_HIERARCHY,
+  RequireAuthResult,
+} from "@/types";
 
 // ======================= API KEYS UTILS ======================
 
@@ -164,6 +171,71 @@ export async function requireAuth(
   };
 }
 
+// ======================= PERMISSION UTILS ======================
+
+export const hasRequiredRole = async (
+  user: WithRole,
+  role: UserRole,
+): Promise<boolean> => {
+  try {
+    return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
+export const canWrite = async (user: WithRole): Promise<boolean> => {
+  return (
+    (await hasRequiredRole(user, "ADMIN")) ||
+    (await hasRequiredRole(user, "STAFF"))
+  );
+};
+
+export const canManageUsers = async (user: WithRole): Promise<boolean> => {
+  return hasRequiredRole(user, "ADMIN");
+};
+
+/**
+ * Requires authentication and write permission (Admin or Staff).
+ * Use for: POST/PUT/DELETE persons, payments, attendance, upload-photo, scan.
+ */
+export async function requireWrite(
+  request: NextRequest,
+): Promise<RequireAuthResult> {
+  const result = await requireAuth(request);
+  if (result.error) return result;
+  const allowed = await canWrite(result.auth_user!);
+  if (allowed) return { auth_user: result.auth_user!, error: null };
+  return {
+    auth_user: null,
+    error: NextResponse.json(
+      { error: "Forbidden: write access required (Admin or Staff)" },
+      { status: 403 },
+    ),
+  };
+}
+
+/**
+ * Requires authentication and admin permission (Admin only).
+ * Use for: user management, system config, audit logs.
+ */
+export async function requireAdmin(
+  request: NextRequest,
+): Promise<RequireAuthResult> {
+  const result = await requireAuth(request);
+  if (result.error) return result;
+  const allowed = await canManageUsers(result.auth_user!);
+  if (allowed) return { auth_user: result.auth_user!, error: null };
+  return {
+    auth_user: null,
+    error: NextResponse.json(
+      { error: "Forbidden: admin access required" },
+      { status: 403 },
+    ),
+  };
+}
+
 // ======================= PASSWORD UTILS ======================
 
 export async function hashPassword(password: string): Promise<string> {
@@ -197,90 +269,3 @@ export function validatePassword(password: string): {
     errors,
   };
 }
-
-// ======================= PERMISSIONS UTILS ======================
-
-// import { canWrite, canManageUsers } from "@/data/user";
-
-// /**
-//  * Middleware to check if user has write permissions
-//  */
-// export async function requireWriteAccess(
-//   request: NextRequest | AuthUser,
-// ): Promise<
-//   | { auth_user: AuthUser | null; authorized: true; error: null }
-//   | { auth_user: null; authorized: false; error: NextResponse }
-// > {
-//   const auth_user =
-//     request instanceof NextRequest
-//       ? (await requireAuth(request)).user
-//       : request;
-
-//   if (!user || !(await canWrite(user as User))) {
-//     return {
-//       user: null,
-//       error: NextResponse.json(
-//         { error: "Insufficient permissions. Write access required." },
-//         { status: 403 },
-//       ),
-//     };
-//   }
-
-//   return authResult;
-// }
-
-// /**
-//  * Middleware to check if user is admin
-//  */
-// export async function requireAdmin(
-//   request: NextRequest,
-// ): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
-//   const authResult = await requireAuth(request);
-//   if (authResult.error) return authResult;
-
-//   if (!canManageUsers(authResult.user.role)) {
-//     return {
-//       user: null,
-//       error: NextResponse.json(
-//         { error: "Admin access required" },
-//         { status: 403 },
-//       ),
-//     };
-//   }
-
-//   return authResult;
-// }
-
-// /**
-//  * Middleware to check if user has specific role
-//  */
-// export async function requireRole(
-//   request: NextRequest,
-//   requiredRole: UserRole,
-// ): Promise<
-//   { user: User | null; error: null } | { user: null; error: NextResponse }
-// > {
-//   const authResult = await requireAuth(request);
-//   if (authResult.error) return authResult;
-
-//   const roleHierarchy: Record<UserRole, number> = {
-//     VIEWER: 1,
-//     STAFF: 2,
-//     ADMIN: 3,
-//   };
-
-//   if (
-//     roleHierarchy[authResult.user.role as UserRole] <
-//     roleHierarchy[requiredRole]
-//   ) {
-//     return {
-//       user: null,
-//       error: NextResponse.json(
-//         { error: `Role '${requiredRole}' or higher required` },
-//         { status: 403 },
-//       ),
-//     };
-//   }
-
-//   return authResult;
-// }

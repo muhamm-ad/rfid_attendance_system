@@ -6,8 +6,43 @@ import {
   Payment as PrismaPayment,
   StudentPayment as PrismaStudentPayment,
   UserRole,
+  User,
 } from "@/prisma/generated/client";
+import { NextResponse } from "next/server";
 
+// Re-export Prisma types for consumers that need them
+export type { UserRole, User };
+
+// ======================= AUTHENTICATION TYPES ======================
+
+export type AuthMethod = "SESSION" | "API_KEY" | "JWT";
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role: UserRole;
+  authMethod: AuthMethod;
+  iat?: number;
+  exp?: number;
+};
+
+/** Any object with a role (User, AuthUser, etc.) for permission checks */
+export type WithRole = { role: UserRole };
+
+export const ROLE_HIERARCHY: Record<UserRole, number> = {
+  VIEWER: 1,
+  STAFF: 2,
+  ADMIN: 3,
+};
+
+/** Result type for auth + permission middlewares */
+export type RequireAuthResult =
+  | { auth_user: AuthUser; error: null }
+  | { auth_user: null; error: NextResponse };
+
+// ======================= DATA TYPES ======================
 /**
  Utility type to convert Date fields to ISO strings for JSON serialization
  */
@@ -68,19 +103,3 @@ export interface AttendanceLog {
   level?: string | null;
   class?: string | null;
 }
-
-// ======================= AUTHENTICATION TYPES ======================
-
-export type AuthMethod = "SESSION" | "API_KEY" | "JWT";
-
-export type AuthUser = {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  role: UserRole;
-  authMethod: AuthMethod;
-  iat?: number;
-  exp?: number;
-};
-

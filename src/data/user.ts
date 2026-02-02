@@ -1,7 +1,7 @@
 // @/data/user.ts
 
 import { prisma } from "@/lib";
-import { User, UserRole } from "@/prisma/generated/client";
+import { User, UserRole } from "@/types";
 import bcrypt from "bcryptjs";
 
 export const createUser = async (user: User) => {
@@ -98,32 +98,4 @@ export const verifyPassword = async (
     console.error(error);
     return false;
   }
-};
-
-export const hasRequiredRole = async (
-  user: User,
-  role: UserRole,
-): Promise<boolean> => {
-  try {
-    const roleHierarchy: Record<UserRole, number> = {
-      VIEWER: 1,
-      STAFF: 2,
-      ADMIN: 3,
-    };
-    return roleHierarchy[user.role] >= roleHierarchy[role];
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-};
-
-export const canWrite = async (user: User): Promise<boolean> => {
-  return (
-    (await hasRequiredRole(user, "ADMIN")) ||
-    (await hasRequiredRole(user, "STAFF"))
-  );
-};
-
-export const canManageUsers = async (user: User): Promise<boolean> => {
-  return await hasRequiredRole(user, "ADMIN");
 };

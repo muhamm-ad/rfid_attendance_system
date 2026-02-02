@@ -2,15 +2,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
-import { prisma, getPersonWithPayments, requireAuth } from "@/lib";
+import { prisma, auth, getPersonWithPayments } from "@/lib";
 
-// GET: Retrieve all persons (session, API Key, or JWT; ADMIN only)
+// GET: Retrieve all persons
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await requireAuth(request);
-    if (authResult.error) return authResult.error;
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (authResult.user.role !== "ADMIN") {
+    // TODO: Get user role from database and check if it is ADMIN
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -74,8 +77,7 @@ export async function POST(request: NextRequest) {
     if (!rfid_uuid || !type || !nom || !prenom) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields (rfid_uuid, type, nom, prenom)",
+          error: "Missing required fields (rfid_uuid, type, nom, prenom)",
         },
         { status: 400 },
       );
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
     if (classField && type !== "student") {
       return NextResponse.json(
         { error: "Class can only be set for students" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
