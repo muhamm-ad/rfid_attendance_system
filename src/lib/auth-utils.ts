@@ -12,7 +12,6 @@ import {
   UserRole,
   AuthMethod,
   AuthUser,
-  WithRole,
   ROLE_HIERARCHY,
   RequireAuthResult,
 } from "@/types";
@@ -144,18 +143,32 @@ async function authenticate(request: NextRequest): Promise<AuthUser | null> {
   return null;
 }
 
+export const hasRequiredRole = async (
+  userRole: UserRole,
+  targetRole: UserRole,
+): Promise<boolean> => {
+  try {
+    return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[targetRole];
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 /**
  * Middleware to check authentication for API routes.
  * Accepts: session (cookie), API Key (x-api-key or Bearer), or JWT (Bearer).
  */
-export async function requireAuth(
+async function requireAuth(
   request: NextRequest,
-): Promise<
-  | { auth_user: AuthUser | null; error: null }
-  | { auth_user: null; error: NextResponse }
-> {
+  targetRole: UserRole = "VIEWER",
+  errorMessage: string = "Authentication required",
+): Promise<RequireAuthResult> {
   const authUser = await authenticate(request);
-  if (authUser) {
+  if (
+    authUser &&
+    (await hasRequiredRole(authUser.role as UserRole, targetRole))
+  ) {
     return {
       auth_user: authUser,
       error: null,
@@ -164,76 +177,38 @@ export async function requireAuth(
 
   return {
     auth_user: null,
-    error: NextResponse.json(
-      { error: "Authentication required" },
-      { status: 401 },
-    ),
+    error: NextResponse.json({ error: errorMessage }, { status: 401 }),
   };
 }
 
-// ======================= PERMISSION UTILS ======================
-
-export const hasRequiredRole = async (
-  user: WithRole,
-  role: UserRole,
-): Promise<boolean> => {
-  try {
-    return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[role];
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-};
-
-export const canWrite = async (user: WithRole): Promise<boolean> => {
-  return (
-    (await hasRequiredRole(user, "ADMIN")) ||
-    (await hasRequiredRole(user, "STAFF"))
+export async function requireViewerAuth(
+  request: NextRequest,
+): Promise<RequireAuthResult> {
+  return await requireAuth(
+    request,
+    "VIEWER",
+    "Authentication required",
   );
-};
-
-export const canManageUsers = async (user: WithRole): Promise<boolean> => {
-  return hasRequiredRole(user, "ADMIN");
-};
-
-/**
- * Requires authentication and write permission (Admin or Staff).
- * Use for: POST/PUT/DELETE persons, payments, attendance, upload-photo, scan.
- */
-export async function requireWrite(
-  request: NextRequest,
-): Promise<RequireAuthResult> {
-  const result = await requireAuth(request);
-  if (result.error) return result;
-  const allowed = await canWrite(result.auth_user!);
-  if (allowed) return { auth_user: result.auth_user!, error: null };
-  return {
-    auth_user: null,
-    error: NextResponse.json(
-      { error: "Forbidden: write access required (Admin or Staff)" },
-      { status: 403 },
-    ),
-  };
 }
 
-/**
- * Requires authentication and admin permission (Admin only).
- * Use for: user management, system config, audit logs.
- */
-export async function requireAdmin(
+export async function requireStaffAuth(
   request: NextRequest,
 ): Promise<RequireAuthResult> {
-  const result = await requireAuth(request);
-  if (result.error) return result;
-  const allowed = await canManageUsers(result.auth_user!);
-  if (allowed) return { auth_user: result.auth_user!, error: null };
-  return {
-    auth_user: null,
-    error: NextResponse.json(
-      { error: "Forbidden: admin access required" },
-      { status: 403 },
-    ),
-  };
+  return await requireAuth(
+    request,
+    "STAFF",
+    "Admin or Staff authentication required",
+  );
+}
+
+export async function requireAdminAuth(
+  request: NextRequest,
+): Promise<RequireAuthResult> {
+  return await requireAuth(
+    request,
+    "ADMIN",
+    "Admin authentication required",
+  );
 }
 
 // ======================= PASSWORD UTILS ======================
@@ -268,4 +243,26 @@ export function validatePassword(password: string): {
     valid: errors.length === 0,
     errors,
   };
+}
+
+// ======================= PRISMA UTILS ======================
+
+export function handlePrismaUniqueConstraintError(
+  error: any,
+): NextResponse | null {
+  if (error.code === "P2002") {
+    const target = error.meta?.target?.join(", ");
+    if (target) {
+      return NextResponse.json(
+        { error: `Conflict: ${target} already used` },
+        { status: 409 },
+      );
+    } else {
+      return NextResponse.json(
+        { error: "Conflict: Unique constraint violation" },
+        { status: 409 },
+      );
+    }
+  }
+  return null;
 }

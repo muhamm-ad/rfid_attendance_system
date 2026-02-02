@@ -1,6 +1,7 @@
 // @/prisma/seed.ts
 
-import { prisma, hashPassword } from "@/lib";
+import { prisma } from "@/lib/db";
+import { hashPassword } from "@/lib/auth-utils";
 
 export async function seedUsers() {
   // const userCount = await prisma.user.count();
@@ -54,9 +55,7 @@ type PersonSeed = {
   type: PersonType;
   nom: string;
   prenom: string;
-  photo_path: string;
-  level?: "License_1" | "License_2" | "License_3" | "Master_1" | "Master_2";
-  class?: string;
+  photo: string;
 };
 
 type AttendanceSeed = {
@@ -80,135 +79,105 @@ const PERSONS_SEED: PersonSeed[] = [
     type: "student",
     nom: "Diallo",
     prenom: "Amadou",
-    photo_path: "/photos/amadou_diallo.jpg",
-    level: "License_1",
-    class: "L1-A",
+    photo: "/photos/amadou_diallo.jpg",
   },
   {
     rfid_uuid: "STU-0002",
     type: "student",
     nom: "Sow",
     prenom: "Fatou",
-    photo_path: "/photos/fatou_sow.jpg",
-    level: "License_1",
-    class: "L1-A",
+    photo: "/photos/fatou_sow.jpg",
   },
   {
     rfid_uuid: "STU-0003",
     type: "student",
     nom: "Ba",
     prenom: "Ousmane",
-    photo_path: "/photos/ousmane_ba.jpg",
-    level: "License_2",
-    class: "L2-B",
+    photo: "/photos/ousmane_ba.jpg",
   },
   {
     rfid_uuid: "STU-0004",
     type: "student",
     nom: "Ndiaye",
     prenom: "Khady",
-    photo_path: "/photos/khady_ndiaye.jpg",
-    level: "License_2",
-    class: "L2-A",
+    photo: "/photos/khady_ndiaye.jpg",
   },
   {
     rfid_uuid: "STU-0005",
     type: "student",
     nom: "Kane",
     prenom: "Mamadou",
-    photo_path: "/photos/mamadou_kane.jpg",
-    level: "License_3",
-    class: "L3-A",
+    photo: "/photos/mamadou_kane.jpg",
   },
   {
     rfid_uuid: "STU-0006",
     type: "student",
     nom: "Diop",
     prenom: "Aicha",
-    photo_path: "/photos/aicha_diop.jpg",
-    level: "License_3",
-    class: "L3-B",
+    photo: "/photos/aicha_diop.jpg",
   },
   {
     rfid_uuid: "STU-0007",
     type: "student",
     nom: "Sy",
     prenom: "Cheikh",
-    photo_path: "/photos/cheikh_sy.jpg",
-    level: "Master_1",
-    class: "M1-A",
+    photo: "/photos/cheikh_sy.jpg",
   },
   {
     rfid_uuid: "STU-0008",
     type: "student",
     nom: "Barry",
     prenom: "Mariam",
-    photo_path: "/photos/mariam_barry.jpg",
-    level: "Master_1",
-    class: "M1-B",
+    photo: "/photos/mariam_barry.jpg",
   },
   {
     rfid_uuid: "STU-0009",
     type: "student",
     nom: "Traoré",
     prenom: "Ibrahim",
-    photo_path: "/photos/ibrahim_traore.jpg",
-    level: "Master_2",
-    class: "M2-A",
+    photo: "/photos/ibrahim_traore.jpg",
   },
   {
     rfid_uuid: "STU-0010",
     type: "student",
     nom: "Cissé",
     prenom: "Aminata",
-    photo_path: "/photos/aminata_cisse.jpg",
-    level: "Master_2",
-    class: "M2-B",
+    photo: "/photos/aminata_cisse.jpg",
   },
   {
     rfid_uuid: "STU-0011",
     type: "student",
     nom: "Fall",
     prenom: "Modou",
-    photo_path: "/photos/modou_fall.jpg",
-    level: "License_1",
-    class: "L1-B",
+    photo: "/photos/modou_fall.jpg",
   },
   {
     rfid_uuid: "STU-0012",
     type: "student",
     nom: "Thiam",
     prenom: "Rokhaya",
-    photo_path: "/photos/rokhaya_thiam.jpg",
-    level: "License_2",
-    class: "L2-C",
+    photo: "/photos/rokhaya_thiam.jpg",
   },
   {
     rfid_uuid: "STU-0013",
     type: "student",
     nom: "Sarr",
     prenom: "Papa",
-    photo_path: "/photos/papa_sarr.jpg",
-    level: "License_3",
-    class: "L3-C",
+    photo: "/photos/papa_sarr.jpg",
   },
   {
     rfid_uuid: "STU-0014",
     type: "student",
     nom: "Gueye",
     prenom: "Aissatou",
-    photo_path: "/photos/aissatou_gueye.jpg",
-    level: "Master_1",
-    class: "M1-C",
+    photo: "/photos/aissatou_gueye.jpg",
   },
   {
     rfid_uuid: "STU-0015",
     type: "student",
     nom: "Mbaye",
     prenom: "Samba",
-    photo_path: "/photos/samba_mbaye.jpg",
-    level: "Master_2",
-    class: "M2-C",
+    photo: "/photos/samba_mbaye.jpg",
   },
   // Teachers
   {
@@ -216,40 +185,35 @@ const PERSONS_SEED: PersonSeed[] = [
     type: "teacher",
     nom: "Ndiaye",
     prenom: "Mariama",
-    photo_path: "/photos/mariama_ndiaye.jpg",
-    class: "Mathématiques",
+    photo: "/photos/mariama_ndiaye.jpg",
   },
   {
     rfid_uuid: "TCH-0002",
     type: "teacher",
     nom: "Diagne",
     prenom: "Ibrahima",
-    photo_path: "/photos/ibrahima_diagne.jpg",
-    class: "Informatique",
+    photo: "/photos/ibrahima_diagne.jpg",
   },
   {
     rfid_uuid: "TCH-0003",
     type: "teacher",
     nom: "Seck",
     prenom: "Awa",
-    photo_path: "/photos/awa_seck.jpg",
-    class: "Physique",
+    photo: "/photos/awa_seck.jpg",
   },
   {
     rfid_uuid: "TCH-0004",
     type: "teacher",
     nom: "Camara",
     prenom: "Boubacar",
-    photo_path: "/photos/boubacar_camara.jpg",
-    class: "Chimie",
+    photo: "/photos/boubacar_camara.jpg",
   },
   {
     rfid_uuid: "TCH-0005",
     type: "teacher",
     nom: "Dia",
     prenom: "Fatou",
-    photo_path: "/photos/fatou_dia.jpg",
-    class: "Biologie",
+    photo: "/photos/fatou_dia.jpg",
   },
   // Staff
   {
@@ -257,32 +221,28 @@ const PERSONS_SEED: PersonSeed[] = [
     type: "staff",
     nom: "Faye",
     prenom: "Astou",
-    photo_path: "/photos/astou_faye.jpg",
-    class: "Administration",
+    photo: "/photos/astou_faye.jpg",
   },
   {
     rfid_uuid: "STF-0002",
     type: "staff",
     nom: "Gaye",
     prenom: "Moussa",
-    photo_path: "/photos/moussa_gaye.jpg",
-    class: "Sécurité",
+    photo: "/photos/moussa_gaye.jpg",
   },
   {
     rfid_uuid: "STF-0003",
     type: "staff",
     nom: "Sall",
     prenom: "Omar",
-    photo_path: "/photos/omar_sall.jpg",
-    class: "Maintenance",
+    photo: "/photos/omar_sall.jpg",
   },
   {
     rfid_uuid: "STF-0004",
     type: "staff",
     nom: "Diouf",
     prenom: "Khadija",
-    photo_path: "/photos/khadija_diouf.jpg",
-    class: "Bibliothèque",
+    photo: "/photos/khadija_diouf.jpg",
   },
   // Visitors
   {
@@ -290,28 +250,28 @@ const PERSONS_SEED: PersonSeed[] = [
     type: "visitor",
     nom: "Dupont",
     prenom: "Jean",
-    photo_path: "/photos/jean_dupont.jpg",
+    photo: "/photos/jean_dupont.jpg",
   },
   {
     rfid_uuid: "VIS-0002",
     type: "visitor",
     nom: "Lopez",
     prenom: "Clara",
-    photo_path: "/photos/clara_lopez.jpg",
+    photo: "/photos/clara_lopez.jpg",
   },
   {
     rfid_uuid: "VIS-0003",
     type: "visitor",
     nom: "Martin",
     prenom: "Sophie",
-    photo_path: "/photos/sophie_martin.jpg",
+    photo: "/photos/sophie_martin.jpg",
   },
   {
     rfid_uuid: "VIS-0004",
     type: "visitor",
     nom: "Bernard",
     prenom: "Pierre",
-    photo_path: "/photos/pierre_bernard.jpg",
+    photo: "/photos/pierre_bernard.jpg",
   },
 ];
 
@@ -1151,24 +1111,14 @@ export async function seedDatabase() {
   >();
 
   for (const person of PERSONS_SEED) {
-    const personData: any = {
-      rfid_uuid: person.rfid_uuid,
-      type: person.type,
-      nom: person.nom,
-      prenom: person.prenom,
-      photo_path: person.photo_path,
-    };
-
-    if (person.level !== undefined) {
-      personData.level = person.level;
-    }
-
-    if (person.class !== undefined) {
-      personData.class = person.class;
-    }
-
     const created = await prisma.person.create({
-      data: personData,
+      data: {
+        rfid_uuid: person.rfid_uuid,
+        type: person.type,
+        last_name: person.nom,
+        first_name: person.prenom,
+        photo: person.photo,
+      },
     });
 
     personIndex.set(person.rfid_uuid, {

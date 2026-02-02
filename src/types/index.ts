@@ -7,11 +7,12 @@ import {
   StudentPayment as PrismaStudentPayment,
   UserRole,
   User,
+  PersonType,
 } from "@/prisma/generated/client";
 import { NextResponse } from "next/server";
 
 // Re-export Prisma types for consumers that need them
-export type { UserRole, User };
+export type { UserRole, User, PersonType };
 
 // ======================= AUTHENTICATION TYPES ======================
 
@@ -28,16 +29,13 @@ export type AuthUser = {
   exp?: number;
 };
 
-/** Any object with a role (User, AuthUser, etc.) for permission checks */
-export type WithRole = { role: UserRole };
-
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   VIEWER: 1,
   STAFF: 2,
   ADMIN: 3,
 };
 
-/** Result type for auth + permission middlewares */
+/** Result type for authentication middlewares */
 export type RequireAuthResult =
   | { auth_user: AuthUser; error: null }
   | { auth_user: null; error: NextResponse };
