@@ -1,10 +1,13 @@
 // @/app/api/reports/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib";
+import { prisma, requireViewerAuth } from "@/lib";
 
 export async function GET(request: NextRequest) {
   try {
+    const { error } = await requireViewerAuth(request);
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("start_date"); // YYYY-MM-DD
     const endDate = searchParams.get("end_date"); // YYYY-MM-DD
@@ -13,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!startDate || !endDate) {
       return NextResponse.json(
         { error: "start_date and end_date are required (format: YYYY-MM-DD)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,8 +63,8 @@ export async function GET(request: NextRequest) {
           if (record.action === "out") day.exits++;
         });
 
-        const attendanceData = Array.from(dailyMap.values()).sort(
-          (a, b) => a.date.localeCompare(b.date)
+        const attendanceData = Array.from(dailyMap.values()).sort((a, b) =>
+          a.date.localeCompare(b.date),
         );
 
         // Statistics by person
@@ -94,29 +97,39 @@ export async function GET(request: NextRequest) {
               },
             });
 
-            const successful = records.filter((r) => r.status === "success").length;
+            const successful = records.filter(
+              (r) => r.status === "success",
+            ).length;
             const entries = records.filter((r) => r.action === "in").length;
             const dates = records.map((r) => r.attendance_date);
 
             return {
               id: person?.id,
-              nom: person?.nom,
-              prenom: person?.prenom,
+              nom: person?.last_name,
+              prenom: person?.first_name,
               type: person?.type,
-              photo_path: person?.photo_path,
+              photo: person?.photo,
               total_scans: stat._count.id,
               successful_scans: successful,
               entries: entries,
-              first_scan: dates.length > 0 ? Math.min(...dates.map((d) => d.getTime())) : null,
-              last_scan: dates.length > 0 ? Math.max(...dates.map((d) => d.getTime())) : null,
+              first_scan:
+                dates.length > 0
+                  ? Math.min(...dates.map((d) => d.getTime()))
+                  : null,
+              last_scan:
+                dates.length > 0
+                  ? Math.max(...dates.map((d) => d.getTime()))
+                  : null,
             };
-          })
+          }),
         );
 
         // Format dates
         personStats.forEach((stat: any) => {
-          if (stat.first_scan) stat.first_scan = new Date(stat.first_scan).toISOString();
-          if (stat.last_scan) stat.last_scan = new Date(stat.last_scan).toISOString();
+          if (stat.first_scan)
+            stat.first_scan = new Date(stat.first_scan).toISOString();
+          if (stat.last_scan)
+            stat.last_scan = new Date(stat.last_scan).toISOString();
         });
 
         personStats.sort((a: any, b: any) => b.total_scans - a.total_scans);
@@ -158,7 +171,7 @@ export async function GET(request: NextRequest) {
                 total_amount: 0,
                 payment_count: 0,
               });
-          }
+            }
             const summary = summaryMap.get(key)!;
             summary.students_paid.add(sp.student_id);
             summary.total_amount += payment.amount;
@@ -177,18 +190,20 @@ export async function GET(request: NextRequest) {
         // Detailed payment list
         const detailedPayments = payments.flatMap((payment) =>
           payment.student_payments.map((sp) => ({
-            nom: sp.student.nom,
-            prenom: sp.student.prenom,
-            photo_path: sp.student.photo_path,
+            nom: sp.student.last_name,
+            prenom: sp.student.first_name,
+            photo: sp.student.photo,
             trimester: sp.trimester,
             amount: payment.amount,
             payment_method: payment.payment_method,
             payment_date: payment.payment_date.toISOString(),
-          }))
+          })),
         );
 
         detailedPayments.sort(
-          (a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+          (a, b) =>
+            new Date(b.payment_date).getTime() -
+            new Date(a.payment_date).getTime(),
         );
 
         report.type = "payments";
@@ -283,7 +298,7 @@ export async function GET(request: NextRequest) {
           {
             error: "Invalid report type. Use: attendance, payments, or summary",
           },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -293,7 +308,7 @@ export async function GET(request: NextRequest) {
     console.error("❌ Error while generating report:", error);
     return NextResponse.json(
       { error: "Error while generating report" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,11 +1,14 @@
 // @/app/api/attendance/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib";
+import { prisma, requireViewerAuth } from "@/lib";
 import { AttendanceLog } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
+    const { error } = await requireViewerAuth(request);
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "100");
     const offset = parseInt(searchParams.get("offset") || "0");
@@ -15,8 +18,6 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status"); // success or failed
     const action = searchParams.get("action"); // in or out
     const personId = searchParams.get("personId");
-    const level = searchParams.get("level"); // License_1, License_2, etc.
-    const classFilter = searchParams.get("class"); // Class name
 
     const where: any = {};
 
@@ -58,28 +59,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (level || classFilter) {
-      where.person = {};
-      if (level) {
-        where.person.level = level;
-      }
-      if (classFilter) {
-        where.person.class = { contains: classFilter, mode: "insensitive" };
-      }
-    }
-
     const logs = await prisma.attendance.findMany({
       where,
       include: {
         person: {
           select: {
-            nom: true,
-            prenom: true,
+            last_name: true,
+            first_name: true,
             type: true,
             rfid_uuid: true,
-            photo_path: true,
-            level: true,
-            class: true,
+            photo: true,
           },
         },
       },
@@ -96,22 +85,18 @@ export async function GET(request: NextRequest) {
       action: log.action,
       status: log.status,
       timestamp: log.attendance_date.toISOString(),
-      person_name: `${log.person.nom} ${log.person.prenom}`,
+      person_name: `${log.person.last_name} ${log.person.first_name}`,
       person_type: log.person.type,
       rfid_uuid: log.person.rfid_uuid,
-      photo_path: log.person.photo_path ?? undefined,
-      level: log.person.level ?? undefined,
-      class: log.person.class ?? undefined,
+      photo: log.person.photo ?? undefined,
     }));
 
-    // console.log(`📋 ${formattedLogs.length} attendance records retrieved`);
     return NextResponse.json(formattedLogs);
-    
   } catch (error) {
     console.error("❌ Error while retrieving attendance logs:", error);
     return NextResponse.json(
       { error: "Error while retrieving attendance logs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

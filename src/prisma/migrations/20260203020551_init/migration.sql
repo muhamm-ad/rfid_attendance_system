@@ -13,15 +13,13 @@ CREATE TYPE "AttendanceStatus" AS ENUM ('success', 'failed');
 -- CreateEnum
 CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'card', 'bank_transfer');
 
--- CreateEnum
-CREATE TYPE "StudentLevel" AS ENUM ('License_1', 'License_2', 'License_3', 'Master_1', 'Master_2');
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "hashed_password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "first_name" TEXT,
     "last_name" TEXT,
     "image" TEXT,
@@ -32,15 +30,26 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "api_keys" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "key_hash" TEXT NOT NULL,
+    "key_prefix" TEXT NOT NULL,
+    "last_used_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "api_keys_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "persons" (
     "id" INTEGER NOT NULL DEFAULT 1000000 + floor(random() * 9000000)::int,
     "rfid_uuid" TEXT NOT NULL,
     "type" "PersonType" NOT NULL,
-    "nom" TEXT NOT NULL,
-    "prenom" TEXT NOT NULL,
-    "photo_path" TEXT,
-    "level" "StudentLevel",
-    "class" TEXT,
+    "last_name" TEXT NOT NULL,
+    "first_name" TEXT NOT NULL,
+    "photo" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -48,14 +57,14 @@ CREATE TABLE "persons" (
 );
 
 -- CreateTable
-CREATE TABLE "attendance" (
+CREATE TABLE "attendances" (
     "id" SERIAL NOT NULL,
     "person_id" INTEGER NOT NULL,
     "action" "AttendanceAction" NOT NULL,
     "status" "AttendanceStatus" NOT NULL,
     "attendance_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "attendance_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "attendances_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -82,16 +91,19 @@ CREATE TABLE "student_payments" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "persons_rfid_uuid_key" ON "persons"("rfid_uuid");
+CREATE UNIQUE INDEX "api_keys_key_hash_key" ON "api_keys"("key_hash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "persons_photo_path_key" ON "persons"("photo_path");
+CREATE UNIQUE INDEX "persons_rfid_uuid_key" ON "persons"("rfid_uuid");
 
 -- AddForeignKey
-ALTER TABLE "attendance" ADD CONSTRAINT "attendance_person_id_fkey" FOREIGN KEY ("person_id") REFERENCES "persons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "attendances" ADD CONSTRAINT "attendances_person_id_fkey" FOREIGN KEY ("person_id") REFERENCES "persons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "student_payments" ADD CONSTRAINT "student_payments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "persons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "student_payments" ADD CONSTRAINT "student_payments_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "payments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "student_payments" ADD CONSTRAINT "student_payments_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "payments"("id") ON DELETE CASCADE ON UPDATE CASCADE;

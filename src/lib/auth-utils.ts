@@ -1,11 +1,217 @@
 // @/lib/auth-utils.ts
 
-// TODO : Update this file
-
 import bcrypt from "bcryptjs";
-import { User, UserRole } from "../prisma/generated/client";
+import { createHash, randomBytes } from "crypto";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { jwtVerify, SignJWT } from "jose";
+import {
+  User,
+  UserRole,
+  AuthMethod,
+  AuthUser,
+  ROLE_HIERARCHY,
+  AuthResult,
+} from "@/types";
+
+// ======================= API KEYS UTILS ======================
+
+const API_KEY_PREFIX = "rf_";
+
+export function hashApiKey(rawKey: string): string {
+  return createHash("sha256").update(rawKey, "utf8").digest("hex");
+}
+
+export function generateApiKey(): {
+  rawKey: string;
+  keyHash: string;
+  keyPrefix: string;
+} {
+  const randomPart = randomBytes(32).toString("hex");
+  const rawKey = `${API_KEY_PREFIX}${randomPart}`;
+  return {
+    rawKey,
+    keyHash: hashApiKey(rawKey),
+    keyPrefix: `${API_KEY_PREFIX}${randomPart.slice(0, 6)}`,
+  };
+}
+
+/**
+ * Verify an API key and return the associated user if valid.
+ * Accepts raw key (e.g. rf_xxxx...) and looks up by hash.
+ */
+export async function verifyApiKey(rawKey: string): Promise<AuthUser | null> {
+  if (!rawKey || !rawKey.startsWith(API_KEY_PREFIX)) {
+    return null;
+  }
+
+  const keyHash = hashApiKey(rawKey);
+
+  const apiKey = await prisma.apiKey.findUnique({
+    where: { key_hash: keyHash },
+    include: { user: true },
+  });
+
+  if (!apiKey?.user) {
+    return null;
+  }
+
+  // Update last_used_at (fire-and-forget, don't block response)
+  prisma.apiKey
+    .update({
+      where: { id: apiKey.id },
+      data: { last_used_at: new Date() },
+    })
+    .catch(() => {});
+
+  const u = apiKey.user;
+
+  return {
+    id: u.id as string,
+    email: u.email as string,
+    first_name: u.first_name as string | undefined,
+    last_name: u.last_name as string | undefined,
+    role: u.role as UserRole,
+    authMethod: "API_KEY" as AuthMethod,
+  };
+}
+
+// ======================= JWT UTILS ======================
+
+export const JWT_SECRET = process.env.JWT_SECRET || process.env.AUTH_SECRET;
+export const DEFAULT_JWT_EXPIRES_IN = "1h";
+export { SignJWT };
+
+export async function verifyJWT(token: string): Promise<AuthUser | null> {
+  if (!JWT_SECRET) {
+    console.warn("JWT_SECRET or NEXTAUTH_SECRET not set");
+    return null;
+  }
+
+  try {
+    const secret = new TextEncoder().encode(JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+
+    return {
+      id: payload.id as string,
+      email: payload.email as string,
+      first_name: payload.first_name as string | undefined,
+      last_name: payload.last_name as string | undefined,
+      role: payload.role as UserRole,
+      authMethod: "JWT" as AuthMethod,
+      iat: payload.iat as number,
+      exp: payload.exp as number,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ======================= AUTHENTICATION UTILS ======================
+
+export async function authenticateSession(): Promise<AuthUser | null> {
+  const session = await auth();
+  if (session?.user) {
+    const u = session.user as User;
+    return {
+      id: u.id as string,
+      email: u.email as string,
+      first_name: u.first_name as string | undefined,
+      last_name: u.last_name as string | undefined,
+      role: u.role as UserRole,
+      authMethod: "SESSION" as AuthMethod,
+    };
+  }
+  return null;
+}
+
+async function authenticate(request: NextRequest): Promise<AuthUser | null> {
+  // 1. Session Auth.js (priority for UI)
+  const session = await authenticateSession();
+  if (session) {
+    return session;
+  }
+
+  // 2. API Key (x-api-key header)
+  const apiKey = request.headers.get("x-api-key");
+  if (apiKey) {
+    return await verifyApiKey(apiKey);
+  }
+
+  // 3. Bearer token (API Key or JWT)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+
+    return (await verifyApiKey(token)) || (await verifyJWT(token));
+  }
+
+  return null;
+}
+
+export const hasRequiredRole = async (
+  userRole: UserRole,
+  targetRole: UserRole,
+): Promise<boolean> => {
+  try {
+    return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[targetRole];
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
+/**
+ * Middleware to check authentication for API routes.
+ * Accepts: session (cookie), API Key (x-api-key or Bearer), or JWT (Bearer).
+ */
+async function requireAuth(
+  request: NextRequest,
+  targetRole: UserRole = "VIEWER",
+  errorMessage: string = "Authentication required",
+): Promise<AuthResult> {
+  const authUser = await authenticate(request);
+  if (
+    authUser &&
+    (await hasRequiredRole(authUser.role as UserRole, targetRole))
+  ) {
+    return {
+      auth_user: authUser,
+      error: null,
+    };
+  }
+
+  return {
+    auth_user: null,
+    error: NextResponse.json({ error: errorMessage }, { status: 401 }),
+  };
+}
+
+export async function requireViewerAuth(
+  request: NextRequest,
+): Promise<AuthResult> {
+  return await requireAuth(request, "VIEWER", "Authentication required");
+}
+
+export async function requireStaffAuth(
+  request: NextRequest,
+): Promise<AuthResult> {
+  return await requireAuth(
+    request,
+    "STAFF",
+    "Admin or Staff authentication required",
+  );
+}
+
+export async function requireAdminAuth(
+  request: NextRequest,
+): Promise<AuthResult> {
+  return await requireAuth(request, "ADMIN", "Admin authentication required");
+}
+
+// ======================= PASSWORD UTILS ======================
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -39,165 +245,40 @@ export function validatePassword(password: string): {
   };
 }
 
-/**
- * Check if user can perform write operations
- */
-export function canWrite(role: UserRole): boolean {
-  return role === "ADMIN" || role === "STAFF";
-}
+// ======================= PRISMA UTILS ======================
 
-/**
- * Check if user can manage other users
- */
-export function canManageUsers(role: UserRole): boolean {
-  return role === "ADMIN";
-}
-
-/**
- * Get user from request (for API routes)
- */
-export async function getUserFromRequest(
-  request: NextRequest,
-): Promise<User | null> {
-  const token = await getToken({
-    req: request,
-    secret:
-      process.env.NEXTAUTH_SECRET ||
-      "rfid-attendance-secret-key-change-in-production",
-  });
-
-  if (!token) return null;
-
-  return {
-    id: token.id as string,
-    email: token.email as string,
-    password: token.password as string,
-    role: (token.role as UserRole) || "VIEWER",
-    is_active: token.is_active as boolean,
-    first_name: token.first_name as string | null,
-    last_name: token.last_name as string | null,
-    image: token.image as string | null,
-    createdAt: token.createdAt as Date,
-    updatedAt: token.updatedAt as Date,
-  };
-}
-
-export interface AuthenticatedRequest extends NextRequest {
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-    role: UserRole;
-  };
-}
-
-/**
- * Middleware to check authentication for API routes
- */
-export async function requireAuth(
-  request: NextRequest,
-): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
-  const token = await getToken({
-    req: request,
-    secret:
-      process.env.NEXTAUTH_SECRET ||
-      "rfid-attendance-secret-key-change-in-production",
-  });
-
-  if (!token) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 },
-      ),
-    };
+export function handlePrismaUniqueConstraintError(
+  error: any,
+): NextResponse | null {
+  if (error.code === "P2002") {
+    const target = error.meta?.target?.join(", ");
+    if (target) {
+      return NextResponse.json(
+        { error: `Conflict: ${target} already used` },
+        { status: 409 },
+      );
+    } else {
+      return NextResponse.json(
+        { error: "Conflict: Unique constraint violation" },
+        { status: 409 },
+      );
+    }
   }
-
-  const user = {
-    id: token.id as string,
-    email: token.email as string,
-    name: token.name as string,
-    role: (token.role as UserRole) || "viewer",
-  };
-
-  return { user, error: null };
+  return null;
 }
 
-/**
- * Middleware to check if user has write permissions
- */
-export async function requireWriteAccess(
-  request: NextRequest,
-): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
-  const authResult = await requireAuth(request);
-  if (authResult.error) return authResult;
+/** Find a person by numeric id or rfid_uuid (path param). Returns null if not found. */
+export async function findPersonByIdOrRfid(param: string) {
+  const trimmed = param.trim();
+  const numericId = parseInt(trimmed, 10);
+  const isNumeric = !Number.isNaN(numericId) && String(numericId) === trimmed;
 
-  if (!canWrite(authResult.user.role)) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { error: "Insufficient permissions. Write access required." },
-        { status: 403 },
-      ),
-    };
+  if (isNumeric) {
+    const person = await prisma.person.findUnique({
+      where: { id: numericId },
+    });
+    if (person) return person;
+    return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
   }
-
-  return authResult;
-}
-
-/**
- * Middleware to check if user is admin
- */
-export async function requireAdmin(
-  request: NextRequest,
-): Promise<{ user: any; error: null } | { user: null; error: NextResponse }> {
-  const authResult = await requireAuth(request);
-  if (authResult.error) return authResult;
-
-  if (!canManageUsers(authResult.user.role)) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      ),
-    };
-  }
-
-  return authResult;
-}
-
-/**
- * Middleware to check if user has specific role
- */
-export async function requireRole(
-  request: NextRequest,
-  requiredRole: UserRole,
-): Promise<
-  { user: User | null; error: null } | { user: null; error: NextResponse }
-> {
-  const authResult = await requireAuth(request);
-  if (authResult.error) return authResult;
-
-  const roleHierarchy: Record<UserRole, number> = {
-    VIEWER: 1,
-    STAFF: 2,
-    ADMIN: 3,
-  };
-
-  if (
-    roleHierarchy[authResult.user.role as UserRole] <
-    roleHierarchy[requiredRole]
-  ) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { error: `Role '${requiredRole}' or higher required` },
-        { status: 403 },
-      ),
-    };
-  }
-
-  return authResult;
+  return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
 }

@@ -2,10 +2,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { ScanResult } from "@/types";
-import { getCurrentTrimester, getPersonWithPayments, logAccess } from "@/lib";
+import {
+  getCurrentTrimester,
+  getPersonWithPayments,
+  logAccess,
+  requireViewerAuth,
+  requireStaffAuth,
+} from "@/lib";
 
-// In-memory store for latest registration scan (UUID only, no attendance logging)
-// In production, consider using Redis or a database for this
 interface LatestScan {
   rfid_uuid: string;
   timestamp: string;
@@ -15,6 +19,9 @@ let latestRegistrationScan: LatestScan | null = null;
 
 export async function POST(request: NextRequest) {
   try {
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
+
     const body = await request.json();
     const { rfid_uuid, action } = body; // action can be 'in', 'out', or undefined/null for registration
 
@@ -37,9 +44,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // console.log(`🔍 Badge scan: ${rfid_uuid} | Action: ${action}`);
-
-    // Registration mode: just return the UUID without checking person or logging attendance
+    console.log(`🔍 Badge scan: ${rfid_uuid} | Action: ${action}`);
+    
+    // Registration mode: just return without checking person or logging attendance
     if (isRegistrationMode) {
       const timestamp = new Date().toISOString();
       // Store the latest scan for retrieval by the frontend
@@ -56,19 +63,15 @@ export async function POST(request: NextRequest) {
 
     // Attendance mode: check person, verify access, and log attendance
     const person = await getPersonWithPayments(rfid_uuid);
-
     if (!person) {
       // console.log(`⚠️ No person found for badge: ${rfid_uuid}`);
-
-      const result: ScanResult = {
+      return NextResponse.json({
         success: true,
         access_granted: false,
         person: null,
         message: "❌ Unrecognized badge",
         timestamp: new Date().toISOString(),
-      };
-
-      return NextResponse.json(result);
+      } as ScanResult);
     }
 
     let accessGranted = false;
@@ -87,33 +90,12 @@ export async function POST(request: NextRequest) {
         message = accessGranted
           ? `✅ Access granted - Student`
           : `❌ Payment required for trimester ${currentTrimester}`;
-
-        // console.log(
-        //   `👨‍🎓 Student: ${person.prenom} ${person.nom} | ` +
-        //     `Trimester ${currentTrimester}: ${
-        //       isPaid ? "PAID" : "NOT PAID"
-        //     } | ` +
-        //     `Access: ${accessGranted ? "GRANTED" : "DENIED"}`
-        // );
         break;
       }
 
-      case "teacher":
-      case "staff": {
-        // Teachers and staff always have access
+      default: {
         accessGranted = true;
-        message = `✅ Access granted - ${
-          person.type === "teacher" ? "Teacher" : "Staff"
-        }`;
-        // console.log(`👨‍🏫 ${person.type}: ${person.prenom} ${person.nom} | Access: GRANTED`);
-        break;
-      }
-
-      case "visitor": {
-        // Visitors have access (you can add temporal validation logic if needed)
-        accessGranted = true;
-        message = "✅ Access granted - Visitor";
-        // console.log(`👥 Visitor: ${person.prenom} ${person.nom} | Access: GRANTED`);
+        message = `✅ Access granted - ${person.type}`;
         break;
       }
     }
@@ -121,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Record in Attendance table
     await logAccess(person.id, action, accessGranted ? "success" : "failed");
 
-    const result: ScanResult = {
+    return NextResponse.json({
       success: true,
       access_granted: accessGranted,
       person: person,
@@ -129,9 +111,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       current_trimester: currentTrimester,
       action: action,
-    };
-
-    return NextResponse.json(result);
+    } as ScanResult);
   } catch (error) {
     console.error("❌ Error during scan:", error);
     return NextResponse.json(
@@ -141,9 +121,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to retrieve the latest registration scan
+// GET endpoint to retrieve the latest registration scan (Admin or Staff only)
 export async function GET(request: NextRequest) {
   try {
+    const { error } = await requireViewerAuth(request);
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const since = searchParams.get("since"); // Optional timestamp to get scans after this time
 

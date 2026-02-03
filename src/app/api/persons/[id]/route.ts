@@ -1,25 +1,26 @@
 // @/app/api/persons/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, getPersonWithPayments } from "@/lib";
+import {
+  prisma,
+  requireViewerAuth,
+  requireStaffAuth,
+  getPersonWithPayments,
+  handlePrismaUniqueConstraintError,
+  findPersonByIdOrRfid,
+} from "@/lib";
 
-// GET: Retrieve a person by ID
+// GET: Retrieve a person by ID (any authenticated user)
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { error } = await requireViewerAuth(request);
+    if (error) return error;
+
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
-
-    const person = await prisma.person.findUnique({
-      where: { id },
-    });
-
+    const person = await findPersonByIdOrRfid(idParam);
     if (!person) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
@@ -37,6 +38,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error:", error);
+
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
@@ -44,168 +46,72 @@ export async function GET(
 // PUT: Update a person
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
+
     const { id: idParam } = await params;
-    const id = parseInt(idParam);
-    const body = await request.json();
-
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-    }
-
-    const {
-      rfid_uuid,
-      type,
-      nom,
-      prenom,
-      photo_path,
-      level,
-      class: classField,
-    } = body;
-
-    // Check that the person exists
-    const existing = await prisma.person.findUnique({
-      where: { id },
-    });
-    if (!existing) {
+    const person = await findPersonByIdOrRfid(idParam);
+    if (!person) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
-    // Determine the final person type (updated type if provided, otherwise existing type)
-    const finalType = type !== undefined ? type : existing.type;
-    
-    // Check if type is changing to non-student (from any type)
-    const isChangingToNonStudent = 
-      type !== undefined && type !== "student";
+    const body = await request.json();
+    const { rfid_uuid, type, last_name, first_name, photo } = body;
 
     // Build update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (rfid_uuid !== undefined) updateData.rfid_uuid = rfid_uuid;
     if (type !== undefined) updateData.type = type;
-    if (nom !== undefined) updateData.nom = nom;
-    if (prenom !== undefined) updateData.prenom = prenom;
-    if (photo_path !== undefined) updateData.photo_path = photo_path && photo_path.trim() !== "" ? photo_path : null;
-    
-    // Handle level and class: clear them if changing to non-student
-    if (isChangingToNonStudent) {
-      // Type is changing to non-student, always clear level and class
-      // Skip validation since we're clearing these fields
-      updateData.level = null;
-      updateData.class = null;
-    } else {
-      // Normal update logic - validate and set level/class only for students
-      // Validate level if provided (only for students)
-      if (level !== undefined) {
-        // If level is null and type is not student, just ignore it (don't set it)
-        if (level === null && finalType !== "student") {
-          // Don't set level for non-students, just skip it
-        } else {
-          // Reject if trying to set a non-null level for non-student
-          if (finalType !== "student") {
-            return NextResponse.json(
-              { error: "Level can only be set for students" },
-              { status: 400 }
-            );
-          }
-          if (
-            level !== null &&
-            ![
-              "License_1",
-              "License_2",
-              "License_3",
-              "Master_1",
-              "Master_2",
-            ].includes(level)
-          ) {
-            return NextResponse.json(
-              {
-                error:
-                  "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
-              },
-              { status: 400 }
-            );
-          }
-          updateData.level = level;
-        }
-      }
-
-      // Validate class if provided (only for students)
-      if (classField !== undefined) {
-        // If class is null and type is not student, just ignore it (don't set it)
-        if (classField === null && finalType !== "student") {
-          // Don't set class for non-students, just skip it
-        } else {
-          // Reject if trying to set a non-null class for non-student
-          if (finalType !== "student") {
-            return NextResponse.json(
-              { error: "Class can only be set for students" },
-              { status: 400 }
-            );
-          }
-          updateData.class = classField;
-        }
-      }
-    }
+    if (last_name !== undefined) updateData.last_name = last_name;
+    if (first_name !== undefined) updateData.first_name = first_name;
+    if (photo !== undefined)
+      updateData.photo = photo && String(photo).trim() !== "" ? photo : null;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const updatedPerson = await prisma.person.update({
-      where: { id },
+    const updated_person = await prisma.person.update({
+      where: { id: person.id },
       data: updateData,
     });
 
-    // console.log(`✅ Person updated: ${updatedPerson.prenom} ${updatedPerson.nom}`);
-    return NextResponse.json(updatedPerson);
+    return NextResponse.json(updated_person);
   } catch (error: any) {
     console.error("Error:", error);
-    if (error.code === "P2002") {
-      // Prisma unique constraint error
-      if (error.meta?.target?.includes("rfid_uuid")) {
-        return NextResponse.json(
-          { error: "This RFID UUID is already associated with another person" },
-          { status: 409 }
-        );
-      }
-      if (error.meta?.target?.includes("photo_path")) {
-        return NextResponse.json(
-          { error: "This photo path is already used" },
-          { status: 409 }
-        );
-      }
-      return NextResponse.json(
-        { error: "Conflict: rfid_uuid or photo_path already used" },
-        { status: 409 }
-      );
+    const uniqueConstraintResponse = handlePrismaUniqueConstraintError(error);
+    if (uniqueConstraintResponse) {
+      return uniqueConstraintResponse;
     }
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-// DELETE: Delete a person
+// DELETE: Delete a person (Admin or Staff only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
 
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    const { id: idParam } = await params;
+    const person = await findPersonByIdOrRfid(idParam);
+    if (!person) {
+      return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
 
     await prisma.person.delete({
-      where: { id },
+      where: { id: person.id },
     });
 
-    // console.log(`🗑️ Person deleted (ID: ${id})`);
     return NextResponse.json({ message: "Person successfully deleted" });
   } catch (error) {
     console.error("Error:", error);

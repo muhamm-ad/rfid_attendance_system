@@ -1,12 +1,15 @@
 // @/app/api/stats/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib";
+import { prisma, requireStaffAuth, requireViewerAuth } from "@/lib";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
+      const { error } = await requireStaffAuth(request);
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const fallbackDate = new Date().toISOString().split("T")[0];
     const rawStart = searchParams.get("startDate");
@@ -163,8 +166,8 @@ export async function GET(request: NextRequest) {
         if (!person) return null;
         return {
           id: person.id,
-          nom: person.nom,
-          prenom: person.prenom,
+          nom: person.last_name,
+          prenom: person.first_name,
           type: person.type,
           attendance_count: item._count.id,
         };
@@ -176,8 +179,8 @@ export async function GET(request: NextRequest) {
       include: {
         person: {
           select: {
-            nom: true,
-            prenom: true,
+            last_name: true,
+            first_name: true,
             type: true,
           },
         },
@@ -193,8 +196,8 @@ export async function GET(request: NextRequest) {
       action: record.action,
       status: record.status,
       attendance_date: record.attendance_date.toISOString(),
-      nom: record.person.nom,
-      prenom: record.person.prenom,
+      nom: record.person.last_name,
+      prenom: record.person.first_name,
       type: record.person.type,
     }));
 

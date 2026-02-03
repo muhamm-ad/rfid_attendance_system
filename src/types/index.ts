@@ -5,36 +5,58 @@ import {
   Attendance as PrismaAttendance,
   Payment as PrismaPayment,
   StudentPayment as PrismaStudentPayment,
+  UserRole,
+  User,
+  PersonType,
 } from "@/prisma/generated/client";
+import { NextResponse } from "next/server";
 
-/**
- Utility type to convert Date fields to ISO strings for JSON serialization
- */
+// Re-export Prisma types for consumers that need them
+export type { UserRole, User, PersonType };
+
+
+// ======================= AUTHENTICATION TYPES ======================
+
+export type AuthMethod = "SESSION" | "API_KEY" | "JWT";
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role: UserRole;
+  authMethod: AuthMethod;
+  iat?: number;
+  exp?: number;
+};
+
+export const ROLE_HIERARCHY: Record<UserRole, number> = {
+  VIEWER: 1,
+  STAFF: 2,
+  ADMIN: 3,
+};
+
+/** Result type for authentication middlewares */
+export type AuthResult =
+  | { auth_user: AuthUser; error: null }
+  | { auth_user: null; error: NextResponse };
+
+
+// ======================= DATA TYPES ======================
+
 type SerializeDates<T> = {
   [K in keyof T]: T[K] extends Date ? string : T[K];
 };
 
-/**
- * Base Person type - Prisma Person with dates serialized to strings
- * This is what we send over the API (JSON doesn't support Date objects)
- */
 export type Person = SerializeDates<
   Omit<PrismaPerson, "attendance" | "student_payments">
 >;
 
-/**
- * Base Attendance type - Prisma Attendance with dates serialized to strings
- */
+
 export type Attendance = SerializeDates<Omit<PrismaAttendance, "person">>;
 
-/**
- * Base Payment type - Prisma Payment with dates serialized to strings
- */
 export type Payment = SerializeDates<Omit<PrismaPayment, "student_payments">>;
 
-/**
- * Base StudentPayment type - matches Prisma StudentPayment
- */
 export type StudentPayment = Omit<PrismaStudentPayment, "student" | "payment">;
 
 // Extended types for API responses
@@ -63,7 +85,5 @@ export interface AttendanceLog {
   person_name: string;
   person_type: string;
   rfid_uuid: string;
-  photo_path?: string;
-  level?: string | null;
-  class?: string | null;
+  photo?: string;
 }

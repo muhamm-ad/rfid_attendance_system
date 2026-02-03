@@ -6,7 +6,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Search, ChevronDown, X } from "lucide-react";
 import { useClickOutside } from "@/hooks/use-click-outside";
-import { filterPersons } from "@/lib/utils";
+import { filterPersons } from "@/lib/ui-utils";
 import PersonAvatar from "./person-avatar";
 import { PersonWithPayments } from "@/types";
 

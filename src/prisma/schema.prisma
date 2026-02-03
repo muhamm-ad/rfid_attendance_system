@@ -22,12 +22,11 @@ enum UserRole {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   @map("hashed_password")
-  role      UserRole
-  is_active Boolean  @default(true)
-
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String   @map("hashed_password")
+  role       UserRole
+  is_active  Boolean  @default(true)
   first_name String?
   last_name  String?
   image      String?
@@ -35,27 +34,59 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  api_keys ApiKey[]
+
   @@map("users")
+}
+
+model ApiKey {
+  id           String    @id @default(uuid())
+  user_id      String
+  name         String
+  key_hash     String // SHA-256 hash of the key (raw key never stored)
+  key_prefix   String // e.g. "rf_xxxx" for display only
+  last_used_at DateTime?
+  created_at   DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([key_hash])
+  @@map("api_keys")
 }
 
 // ================ TABLES ================
 
+enum PersonType {
+  student
+  teacher
+  staff
+  visitor
+}
+
 model Person {
-  id         Int           @id @default(dbgenerated("1000000 + floor(random() * 9000000)::int"))
-  rfid_uuid  String        @unique
+  id         Int        @id @default(dbgenerated("1000000 + floor(random() * 9000000)::int"))
+  rfid_uuid  String     @unique
   type       PersonType
-  nom        String
-  prenom     String
-  photo_path String?       @unique
-  level      StudentLevel?
-  class      String?
-  created_at DateTime      @default(now())
-  updated_at DateTime      @updatedAt
+  last_name  String
+  first_name String
+  photo      String?
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
   attendance       Attendance[]
   student_payments StudentPayment[]
 
   @@map("persons")
+}
+
+enum AttendanceAction {
+  in
+  out
+}
+
+enum AttendanceStatus {
+  success
+  failed
 }
 
 model Attendance {
@@ -67,7 +98,13 @@ model Attendance {
 
   person Person @relation(fields: [person_id], references: [id], onDelete: Cascade)
 
-  @@map("attendance")
+  @@map("attendances")
+}
+
+enum PaymentMethod {
+  cash
+  card
+  bank_transfer
 }
 
 model Payment {
@@ -91,35 +128,4 @@ model StudentPayment {
   payment Payment @relation(fields: [payment_id], references: [id], onDelete: Cascade)
 
   @@map("student_payments")
-}
-
-enum PersonType {
-  student
-  teacher
-  staff
-  visitor
-}
-
-enum AttendanceAction {
-  in
-  out
-}
-
-enum AttendanceStatus {
-  success
-  failed
-}
-
-enum PaymentMethod {
-  cash
-  card
-  bank_transfer
-}
-
-enum StudentLevel {
-  License_1
-  License_2
-  License_3
-  Master_1
-  Master_2
 }
