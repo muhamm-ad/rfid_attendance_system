@@ -6,6 +6,8 @@
 
 **Authentication:** No authentication required (public API)
 
+**Postman:** A [Postman Collection](RFID-Attendance-API.postman_collection.json) is available in this folder. Import it into Postman to call all endpoints with inline documentation. Set the `base_url` variable (default: `http://localhost:3000`) and, for protected routes, obtain a JWT via `POST /api/auth/token` (with session cookie after web login) and set the `token` variable for Bearer auth.
+
 ---
 
 ## 🔐 Scan Badge

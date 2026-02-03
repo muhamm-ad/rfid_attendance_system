@@ -13,9 +13,6 @@ CREATE TYPE "AttendanceStatus" AS ENUM ('success', 'failed');
 -- CreateEnum
 CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'card', 'bank_transfer');
 
--- CreateEnum
-CREATE TYPE "StudentLevel" AS ENUM ('License_1', 'License_2', 'License_3', 'Master_1', 'Master_2');
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -60,14 +57,14 @@ CREATE TABLE "persons" (
 );
 
 -- CreateTable
-CREATE TABLE "attendance" (
+CREATE TABLE "attendances" (
     "id" SERIAL NOT NULL,
     "person_id" INTEGER NOT NULL,
     "action" "AttendanceAction" NOT NULL,
     "status" "AttendanceStatus" NOT NULL,
     "attendance_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "attendance_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "attendances_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -103,7 +100,7 @@ CREATE UNIQUE INDEX "persons_rfid_uuid_key" ON "persons"("rfid_uuid");
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "attendance" ADD CONSTRAINT "attendance_person_id_fkey" FOREIGN KEY ("person_id") REFERENCES "persons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "attendances" ADD CONSTRAINT "attendances_person_id_fkey" FOREIGN KEY ("person_id") REFERENCES "persons"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "student_payments" ADD CONSTRAINT "student_payments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "persons"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,0 +1,405 @@
+{
+  "info": {
+    "name": "RFID Attendance System API",
+    "description": "API collection for the RFID Attendance System.\n\n**Base URL:** `{{base_url}}` (default: http://localhost:3000)\n\n**Format:** JSON\n\n**Authentication:**\n- **Public endpoints** (Scan, GET Scan): No auth required.\n- **Protected endpoints**: Use **Bearer Token** (JWT) in the `Authorization` header, or session cookie if calling from the same origin.\n- Get a JWT: log in via the app, then `POST /api/auth/token` with session cookie (or body `expiresIn` e.g. `1h`, `24h`).\n\n**Conventions:**\n- **Trimesters:** 1 (Oct–Jan), 2 (Feb–May), 3 (Jun–Sep)\n- **Person types:** student, teacher, staff, visitor\n- **Student levels:** License_1, License_2, License_3, Master_1, Master_2\n- **Payment methods:** cash, card, bank_transfer",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Scan",
+      "description": "RFID badge scan: attendance mode (in/out) or registration mode (UUID only).",
+      "item": [
+        {
+          "name": "Scan badge (Attendance - In)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"action\": \"in\"\n}"
+            },
+            "url": "{{base_url}}/api/scan",
+            "description": "**Attendance mode.** Records an \"in\" action: checks badge, verifies person and (for students) payment for current trimester, logs attendance. Teachers, staff, visitors always have access.\n\n**Body:**\n- `rfid_uuid` (string, required): RFID badge UUID\n- `action` (string, required): `\"in\"` or `\"out\"`\n\n**Response 200:** `success`, `access_granted`, `person`, `message`, `timestamp`, `current_trimester`, `action`"
+          }
+        },
+        {
+          "name": "Scan badge (Attendance - Out)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"action\": \"out\"\n}"
+            },
+            "url": "{{base_url}}/api/scan",
+            "description": "**Attendance mode.** Records an \"out\" action. Same behavior as \"in\" but action is `out`."
+          }
+        },
+        {
+          "name": "Scan badge (Registration mode)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\"\n}"
+            },
+            "url": "{{base_url}}/api/scan",
+            "description": "**Registration mode.** Omitting `action` or setting it to `null` returns only the UUID without checking person or logging attendance. Used when adding new persons.\n\n**Response 200:** `success`, `rfid_uuid`, `timestamp`"
+          }
+        },
+        {
+          "name": "Get latest registration scan",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/scan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "scan"],
+              "query": [
+                { "key": "since", "value": "", "description": "Optional. ISO timestamp; only return scan if newer", "disabled": true }
+              ]
+            },
+            "description": "Returns the most recent UUID scanned in registration mode. Used by frontend to poll for new badge scans. Optional `since` (ISO timestamp) returns scan only if newer."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Persons",
+      "description": "Person management: list, create, get, update, delete.",
+      "item": [
+        {
+          "name": "List persons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/persons?type=student",
+              "host": ["{{base_url}}"],
+              "path": ["api", "persons"],
+              "query": [
+                { "key": "type", "value": "student", "description": "Filter: student, teacher, staff, visitor" }
+              ]
+            },
+            "description": "Returns all persons (or filtered by `type`). Students include `trimester1_paid`, `trimester2_paid`, `trimester3_paid`. Sorted by nom, prenom."
+          }
+        },
+        {
+          "name": "Create person",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfid_uuid\": \"NEW001\",\n  \"type\": \"student\",\n  \"nom\": \"Sarr\",\n  \"prenom\": \"Moussa\",\n  \"photo_path\": \"/photos/moussa_sarr.jpg\",\n  \"level\": \"License_1\",\n  \"class\": \"L1-A\"\n}"
+            },
+            "url": "{{base_url}}/api/persons",
+            "description": "**Auth:** Admin or Staff.\n\n**Body (required):** rfid_uuid, type, nom, prenom, photo_path.\n**Optional:** level (students only: License_1..Master_2), class.\n\n**Responses:** 201 created; 400 missing/invalid; 409 RFID or photo already used."
+          }
+        },
+        {
+          "name": "Get person by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/persons/1",
+            "description": "Returns one person by ID. Students include trimester payment flags."
+          }
+        },
+        {
+          "name": "Update person",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"nom\": \"Diallo\",\n  \"prenom\": \"Amadou\",\n  \"photo_path\": \"/photos/amadou_diallo_updated.jpg\",\n  \"level\": \"License_2\",\n  \"class\": \"L2-B\"\n}"
+            },
+            "url": "{{base_url}}/api/persons/1",
+            "description": "**Auth:** Admin or Staff. All body fields optional; only provided fields are updated. Level/class can be set to null to clear."
+          }
+        },
+        {
+          "name": "Delete person",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/persons/1",
+            "description": "**Auth:** Admin or Staff. Permanently deletes the person. Irreversible."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "description": "Attendance (access) logs.",
+      "item": [
+        {
+          "name": "List attendance logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/attendance?limit=100&offset=0&date=&startDate=&endDate=&status=&action=&personId=&level=&class=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance"],
+              "query": [
+                { "key": "limit", "value": "100", "description": "Max results (default 100)" },
+                { "key": "offset", "value": "0", "description": "Pagination offset" },
+                { "key": "date", "value": "", "description": "YYYY-MM-DD" },
+                { "key": "startDate", "value": "", "description": "YYYY-MM-DD" },
+                { "key": "endDate", "value": "", "description": "YYYY-MM-DD" },
+                { "key": "status", "value": "", "description": "success | failed" },
+                { "key": "action", "value": "", "description": "in | out" },
+                { "key": "personId", "value": "", "description": "Filter by person ID" },
+                { "key": "level", "value": "", "description": "License_1, License_2, etc." },
+                { "key": "class", "value": "", "description": "Class name (partial match)" }
+              ]
+            },
+            "description": "Returns badge scan history with person info. Supports pagination and filters: date range, status, action, personId, level, class."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Student payments by trimester.",
+      "item": [
+        {
+          "name": "Create payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 3,\n  \"trimester\": 2,\n  \"amount\": 50000,\n  \"payment_method\": \"cash\"\n}"
+            },
+            "url": "{{base_url}}/api/payments",
+            "description": "**Auth:** Admin or Staff.\n\n**Body:** student_id, trimester (1–3), amount, payment_method (cash, card, bank_transfer). One payment per student per trimester. **Response 201:** payment + student_payment objects."
+          }
+        },
+        {
+          "name": "List payments by student",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/payments?student_id=3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments"],
+              "query": [
+                { "key": "student_id", "value": "3", "description": "Required. Student ID" }
+              ]
+            },
+            "description": "Returns all payments for the given student_id, sorted by trimester."
+          }
+        },
+        {
+          "name": "Update payment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 55000,\n  \"payment_method\": \"card\",\n  \"trimester\": 2\n}"
+            },
+            "url": "{{base_url}}/api/payments/1",
+            "description": "**Auth:** Admin or Staff. Updates payment by student_payment ID. Body: amount, payment_method, trimester (all optional). 409 if trimester change causes duplicate."
+          }
+        },
+        {
+          "name": "Delete payment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/payments/1",
+            "description": "**Auth:** Admin or Staff. Deletes payment by student_payment ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Statistics",
+      "description": "Aggregated stats for the system.",
+      "item": [
+        {
+          "name": "Get statistics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/stats?startDate=2025-11-10&endDate=2025-11-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "stats"],
+              "query": [
+                { "key": "startDate", "value": "2025-11-10", "description": "YYYY-MM-DD (default: today)" },
+                { "key": "endDate", "value": "2025-11-15", "description": "YYYY-MM-DD (default: today)" },
+                { "key": "date", "value": "", "description": "Legacy: sets both start and end to this date" }
+              ]
+            },
+            "description": "Returns: range, general (totals by type), attendance_summary, attendance_by_type, payments (current trimester), top_attendance, recent_activity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "description": "Search persons.",
+      "item": [
+        {
+          "name": "Search persons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/search?q=Diallo&type=student",
+              "host": ["{{base_url}}"],
+              "path": ["api", "search"],
+              "query": [
+                { "key": "q", "value": "Diallo", "description": "Search term (min 2 chars); searches nom, prenom, rfid_uuid" },
+                { "key": "type", "value": "student", "description": "Optional: student, teacher, staff, visitor" }
+              ]
+            },
+            "description": "Case-insensitive search in name, first name, badge ID. Max 50 results."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "description": "Generated reports by period.",
+      "item": [
+        {
+          "name": "Attendance report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/reports?type=attendance&start_date=2025-11-01&end_date=2025-11-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"],
+              "query": [
+                { "key": "type", "value": "attendance", "description": "attendance | payments | summary" },
+                { "key": "start_date", "value": "2025-11-01", "description": "Required. YYYY-MM-DD" },
+                { "key": "end_date", "value": "2025-11-15", "description": "Required. YYYY-MM-DD" }
+              ]
+            },
+            "description": "**type=attendance** (default): daily_summary and person_summary for the date range."
+          }
+        },
+        {
+          "name": "Payments report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/reports?type=payments&start_date=2025-11-01&end_date=2025-11-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"],
+              "query": [
+                { "key": "type", "value": "payments" },
+                { "key": "start_date", "value": "2025-11-01" },
+                { "key": "end_date", "value": "2025-11-15" }
+              ]
+            },
+            "description": "**type=payments:** summary by trimester/method and details per payment."
+          }
+        },
+        {
+          "name": "Summary report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/reports?type=summary&start_date=2025-11-01&end_date=2025-11-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"],
+              "query": [
+                { "key": "type", "value": "summary" },
+                { "key": "start_date", "value": "2025-11-01" },
+                { "key": "end_date", "value": "2025-11-15" }
+              ]
+            },
+            "description": "**type=summary:** attendance totals and success rate, payment totals."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "description": "File upload (requires session or Bearer auth).",
+      "item": [
+        {
+          "name": "Upload person photo",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "photo", "type": "file", "src": "", "description": "JPEG, PNG, WebP; max 5MB" }
+              ]
+            },
+            "url": "{{base_url}}/api/upload-photo",
+            "description": "**Auth:** Admin or Staff. Multipart form: field name `photo`. Allowed: image/jpeg, image/png, image/webp; max 5MB. Returns `photo_path` (e.g. /photos/filename.jpg)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication and API key management. Token/keys endpoints require **session cookie** (browser login); use the returned JWT as Bearer token for other API calls.",
+      "item": [
+        {
+          "name": "Get JWT token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresIn\": \"24h\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/token",
+            "description": "**Requires session cookie** (log in via the web app first). Generates a JWT for API use. Body optional: `expiresIn` (e.g. 1m, 1h, 24h). Response: `token`, `expiresIn`. Set collection variable `token` to the returned token for Bearer auth."
+          }
+        },
+        {
+          "name": "List API keys",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/keys",
+            "description": "**Requires session.** Lists current user's API keys (id, name, key_prefix, lastUsed, createdAt). Raw key is never returned."
+          }
+        },
+        {
+          "name": "Create API key",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman / CLI\"\n}"
+            },
+            "url": "{{base_url}}/api/keys",
+            "description": "**Requires session.** Creates a new API key. Body optional: `name`. Response includes `apiKey` **only once**; store it securely."
+          }
+        },
+        {
+          "name": "Revoke API key",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/keys/:key_id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "keys", ":key_id"],
+              "variable": [
+                { "key": "key_id", "value": "" }
+              ]
+            },
+            "description": "**Requires session.** Revokes an API key by ID. Key must belong to current user. Set path variable key_id to the key ID from List API keys."
+          }
+        }
+      ]
+    }
+  ]
+}

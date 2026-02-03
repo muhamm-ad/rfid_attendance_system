@@ -63,6 +63,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Session id can be stale after a DB reset (JWT still has old user id). Resolve current user from DB.
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: auth_user.id }, { email: auth_user.email }],
+      },
+      select: { id: true },
+    });
+    if (!dbUser) {
+      return NextResponse.json(
+        {
+          error:
+            "User not found in database. Please log out and log in again to refresh your session.",
+        },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const MAX_KEY_NAME_LENGTH = 100;
     const sanitizeKeyName = (s: string) =>
@@ -78,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.apiKey.create({
       data: {
-        user_id: auth_user!.id,
+        user_id: dbUser.id,
         name,
         key_hash: keyHash,
         key_prefix: keyPrefix,
@@ -92,7 +109,8 @@ export async function POST(request: NextRequest) {
       message: "Store this key securely. It will not be shown again.",
     });
   } catch (error) {
-    console.error("❌ Error generating API key:", error);
+    // console.error("❌ Error generating API key:", error);
+    console.error("❌ Error generating API key", JSON.stringify(error));
     return NextResponse.json(
       { error: "Error generating API key" },
       { status: 500 },
