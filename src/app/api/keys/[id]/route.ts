@@ -2,13 +2,14 @@
 
 // * API should be only used by session authenticated users in the UI to manage their own keys.
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { authenticateSession, prisma } from "@/lib";
 
 /**
  * DELETE: Revoke an API key (any authenticated user). Key must belong to the current user.
  */
 export async function DELETE(
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {

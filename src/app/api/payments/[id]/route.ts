@@ -1,27 +1,29 @@
 // @/app/api/payments/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib";
+import { prisma, requireStaffAuth } from "@/lib";
 
-// PUT: Update a payment
+// PUT: Update a payment (Admin or Staff only)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
-    const body = await request.json();
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
 
-    if (isNaN(id)) {
+    const { id: id_paymentParam } = await params;
+    const id_payment = parseInt(id_paymentParam);
+    if (isNaN(id_payment)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
+    const body = await request.json();
     const { amount, payment_method, trimester } = body;
 
     // Check that the student payment exists
     const existingStudentPayment = await prisma.studentPayment.findUnique({
-      where: { id },
+      where: { id: id_payment },
       include: { payment: true },
     });
 
@@ -57,7 +59,7 @@ export async function PUT(
         where: {
           student_id: existingStudentPayment.student_id,
           trimester: trimester,
-          id: { not: id },
+          id: { not: id_payment },
         },
       });
 
@@ -90,14 +92,14 @@ export async function PUT(
       // Update student payment if trimester changed
       if (trimester !== undefined) {
         await tx.studentPayment.update({
-          where: { id },
+          where: { id: id_payment },
           data: { trimester },
         });
       }
 
       // Fetch updated student payment with payment relation
       const updatedStudentPayment = await tx.studentPayment.findUnique({
-        where: { id },
+        where: { id: id_payment },
         include: { payment: true },
       });
 
@@ -133,22 +135,25 @@ export async function PUT(
   }
 }
 
-// DELETE: Delete a payment
+// DELETE: Delete a payment (Admin or Staff only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
 
-    if (isNaN(id)) {
+    const { id: id_paymentParam } = await params;
+    const id_payment = parseInt(id_paymentParam);
+
+    if (isNaN(id_payment)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
     // Check that the student payment exists
     const existingStudentPayment = await prisma.studentPayment.findUnique({
-      where: { id },
+      where: { id: id_payment },
       include: { payment: true },
     });
 
@@ -160,7 +165,7 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       // Delete student payment (this will cascade or we need to delete payment too)
       await tx.studentPayment.delete({
-        where: { id },
+        where: { id: id_payment },
       });
 
       // Delete the associated payment
@@ -169,7 +174,6 @@ export async function DELETE(
       });
     });
 
-    // console.log(`🗑️ Payment deleted (ID: ${id})`);
     return NextResponse.json({ message: "Payment successfully deleted" });
   } catch (error) {
     console.error("❌ Error while deleting payment:", error);

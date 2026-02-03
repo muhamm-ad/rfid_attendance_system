@@ -4,9 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
+import { requireStaffAuth } from "@/lib";
 
 export async function POST(request: NextRequest) {
   try {
+    const { error } = await requireStaffAuth(request);
+    if (error) return error;
+
     const formData = await request.formData();
     const file = formData.get("photo") as File;
 

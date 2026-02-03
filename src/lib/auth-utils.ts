@@ -13,7 +13,7 @@ import {
   AuthMethod,
   AuthUser,
   ROLE_HIERARCHY,
-  RequireAuthResult,
+  AuthResult,
 } from "@/types";
 
 // ======================= API KEYS UTILS ======================
@@ -127,7 +127,6 @@ export async function authenticateSession(): Promise<AuthUser | null> {
   return null;
 }
 
-
 async function authenticate(request: NextRequest): Promise<AuthUser | null> {
   // 1. Session Auth.js (priority for UI)
   const session = await authenticateSession();
@@ -172,7 +171,7 @@ async function requireAuth(
   request: NextRequest,
   targetRole: UserRole = "VIEWER",
   errorMessage: string = "Authentication required",
-): Promise<RequireAuthResult> {
+): Promise<AuthResult> {
   const authUser = await authenticate(request);
   if (
     authUser &&
@@ -192,17 +191,13 @@ async function requireAuth(
 
 export async function requireViewerAuth(
   request: NextRequest,
-): Promise<RequireAuthResult> {
-  return await requireAuth(
-    request,
-    "VIEWER",
-    "Authentication required",
-  );
+): Promise<AuthResult> {
+  return await requireAuth(request, "VIEWER", "Authentication required");
 }
 
 export async function requireStaffAuth(
   request: NextRequest,
-): Promise<RequireAuthResult> {
+): Promise<AuthResult> {
   return await requireAuth(
     request,
     "STAFF",
@@ -212,12 +207,8 @@ export async function requireStaffAuth(
 
 export async function requireAdminAuth(
   request: NextRequest,
-): Promise<RequireAuthResult> {
-  return await requireAuth(
-    request,
-    "ADMIN",
-    "Admin authentication required",
-  );
+): Promise<AuthResult> {
+  return await requireAuth(request, "ADMIN", "Admin authentication required");
 }
 
 // ======================= PASSWORD UTILS ======================
@@ -274,4 +265,20 @@ export function handlePrismaUniqueConstraintError(
     }
   }
   return null;
+}
+
+/** Find a person by numeric id or rfid_uuid (path param). Returns null if not found. */
+export async function findPersonByIdOrRfid(param: string) {
+  const trimmed = param.trim();
+  const numericId = parseInt(trimmed, 10);
+  const isNumeric = !Number.isNaN(numericId) && String(numericId) === trimmed;
+
+  if (isNumeric) {
+    const person = await prisma.person.findUnique({
+      where: { id: numericId },
+    });
+    if (person) return person;
+    return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
+  }
+  return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
 }

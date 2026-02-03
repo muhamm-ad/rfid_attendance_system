@@ -7,23 +7,8 @@ import {
   requireStaffAuth,
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
+  findPersonByIdOrRfid,
 } from "@/lib";
-
-/** Find a person by numeric id or rfid_uuid (path param). Returns null if not found. */
-async function findPersonByIdOrRfid(param: string) {
-  const trimmed = param.trim();
-  const numericId = parseInt(trimmed, 10);
-  const isNumeric = !Number.isNaN(numericId) && String(numericId) === trimmed;
-
-  if (isNumeric) {
-    const person = await prisma.person.findUnique({
-      where: { id: numericId },
-    });
-    if (person) return person;
-    return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
-  }
-  return prisma.person.findUnique({ where: { rfid_uuid: trimmed } });
-}
 
 // GET: Retrieve a person by ID (any authenticated user)
 export async function GET(
