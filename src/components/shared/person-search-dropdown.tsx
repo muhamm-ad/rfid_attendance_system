@@ -184,7 +184,7 @@ export default function PersonSearchDropdown({
   return (
     <div className="relative" ref={dropdownRef}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium theme-text-muted">
           {label}
         </label>
       )}

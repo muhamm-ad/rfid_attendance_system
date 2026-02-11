@@ -2,15 +2,15 @@
 
 import React from "react";
 
-// Common CSS classes
+// Common CSS classes (theme-aligned)
 export const inputClasses =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors";
 
 export const selectClasses =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500";
+  "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors";
 
 export const buttonPrimaryClasses =
-  "flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors";
+  "flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-lg hover:opacity-90 transition-opacity";
 
 export const buttonSecondaryClasses =
   "flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors";
@@ -28,25 +28,25 @@ export const Badge: React.FC<{
 export const BadgeGray: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => (
-  <Badge className="bg-gray-100 text-gray-800 capitalize">{children}</Badge>
+  <Badge className="theme-badge-muted capitalize">{children}</Badge>
 );
 
 export const BadgeBlue: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => <Badge className="bg-blue-50 text-blue-700">{children}</Badge>;
 
-// Status colors
+// Status colors (aligned with theme)
 export const statusColors = {
-  success: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800",
+  success: "theme-badge-success",
+  failed: "theme-badge-error",
 };
 
-// Type colors
+// Type colors (aligned with theme)
 export const typeColors = {
-  student: "bg-blue-100 text-blue-800",
-  teacher: "bg-purple-100 text-purple-800",
-  staff: "bg-green-100 text-green-800",
-  visitor: "bg-orange-100 text-orange-800",
+  student: "theme-badge-brand",
+  teacher: "bg-[#f3e8ff] text-[#7c3aed]",
+  staff: "theme-badge-success",
+  visitor: "bg-[#fff7ed] text-[#ea580c]",
 };
 
 // Helper to format level

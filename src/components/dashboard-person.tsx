@@ -4,7 +4,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PersonWithPayments } from "@/types";
-import { Users, Plus, Edit2, Trash2, X, Scan, MoreHorizontal } from "lucide-react";
+import { Users, Plus, Edit2, Trash2, X, Scan, MoreHorizontal, RefreshCw, UserCircle2 } from "lucide-react";
 import {
   DataTable,
   type ColumnDef,
@@ -29,8 +29,95 @@ import {
   buttonPrimaryClasses,
   buttonSecondaryClasses,
 } from "@/lib/ui-utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 // import { useClickOutside } from "@/hooks/useClickOutside";
 // import Image from "next/image";
+
+/** Filters section in an accordion, using shadcn components */
+function PersonFiltersSection({
+  typeFilter,
+  setTypeFilter,
+  allPersons,
+  searchTerm,
+  onSearchChange,
+  selectedPersonId,
+  onPersonSelect,
+  onClearSearch,
+  loadPersons,
+}: {
+  typeFilter: string;
+  setTypeFilter: (v: string) => void;
+  allPersons: PersonWithPayments[];
+  searchTerm: string;
+  onSearchChange: (v: string) => void;
+  selectedPersonId: number | null;
+  onPersonSelect: (id: number) => void;
+  onClearSearch: () => void;
+  loadPersons: () => void;
+  onResetFilters: () => void;
+}) {
+  return (
+    <Accordion type="single" collapsible className="mb-6 theme-accordion-filters">
+      <AccordionItem value="filters">
+        <AccordionTrigger className="flex items-center gap-2 py-4">
+          <span className="text-[var(--brand)] font-semibold">Filters</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[280px]">
+              <PersonSearchDropdown
+                persons={allPersons}
+                selectedPersonId={selectedPersonId}
+                searchTerm={searchTerm}
+                onSearchChange={onSearchChange}
+                onPersonSelect={onPersonSelect}
+                onClear={onClearSearch}
+                placeholder="Search by UUID, ID or Name..."
+                label={
+                  <span className="flex items-center gap-2">
+                    <UserCircle2 size={16} className="text-[var(--brand)] shrink-0" />
+                    Recherche personne
+                  </span>
+                }
+                onFocus={() => {
+                  if (allPersons.length === 0) loadPersons();
+                }}
+              />
+            </div>
+            <div className="w-48">
+              <Label className="mb-2 block text-sm font-medium theme-text-muted">Type</Label>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="student">Students</SelectItem>
+                  <SelectItem value="teacher">Teachers</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="visitor">Visitors</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
 
 export default function PersonManagement() {
   const [persons, setPersons] = useState<PersonWithPayments[]>([]);
@@ -204,6 +291,25 @@ export default function PersonManagement() {
     setSelectedPersonId(null);
     setSearchTerm("");
     loadPersons();
+  }
+
+  async function resetAllFilters() {
+    setTypeFilter("all");
+    setSearchTerm("");
+    setSelectedPersonId(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/persons");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load persons");
+      setPersons(data);
+      setAllPersons(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unexpected error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function resetForm() {
@@ -416,7 +522,7 @@ export default function PersonManagement() {
           <DataTableColumnHeader column={column} title="ID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600 font-mono">{row.getValue("id")}</span>
+          <span className="text-sm theme-text-muted font-mono">{row.getValue("id")}</span>
         ),
       },
       {
@@ -434,7 +540,7 @@ export default function PersonManagement() {
                 name={`${person.first_name} ${person.last_name}`}
                 size="md"
               />
-              <div className="font-medium text-gray-900">
+              <div className="font-medium" style={{ color: "var(--foreground)" }}>
                 {person.first_name} {person.last_name}
               </div>
             </div>
@@ -462,7 +568,7 @@ export default function PersonManagement() {
           <DataTableColumnHeader column={column} title="RFID UUID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600 font-mono">
+          <span className="text-sm theme-text-muted font-mono">
             {row.getValue("rfid_uuid")}
           </span>
         ),
@@ -481,9 +587,12 @@ export default function PersonManagement() {
                   <span
                     className={
                       person.trimester1_paid
-                        ? "text-green-600 font-medium"
-                        : "text-red-600 font-medium"
+                        ? "font-medium"
+                        : "font-medium"
                     }
+                    style={{
+                      color: person.trimester1_paid ? "var(--success)" : "var(--error)",
+                    }}
                   >
                     T1: {person.trimester1_paid ? "✓" : "✗"}
                   </span>
@@ -497,17 +606,16 @@ export default function PersonManagement() {
                     T2: {person.trimester2_paid ? "✓" : "✗"}
                   </span>
                   <span
-                    className={
-                      person.trimester3_paid
-                        ? "text-green-600 font-medium"
-                        : "text-red-600 font-medium"
-                    }
+                    className="font-medium"
+                    style={{
+                      color: person.trimester3_paid ? "var(--success)" : "var(--error)",
+                    }}
                   >
                     T3: {person.trimester3_paid ? "✓" : "✗"}
                   </span>
                 </div>
               ) : (
-                <span className="text-gray-400">N/A</span>
+                <span className="theme-text-muted">N/A</span>
               )}
             </div>
           );
@@ -519,7 +627,7 @@ export default function PersonManagement() {
           <DataTableColumnHeader column={column} title="Last Modified" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600">
+          <span className="text-sm theme-text-muted">
             {new Date(row.original.updated_at).toLocaleDateString("fr-FR", {
               year: "numeric",
               month: "short",
@@ -566,79 +674,64 @@ export default function PersonManagement() {
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8">
+    <div className="theme-card rounded-xl p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Users size={28} />
+          <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+            <Users size={28} className="text-[var(--brand)]" />
             Person Management
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="theme-text-muted mt-1">
             Manage students, teachers, staff, and visitors
           </p>
         </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-          className={buttonPrimaryClasses}
-        >
-          <Plus size={20} />
-          Add Person
-        </button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="mb-6">
-        <div className="flex gap-3 items-end">
-          <div className="flex-1 min-w-0">
-            <PersonSearchDropdown
-              persons={allPersons}
-              selectedPersonId={selectedPersonId}
-              searchTerm={searchTerm}
-              onSearchChange={handleSearchInputChange}
-              onPersonSelect={handlePersonSelect}
-              onClear={clearSearchSelection}
-              placeholder="Search by UUID, ID or Name..."
-              onFocus={() => {
-                if (allPersons.length === 0) {
-                  loadPersons();
-                }
-              }}
-            />
-          </div>
-          <div className="w-48 flex-shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className={selectClasses}
-            >
-              <option value="all">All Types</option>
-              <option value="student">Students</option>
-              <option value="teacher">Teachers</option>
-              <option value="staff">Staff</option>
-              <option value="visitor">Visitors</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={resetAllFilters}
+            variant="outline"
+            title="Reset all filters and refresh"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Reset & Refresh
+          </Button>
+          <Button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className={buttonPrimaryClasses}
+          >
+            <Plus size={20} />
+            Add Person
+          </Button>
         </div>
       </div>
 
+      <PersonFiltersSection
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        allPersons={allPersons}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchInputChange}
+        selectedPersonId={selectedPersonId}
+        onPersonSelect={handlePersonSelect}
+        onClearSearch={clearSearchSelection}
+        loadPersons={loadPersons}
+        onResetFilters={resetAllFilters}
+      />
+
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mb-4 rounded-lg theme-border border p-4" style={{ backgroundColor: "var(--error-bg)" }}>
+          <p className="text-sm" style={{ color: "var(--error)" }}>{error}</p>
         </div>
       )}
 
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+          <div className="theme-card rounded-xl p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
                 {editingPerson ? "Edit Person" : "Add New Person"}
               </h3>
               <button
@@ -650,12 +743,12 @@ export default function PersonManagement() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mb-4 rounded-lg theme-border border p-4" style={{ backgroundColor: "var(--error-bg)" }}>
+                  <p className="text-sm" style={{ color: "var(--error)" }}>{error}</p>
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium theme-text-muted mb-1">
                   RFID UUID *
                 </label>
                 <div className="flex gap-2">
@@ -728,7 +821,7 @@ export default function PersonManagement() {
                   )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium theme-text-muted mb-1">
                   Type *
                 </label>
                 <select
@@ -753,7 +846,7 @@ export default function PersonManagement() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium theme-text-muted mb-1">
                   Last Name (Nom) *
                 </label>
                 <input
@@ -767,7 +860,7 @@ export default function PersonManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium theme-text-muted mb-1">
                   First Name (Prenom) *
                 </label>
                 <input
@@ -781,7 +874,7 @@ export default function PersonManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium theme-text-muted mb-1">
                   Photo
                 </label>
                 {photoPreview && (
@@ -835,29 +928,10 @@ export default function PersonManagement() {
         columns={personColumns}
         emptyMessage="No persons found"
         pageSize={filters.limit}
+        onPageSizeChange={(size) =>
+          setFilters((f) => ({ ...f, limit: size }))
+        }
       />
-
-      <div className="flex justify-end mt-4">
-        <div className="w-40">
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
-            Limit
-          </label>
-          <select
-            value={filters.limit}
-            onChange={(e) =>
-              setFilters({ ...filters, limit: parseInt(e.target.value) })
-            }
-            className={selectClasses}
-          >
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-          </select>
-        </div>
-      </div>
     </div>
   );
 }

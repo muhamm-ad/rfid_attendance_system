@@ -4,7 +4,8 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { AttendanceLog, PersonWithPayments } from "@/types";
-import { Clock, RefreshCw, LogIn, LogOut, UserCircle2 } from "lucide-react";
+import { Clock, RefreshCw, LogIn, LogOut, UserCircle2, ChevronDownIcon } from "lucide-react";
+import { format } from "date-fns";
 import {
   DataTable,
   type ColumnDef,
@@ -13,13 +14,253 @@ import {
 } from "./shared/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
-import {
-  statusColors,
-  BadgeGray,
-  inputClasses,
-  selectClasses,
-} from "@/lib/ui-utils";
+import { statusColors, BadgeGray } from "@/lib/ui-utils";
 import Loading from "./loading";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/cn-utils";
+
+/** Date + time picker in a popover (shadcn-style) */
+function DatePickerTime({
+  label,
+  dateValue,
+  timeValue = "00:00",
+  onDateChange,
+  onTimeChange,
+  id,
+}: {
+  label: string;
+  dateValue: string;
+  timeValue?: string;
+  onDateChange: (value: string) => void;
+  onTimeChange?: (value: string) => void;
+  id: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const date = dateValue ? new Date(dateValue + "T00:00:00") : undefined;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {label && (
+        <Label htmlFor={id} className="text-sm font-medium theme-text-muted">{label}</Label>
+      )}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            id={id}
+            className={cn(
+              "w-full justify-between font-normal",
+              !dateValue && "text-muted-foreground"
+            )}
+          >
+            {dateValue ? format(date!, "PPP") : "Select date"}
+            <ChevronDownIcon className="h-4 w-4 text-[var(--brand)] opacity-70" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-4" align="start">
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-date`}>Date</Label>
+              <Input
+                type="date"
+                id={`${id}-date`}
+                value={dateValue}
+                onChange={(e) => onDateChange(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${id}-time`}>Time</Label>
+              <Input
+                type="time"
+                id={`${id}-time`}
+                step="1"
+                value={timeValue}
+                onChange={(e) => onTimeChange?.(e.target.value)}
+                className={cn(
+                  "bg-background w-full appearance-none",
+                  "[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                )}
+              />
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+/** Filters section in an accordion, using shadcn components */
+function LogsFiltersSection({
+  filters,
+  setFilters,
+  persons,
+  personSearchTerm,
+  setPersonSearchTerm,
+  selectedPersonId,
+  onPersonSelect,
+  onClearPerson,
+  loadPersons,
+  loadLogs,
+  onResetFilters,
+}: {
+  filters: {
+    startDate: string;
+    endDate: string;
+    status: string;
+    action: string;
+    type: string;
+    limit: number;
+  };
+  setFilters: React.Dispatch<
+    React.SetStateAction<{
+      startDate: string;
+      endDate: string;
+      status: string;
+      action: string;
+      type: string;
+      limit: number;
+    }>
+  >;
+  persons: PersonWithPayments[];
+  personSearchTerm: string;
+  setPersonSearchTerm: (v: string) => void;
+  selectedPersonId: number | null;
+  onPersonSelect: (id: number) => void;
+  onClearPerson: () => void;
+  loadPersons: () => void;
+  loadLogs: () => void;
+  onResetFilters: () => void;
+}) {
+  return (
+    <Accordion type="single" collapsible className="mb-6 theme-accordion-filters">
+      <AccordionItem value="filters">
+        <AccordionTrigger className="flex items-center gap-2 py-4">
+          <span className="text-[var(--brand)] font-semibold">Filters</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[280px]">
+              <PersonSearchDropdown
+                persons={persons}
+                selectedPersonId={selectedPersonId}
+                searchTerm={personSearchTerm}
+                onSearchChange={setPersonSearchTerm}
+                onPersonSelect={onPersonSelect}
+                onClear={onClearPerson}
+                placeholder="Search by name, ID or UUID..."
+                label={
+                  <span className="flex items-center gap-2">
+                    <UserCircle2 size={16} />
+                    Recherche personne
+                  </span>
+                }
+                onFocus={() => {
+                  if (persons.length === 0) loadPersons();
+                }}
+              />
+            </div>
+            <div className="w-40">
+              <DatePickerTime
+                id="start-date"
+                label="Start date"
+                dateValue={filters.startDate}
+                onDateChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
+              />
+            </div>
+            <div className="w-40">
+              <DatePickerTime
+                id="end-date"
+                label="End date"
+                dateValue={filters.endDate}
+                onDateChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
+              />
+            </div>
+            <div className="w-36">
+              <Label className="mb-2 block text-sm font-medium theme-text-muted">Status</Label>
+              <Select
+                value={filters.status || "all"}
+                onValueChange={(v) =>
+                  setFilters((f) => ({ ...f, status: v === "all" ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-36">
+              <Label className="mb-2 block text-sm font-medium theme-text-muted">Action</Label>
+              <Select
+                value={filters.action || "all"}
+                onValueChange={(v) =>
+                  setFilters((f) => ({ ...f, action: v === "all" ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Actions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Actions</SelectItem>
+                  <SelectItem value="in">Entry (In)</SelectItem>
+                  <SelectItem value="out">Exit (Out)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-40">
+              <Label className="mb-2 block text-sm font-medium theme-text-muted">Type</Label>
+              <Select
+                value={filters.type || "all"}
+                onValueChange={(v) =>
+                  setFilters((f) => ({ ...f, type: v === "all" ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="student">Students</SelectItem>
+                  <SelectItem value="teacher">Teachers</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="visitor">Visitors</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={onResetFilters} variant="outline" size="sm" title="Reset all filters">
+              <RefreshCw className="h-4 w-4 text-[var(--brand)]" />
+            </Button>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
@@ -143,7 +384,7 @@ export default function LogsTable() {
           <DataTableColumnHeader column={column} title="Person ID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600 font-mono">
+          <span className="text-sm theme-text-muted font-mono">
             {row.getValue("person_id")}
           </span>
         ),
@@ -190,7 +431,7 @@ export default function LogsTable() {
           <DataTableColumnHeader column={column} title="RFID UUID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600 font-mono">
+          <span className="text-sm theme-text-muted font-mono">
             {row.getValue("rfid_uuid")}
           </span>
         ),
@@ -214,6 +455,20 @@ export default function LogsTable() {
     await loadLogs();
   }
 
+  function resetAllFilters() {
+    setFilters({
+      startDate: "",
+      endDate: "",
+      status: "",
+      action: "",
+      type: "",
+      limit: 10,
+    });
+    setPersonSearchTerm("");
+    setSelectedPersonId(null);
+    loadLogs();
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-8">
       <div className="flex items-center justify-between mb-6">
@@ -226,120 +481,29 @@ export default function LogsTable() {
             View all access attempts and attendance records
           </p>
         </div>
-        <button
-          onClick={loadLogs}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <RefreshCw size={18} />
+        <Button onClick={loadLogs}>
+          <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
-        </button>
+        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="mb-6">
-        <div className="flex gap-3 items-end overflow-x-auto pb-2">
-          <div className="flex-1 min-w-[300px] shrink-0">
-            <PersonSearchDropdown
-              persons={persons}
-              selectedPersonId={selectedPersonId}
-              searchTerm={personSearchTerm}
-              onSearchChange={setPersonSearchTerm}
-              onPersonSelect={handlePersonSelect}
-              onClear={clearPersonSelection}
-              placeholder="Search by name, ID or UUID..."
-              label={
-                <span className="flex items-center gap-2">
-                  <UserCircle2 size={16} />
-                  Recherche personne
-                </span>
-              }
-              onFocus={() => {
-                if (persons.length === 0) {
-                  loadPersons();
-                }
-              }}
-            />
-          </div>
-          <div className="w-40 shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start date
-            </label>
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) =>
-                setFilters({ ...filters, startDate: e.target.value })
-              }
-              className={inputClasses}
-            />
-          </div>
-          <div className="w-40 shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End date
-            </label>
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) =>
-                setFilters({ ...filters, endDate: e.target.value })
-              }
-              className={inputClasses}
-            />
-          </div>
-          <div className="w-32 shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                setFilters({ ...filters, status: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Status</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-            </select>
-          </div>
-          <div className="w-32 shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Action
-            </label>
-            <select
-              value={filters.action}
-              onChange={(e) =>
-                setFilters({ ...filters, action: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Actions</option>
-              <option value="in">Entry (In)</option>
-              <option value="out">Exit (Out)</option>
-            </select>
-          </div>
-          <div className="w-48 shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type
-            </label>
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className={selectClasses}
-            >
-              <option value="">All Types</option>
-              <option value="student">Students</option>
-              <option value="teacher">Teachers</option>
-              <option value="staff">Staff</option>
-              <option value="visitor">Visitors</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <LogsFiltersSection
+        filters={filters}
+        setFilters={setFilters}
+        persons={persons}
+        personSearchTerm={personSearchTerm}
+        setPersonSearchTerm={setPersonSearchTerm}
+        selectedPersonId={selectedPersonId}
+        onPersonSelect={handlePersonSelect}
+        onClearPerson={clearPersonSelection}
+        loadPersons={loadPersons}
+        loadLogs={loadLogs}
+        onResetFilters={resetAllFilters}
+      />
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mb-4 rounded-lg theme-border border p-4" style={{ backgroundColor: "var(--error-bg)" }}>
+          <p className="text-sm" style={{ color: "var(--error)" }}>{error}</p>
         </div>
       )}
 
@@ -352,30 +516,11 @@ export default function LogsTable() {
           emptyMessage="No records found"
           pageSize={filters.limit}
           initialSorting={[{ id: "timestamp", desc: true }]}
+          onPageSizeChange={(size) =>
+            setFilters((f) => ({ ...f, limit: size }))
+          }
         />
       )}
-
-      <div className="flex justify-end mt-4">
-        <div className="w-40">
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
-            Limit
-          </label>
-          <select
-            value={filters.limit}
-            onChange={(e) =>
-              setFilters({ ...filters, limit: parseInt(e.target.value) })
-            }
-            className={selectClasses}
-          >
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-          </select>
-        </div>
-      </div>
     </div>
   );
 }
