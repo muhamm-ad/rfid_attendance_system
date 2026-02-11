@@ -9,11 +9,11 @@ import {
   User,
   PersonType,
 } from "@/prisma/generated/client";
+import { LinkProps } from "next/link";
 import { NextResponse } from "next/server";
 
 // Re-export Prisma types for consumers that need them
 export type { UserRole, User, PersonType };
-
 
 // ======================= AUTHENTICATION TYPES ======================
 
@@ -41,7 +41,6 @@ export type AuthResult =
   | { auth_user: AuthUser; error: null }
   | { auth_user: null; error: NextResponse };
 
-
 // ======================= DATA TYPES ======================
 
 type SerializeDates<T> = {
@@ -51,7 +50,6 @@ type SerializeDates<T> = {
 export type Person = SerializeDates<
   Omit<PrismaPerson, "attendance" | "student_payments">
 >;
-
 
 export type Attendance = SerializeDates<Omit<PrismaAttendance, "person">>;
 
@@ -87,3 +85,35 @@ export interface AttendanceLog {
   rfid_uuid: string;
   photo?: string;
 }
+
+// ======================= UI TYPES ======================
+
+type BaseNavItem = {
+  title: string;
+  badge?: string;
+  icon?: React.ElementType;
+};
+
+type NavLink = BaseNavItem & {
+  url: LinkProps["href"] | (string & {});
+  items?: never;
+};
+
+type NavCollapsible = BaseNavItem & {
+  items: (BaseNavItem & { url: LinkProps["href"] | (string & {}) })[];
+  url?: never;
+};
+
+type NavItem = NavCollapsible | NavLink;
+
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+type SidebarData = {
+  user: User;
+  navGroups: NavGroup[];
+};
+
+export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink };

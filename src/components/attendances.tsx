@@ -11,11 +11,11 @@ import {
   type ColumnDef,
   DataTableColumnHeader,
   DEFAULT_TABLE_HEADER_CLASSNAME,
-} from "./shared/data-table";
+} from "./ui/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
 import { statusColors, BadgeGray } from "@/lib/ui-utils";
-import Loading from "./loading";
+import Loading from "./ui/loading";
 import {
   Accordion,
   AccordionContent,

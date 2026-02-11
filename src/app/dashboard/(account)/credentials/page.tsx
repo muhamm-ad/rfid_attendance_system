@@ -1,4 +1,4 @@
-// @/app/(admin)/credentials/page.tsx
+// @/app/dashboard/(general)/(account)/credentials/page.tsx
 
 "use client";
 

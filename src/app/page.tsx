@@ -5,7 +5,7 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Loading } from "#/src/components/loading";
+import { Loading } from "#/src/components/ui/loading";
 
 export default function Home() {
 

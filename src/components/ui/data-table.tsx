@@ -1,5 +1,4 @@
-// @/components/shared/data-table.tsx
-// Data table built with TanStack Table + shadcn Table (see https://ui.shadcn.com/docs/components/radix/data-table)
+// @/components/ui/data-table.tsx
 
 "use client";
 

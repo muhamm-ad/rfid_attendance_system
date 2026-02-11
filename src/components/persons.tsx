@@ -9,7 +9,7 @@ import {
   DataTable,
   type ColumnDef,
   DataTableColumnHeader,
-} from "./shared/data-table";
+} from "./ui/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
 import { Button } from "@/components/ui/button";

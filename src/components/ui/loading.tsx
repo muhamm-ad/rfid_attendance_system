@@ -1,4 +1,4 @@
-// @/components/loading.tsx
+// @/components/ui/loading.tsx
 
 "use client";
 
