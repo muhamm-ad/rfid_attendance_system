@@ -1,183 +1,182 @@
 // @/components/shared/data-table.tsx
+// Data table built with TanStack Table + shadcn Table (see https://ui.shadcn.com/docs/components/radix/data-table)
 
 "use client";
 
-import React, { useMemo, ReactNode, useState } from "react";
+import * as React from "react";
+import {
+  type ColumnDef,
+  type SortingState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
-export type SortDirection = "asc" | "desc" | null;
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-export interface Column<T> {
-  key: string;
-  label: string;
-  sortable?: boolean;
-  sortKey?: string;
-  render: (item: T) => ReactNode;
-  headerClassName?: string;
+export const DEFAULT_TABLE_HEADER_CLASSNAME =
+  "text-center font-medium text-gray-500 cursor-pointer hover:bg-gray-100";
+
+export const DEFAULT_TABLE_CELL_CLASSNAME =
+  "text-center whitespace-nowrap items-center justify-center";
+
+export type { ColumnDef };
+
+/** Use column meta to pass cell/header classNames: meta: { cellClassName?: string; headerClassName?: string } */
+export interface DataTableColumnMeta {
   cellClassName?: string;
+  headerClassName?: string;
 }
 
-export interface DataTableProps<T> {
-  data: T[];
-  columns: Column<T>[];
-  loading?: boolean;
+export interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
   emptyMessage?: string;
-  limit?: number;
-  defaultSortKey?: string;
-  defaultSortDirection?: SortDirection;
-  onSort?: (key: string, direction: SortDirection) => void;
-  getSortValue?: (item: T, key: string) => any;
+  pageSize?: number;
+  /** Initial sort: [{ id: columnId, desc: boolean }] */
+  initialSorting?: SortingState;
 }
 
-export default function DataTable<T extends { id?: number | string }>({
-  data,
+export function DataTable<TData, TValue>({
   columns,
-  loading = false,
-  emptyMessage = "No records found",
-  limit = 25,
-  defaultSortKey,
-  defaultSortDirection = null,
-  onSort,
-  getSortValue,
-}: DataTableProps<T>) {
-  const [sortKey, setSortKey] = useState<string | null>(defaultSortKey || null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(
-    defaultSortKey && defaultSortDirection ? defaultSortDirection : null,
-  );
+  data,
+  emptyMessage = "No results.",
+  pageSize = 25,
+  initialSorting = [],
+}: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
 
-  const handleSort = (key: string) => {
-    if (!onSort && !getSortValue) {
-      // If no sort handlers provided, don't allow sorting
-      return;
-    }
-
-    let newDirection: SortDirection = "asc";
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        newDirection = "desc";
-      } else if (sortDirection === "desc") {
-        newDirection = null;
-      }
-    }
-
-    setSortKey(newDirection ? key : null);
-    setSortDirection(newDirection);
-
-    if (onSort) {
-      onSort(key, newDirection);
-    }
-  };
-
-  const sortedData = useMemo(() => {
-    if (!sortKey || !sortDirection || !getSortValue) {
-      return data.slice(0, limit);
-    }
-
-    const sorted = [...data].sort((a, b) => {
-      const aValue = getSortValue(a, sortKey);
-      const bValue = getSortValue(b, sortKey);
-
-      if (aValue === null || aValue === undefined) return 1;
-      if (bValue === null || bValue === undefined) return -1;
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      const aStr = String(aValue).toLowerCase();
-      const bStr = String(bValue).toLowerCase();
-
-      if (sortDirection === "asc") {
-        return aStr.localeCompare(bStr);
-      } else {
-        return bStr.localeCompare(aStr);
-      }
-    });
-
-    return sorted.slice(0, limit);
-  }, [data, sortKey, sortDirection, getSortValue, limit]);
-
-  const getSortIcon = (columnKey: string) => {
-    if (!sortKey || sortKey !== columnKey) {
-      return <ArrowUpDown size={14} className="text-gray-400" />;
-    }
-    return (
-      <ArrowUpDown
-        size={14}
-        className={
-          sortDirection === "asc" || sortDirection === "desc"
-            ? "text-indigo-600"
-            : "text-gray-400"
-        }
-      />
-    );
-  };
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+      pagination: { pageIndex: 0, pageSize },
+    },
+    initialState: {
+      pagination: { pageSize },
+    },
+  });
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                className={`px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                  column.sortable !== false
-                    ? "cursor-pointer hover:bg-gray-100"
-                    : ""
-                } ${column.headerClassName || ""}`}
-                onClick={() =>
-                  column.sortable !== false &&
-                  handleSort(column.sortKey || column.key)
-                }
-              >
-                <div className="flex items-center justify-center gap-1">
-                  {column.label}
-                  {column.sortable !== false &&
-                    getSortIcon(column.sortKey || column.key)}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {loading ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-4 py-8 text-center text-gray-500"
-              >
-                Loading...
-              </td>
-            </tr>
-          ) : sortedData.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-4 py-8 text-center text-gray-500"
-              >
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : (
-            sortedData.map((item) => (
-              <tr
-                key={item.id || JSON.stringify(item)}
-                className="hover:bg-gray-50"
-              >
-                {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={`px-4 py-3 whitespace-nowrap text-center ${column.cellClassName || ""}`}
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <Table className="min-w-full divide-y divide-gray-200">
+          <TableHeader className="bg-gray-50 [&_tr]:border-b-0">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={DEFAULT_TABLE_HEADER_CLASSNAME}
                   >
-                    {column.render(item)}
-                  </td>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
                 ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody className="bg-white divide-y divide-gray-200">
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={DEFAULT_TABLE_CELL_CLASSNAME}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  {emptyMessage}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {table.getFilteredRowModel().rows.length > pageSize && (
+        <div className="flex items-center justify-end space-x-2">
+          emptyMessage
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
+  );
+}
+
+/** Sortable column header button. Use in column header: header: ({ column }) => <DataTableColumnHeader column={column} title="Label" /> */
+export function DataTableColumnHeader<TData, TValue>({
+  column,
+  title,
+  className,
+}: {
+  column: import("@tanstack/react-table").Column<TData, TValue>;
+  title: string;
+  className?: string;
+}) {
+  if (!column.getCanSort()) {
+    return <span className={className}>{title}</span>;
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      // className="-ml-3 h-8 data-[state=open]:bg-accent"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    >
+      {title}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
   );
 }

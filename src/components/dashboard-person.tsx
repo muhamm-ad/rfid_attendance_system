@@ -4,15 +4,26 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { PersonWithPayments } from "@/types";
-import { Users, Plus, Edit2, Trash2, X, Scan } from "lucide-react";
-import DataTable, { Column } from "./shared/data-table";
+import { Users, Plus, Edit2, Trash2, X, Scan, MoreHorizontal } from "lucide-react";
+import {
+  DataTable,
+  type ColumnDef,
+  DataTableColumnHeader,
+} from "./shared/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   typeColors,
   BadgeGray,
-  BadgeBlue,
-  formatLevel,
   inputClasses,
   selectClasses,
   buttonPrimaryClasses,
@@ -29,12 +40,8 @@ export default function PersonManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [filters, setFilters] = useState({
-    level: "",
-    class: "",
-    limit: 25,
+    limit: 10,
   });
-  const [uniqueLevels, setUniqueLevels] = useState<string[]>([]);
-  const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingPerson, setEditingPerson] = useState<PersonWithPayments | null>(
     null,
@@ -46,14 +53,6 @@ export default function PersonManagement() {
     nom: "",
     prenom: "",
     photo_path: "",
-    level: "" as
-      | ""
-      | "License_1"
-      | "License_2"
-      | "License_3"
-      | "Master_1"
-      | "Master_2",
-    class: "",
   });
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -78,37 +77,14 @@ export default function PersonManagement() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load persons");
 
-      // Extract unique levels and classes
-      const levels = new Set<string>();
-      const classes = new Set<string>();
-      data.forEach((p: PersonWithPayments) => {
-        if (p.level) levels.add(p.level);
-        if (p.class) classes.add(p.class);
-      });
-      setUniqueLevels(Array.from(levels).sort());
-      setUniqueClasses(Array.from(classes).sort());
-
-      // Apply filters
-      let filtered = data;
-      if (filters.level) {
-        filtered = filtered.filter(
-          (p: PersonWithPayments) => p.level === filters.level,
-        );
-      }
-      if (filters.class) {
-        filtered = filtered.filter(
-          (p: PersonWithPayments) => p.class === filters.class,
-        );
-      }
-
-      setPersons(filtered);
+      setPersons(data);
       setAllPersons(data); // Store all persons for dropdown
     } catch (e: any) {
       setError(e.message || "Unexpected error");
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, filters.level, filters.class]);
+  }, [typeFilter]);
 
   useEffect(() => {
     loadPersons();
@@ -125,7 +101,7 @@ export default function PersonManagement() {
       loadPersons();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedPersonId, filters.level, filters.class]);
+  }, [searchTerm, selectedPersonId]);
 
   async function handleSearch() {
     if (searchTerm.length < 2 && !selectedPersonId) {
@@ -170,18 +146,6 @@ export default function PersonManagement() {
         data = fetchedData;
       }
 
-      // Apply level and class filters
-      if (filters.level) {
-        data = data.filter(
-          (p: PersonWithPayments) => p.level === filters.level,
-        );
-      }
-      if (filters.class) {
-        data = data.filter(
-          (p: PersonWithPayments) => p.class === filters.class,
-        );
-      }
-
       setPersons(data);
     } catch (e: any) {
       setError(e.message || "Unexpected error");
@@ -193,7 +157,7 @@ export default function PersonManagement() {
   async function handlePersonSelect(personId: number) {
     const person = allPersons.find((p) => p.id === personId);
     if (person) {
-      setSearchTerm(`${person.prenom} ${person.nom}`);
+      setSearchTerm(`${person.first_name} ${person.last_name}`);
     }
     setSelectedPersonId(personId);
 
@@ -249,8 +213,6 @@ export default function PersonManagement() {
       nom: "",
       prenom: "",
       photo_path: "",
-      level: "",
-      class: "",
     });
     setSelectedPhoto(null);
     setPhotoPreview(null);
@@ -378,19 +340,13 @@ export default function PersonManagement() {
         : "/api/persons";
       const method = editingPerson ? "PUT" : "POST";
 
-      // Build request body - only include level and class for students
-      const { level, class: classField, ...restFormData } = formData;
-      const requestBody: any = {
-        ...restFormData,
-        photo_path: photoPath || formData.photo_path || null,
+      const requestBody = {
+        rfid_uuid: formData.rfid_uuid,
+        type: formData.type,
+        last_name: formData.nom,
+        first_name: formData.prenom,
+        photo: photoPath || formData.photo_path || null,
       };
-
-      // Only include level and class if type is student
-      if (formData.type === "student") {
-        requestBody.level = formData.level || null;
-        requestBody.class = formData.class || null;
-      }
-      // For non-students, level and class are excluded from the request
 
       const res = await fetch(url, {
         method,
@@ -430,20 +386,12 @@ export default function PersonManagement() {
     setFormData({
       rfid_uuid: person.rfid_uuid,
       type: person.type,
-      nom: person.nom,
-      prenom: person.prenom,
-      photo_path: person.photo_path || "",
-      level: (person.level || "") as
-        | ""
-        | "License_1"
-        | "License_2"
-        | "License_3"
-        | "Master_1"
-        | "Master_2",
-      class: person.class || "",
+      nom: person.last_name ?? "",
+      prenom: person.first_name ?? "",
+      photo_path: person.photo ?? "",
     });
     setSelectedPhoto(null);
-    setPhotoPreview(person.photo_path || null);
+    setPhotoPreview(person.photo ?? null);
     setShowForm(true);
   }
 
@@ -460,26 +408,162 @@ export default function PersonManagement() {
     }
   }
 
-  const getSortValue = (person: PersonWithPayments, key: string): any => {
-    switch (key) {
-      case "id":
-        return person.id;
-      case "nom":
-        return `${person.prenom} ${person.nom}`.toLowerCase();
-      case "type":
-        return person.type;
-      case "level":
-        return person.level || "";
-      case "class":
-        return person.class?.toLowerCase() || "";
-      case "rfid_uuid":
-        return person.rfid_uuid.toLowerCase();
-      case "updated_at":
-        return new Date(person.updated_at).getTime();
-      default:
-        return "";
-    }
-  };
+  const personColumns = useMemo<ColumnDef<PersonWithPayments>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="ID" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600 font-mono">{row.getValue("id")}</span>
+        ),
+      },
+      {
+        id: "name",
+        accessorFn: (row) => `${row.first_name} ${row.last_name}`,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Name" />
+        ),
+        cell: ({ row }) => {
+          const person = row.original;
+          return (
+            <div className="flex items-center gap-3 justify-center">
+              <PersonAvatar
+                photoPath={person.photo}
+                name={`${person.first_name} ${person.last_name}`}
+                size="md"
+              />
+              <div className="font-medium text-gray-900">
+                {person.first_name} {person.last_name}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "type",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Type" />
+        ),
+        cell: ({ row }) => (
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
+              typeColors[row.original.type]
+            }`}
+          >
+            {row.original.type}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "rfid_uuid",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="RFID UUID" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600 font-mono">
+            {row.getValue("rfid_uuid")}
+          </span>
+        ),
+      },
+      {
+        id: "payment_status",
+        accessorKey: "payment_status",
+        enableSorting: false,
+        header: "Payment Status",
+        cell: ({ row }) => {
+          const person = row.original;
+          return (
+            <div>
+              {person.type === "student" ? (
+                <div className="flex gap-2 text-xs justify-center">
+                  <span
+                    className={
+                      person.trimester1_paid
+                        ? "text-green-600 font-medium"
+                        : "text-red-600 font-medium"
+                    }
+                  >
+                    T1: {person.trimester1_paid ? "✓" : "✗"}
+                  </span>
+                  <span
+                    className={
+                      person.trimester2_paid
+                        ? "text-green-600 font-medium"
+                        : "text-red-600 font-medium"
+                    }
+                  >
+                    T2: {person.trimester2_paid ? "✓" : "✗"}
+                  </span>
+                  <span
+                    className={
+                      person.trimester3_paid
+                        ? "text-green-600 font-medium"
+                        : "text-red-600 font-medium"
+                    }
+                  >
+                    T3: {person.trimester3_paid ? "✓" : "✗"}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-gray-400">N/A</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "updated_at",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Last Modified" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600">
+            {new Date(row.original.updated_at).toLocaleDateString("fr-FR", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        cell: ({ row }) => {
+          const person = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => startEdit(person)}>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => handleDelete(person.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [handleDelete]
+  );
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-8">
@@ -538,44 +622,6 @@ export default function PersonManagement() {
               <option value="teacher">Teachers</option>
               <option value="staff">Staff</option>
               <option value="visitor">Visitors</option>
-            </select>
-          </div>
-          <div className="w-40 flex-shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Level
-            </label>
-            <select
-              value={filters.level}
-              onChange={(e) =>
-                setFilters({ ...filters, level: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Levels</option>
-              {uniqueLevels.map((level) => (
-                <option key={level} value={level}>
-                  {formatLevel(level)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="w-40 flex-shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Class
-            </label>
-            <select
-              value={filters.class}
-              onChange={(e) =>
-                setFilters({ ...filters, class: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Classes</option>
-              {uniqueClasses.map((classItem) => (
-                <option key={classItem} value={classItem}>
-                  {classItem}
-                </option>
-              ))}
             </select>
           </div>
         </div>
@@ -687,19 +733,16 @@ export default function PersonManagement() {
                 </label>
                 <select
                   value={formData.type}
-                  onChange={(e) => {
-                    const newType = e.target.value as
-                      | "student"
-                      | "teacher"
-                      | "staff"
-                      | "visitor";
+                  onChange={(e) =>
                     setFormData({
                       ...formData,
-                      type: newType,
-                      level: newType === "student" ? formData.level : "",
-                      class: newType === "student" ? formData.class : "",
-                    });
-                  }}
+                      type: e.target.value as
+                        | "student"
+                        | "teacher"
+                        | "staff"
+                        | "visitor",
+                    })
+                  }
                   required
                   className={selectClasses}
                 >
@@ -737,43 +780,6 @@ export default function PersonManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              {formData.type === "student" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Level
-                  </label>
-                  <select
-                    value={formData.level}
-                    onChange={(e) =>
-                      setFormData({ ...formData, level: e.target.value as any })
-                    }
-                    className={selectClasses}
-                  >
-                    <option value="">Select Level</option>
-                    <option value="License_1">License 1</option>
-                    <option value="License_2">License 2</option>
-                    <option value="License_3">License 3</option>
-                    <option value="Master_1">Master 1</option>
-                    <option value="Master_2">Master 2</option>
-                  </select>
-                </div>
-              )}
-              {formData.type === "student" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Class
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.class}
-                    onChange={(e) =>
-                      setFormData({ ...formData, class: e.target.value })
-                    }
-                    placeholder="e.g., L1-A, M1-B, Mathématiques"
-                    className={inputClasses}
-                  />
-                </div>
-              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Photo
@@ -824,178 +830,11 @@ export default function PersonManagement() {
       )}
 
       {/* Table */}
-      <DataTable
+      <DataTable<PersonWithPayments, unknown>
         data={persons}
-        columns={useMemo<Column<PersonWithPayments>[]>(
-          () => [
-            {
-              key: "id",
-              label: "ID",
-              sortKey: "id",
-              render: (person) => (
-                <span className="text-sm text-gray-600 font-mono">
-                  {person.id}
-                </span>
-              ),
-            },
-            {
-              key: "name",
-              label: "Name",
-              sortKey: "nom",
-              cellClassName: "text-left",
-              render: (person) => (
-                <div className="flex items-center gap-3">
-                  <PersonAvatar
-                    photoPath={person.photo_path}
-                    name={`${person.prenom} ${person.nom}`}
-                    size="md"
-                  />
-                  <div className="font-medium text-gray-900">
-                    {person.prenom} {person.nom}
-                  </div>
-                </div>
-              ),
-            },
-            {
-              key: "type",
-              label: "Type",
-              sortKey: "type",
-              render: (person) => (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
-                    typeColors[person.type]
-                  }`}
-                >
-                  {person.type}
-                </span>
-              ),
-            },
-            {
-              key: "level",
-              label: "Level",
-              sortKey: "level",
-              render: (person) => (
-                <span className="text-sm text-gray-600">
-                  {person.type === "student" && person.level ? (
-                    <BadgeBlue>{formatLevel(person.level)}</BadgeBlue>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </span>
-              ),
-            },
-            {
-              key: "class",
-              label: "Class",
-              sortKey: "class",
-              render: (person) => (
-                <span className="text-sm text-gray-600">
-                  {person.class ? (
-                    <BadgeGray>{person.class}</BadgeGray>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </span>
-              ),
-            },
-            {
-              key: "rfid_uuid",
-              label: "RFID UUID",
-              sortKey: "rfid_uuid",
-              render: (person) => (
-                <span className="text-sm text-gray-600 font-mono">
-                  {person.rfid_uuid}
-                </span>
-              ),
-            },
-            {
-              key: "payment_status",
-              label: "Payment Status",
-              sortable: false,
-              render: (person) => (
-                <div>
-                  {person.type === "student" ? (
-                    <div className="flex gap-2 text-xs">
-                      <span
-                        className={
-                          person.trimester1_paid
-                            ? "text-green-600 font-medium"
-                            : "text-red-600 font-medium"
-                        }
-                      >
-                        T1: {person.trimester1_paid ? "✓" : "✗"}
-                      </span>
-                      <span
-                        className={
-                          person.trimester2_paid
-                            ? "text-green-600 font-medium"
-                            : "text-red-600 font-medium"
-                        }
-                      >
-                        T2: {person.trimester2_paid ? "✓" : "✗"}
-                      </span>
-                      <span
-                        className={
-                          person.trimester3_paid
-                            ? "text-green-600 font-medium"
-                            : "text-red-600 font-medium"
-                        }
-                      >
-                        T3: {person.trimester3_paid ? "✓" : "✗"}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">N/A</span>
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: "updated_at",
-              label: "Last Modified",
-              sortKey: "updated_at",
-              render: (person) => (
-                <span className="text-sm text-gray-600">
-                  {new Date(person.updated_at).toLocaleDateString("fr-FR", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              ),
-            },
-            {
-              key: "actions",
-              label: "Actions",
-              sortable: false,
-              headerClassName: "text-right",
-              cellClassName: "text-right",
-              render: (person) => (
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => startEdit(person)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(person.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ),
-            },
-          ],
-          [handleDelete],
-        )}
-        loading={loading}
+        columns={personColumns}
         emptyMessage="No persons found"
-        limit={filters.limit}
-        getSortValue={getSortValue}
+        pageSize={filters.limit}
       />
 
       <div className="flex justify-end mt-4">
@@ -1010,6 +849,7 @@ export default function PersonManagement() {
             }
             className={selectClasses}
           >
+            <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>

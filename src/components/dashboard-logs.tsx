@@ -5,16 +5,21 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { AttendanceLog, PersonWithPayments } from "@/types";
 import { Clock, RefreshCw, LogIn, LogOut, UserCircle2 } from "lucide-react";
-import DataTable, { Column } from "./shared/data-table";
+import {
+  DataTable,
+  type ColumnDef,
+  DataTableColumnHeader,
+  DEFAULT_TABLE_HEADER_CLASSNAME,
+} from "./shared/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
 import PersonAvatar from "./shared/person-avatar";
 import {
   statusColors,
   BadgeGray,
-  formatLevel,
   inputClasses,
   selectClasses,
 } from "@/lib/ui-utils";
+import Loading from "./loading";
 
 export default function LogsTable() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
@@ -25,14 +30,10 @@ export default function LogsTable() {
     endDate: "",
     status: "",
     action: "",
-    level: "",
-    class: "",
     type: "",
-    limit: 25,
+    limit: 10,
   });
   const [persons, setPersons] = useState<PersonWithPayments[]>([]);
-  const [uniqueLevels, setUniqueLevels] = useState<string[]>([]);
-  const [uniqueClasses, setUniqueClasses] = useState<string[]>([]);
   const [personSearchTerm, setPersonSearchTerm] = useState("");
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
 
@@ -49,8 +50,6 @@ export default function LogsTable() {
       if (filters.endDate) params.append("endDate", filters.endDate);
       if (filters.status) params.append("status", filters.status);
       if (filters.action) params.append("action", filters.action);
-      if (filters.level) params.append("level", filters.level);
-      if (filters.class) params.append("class", filters.class);
       if (selectedPersonId) {
         params.append("personId", selectedPersonId.toString());
       }
@@ -70,8 +69,6 @@ export default function LogsTable() {
     filters.endDate,
     filters.status,
     filters.action,
-    filters.level,
-    filters.class,
     filters.type,
     filters.limit,
     selectedPersonId,
@@ -87,16 +84,6 @@ export default function LogsTable() {
       const data = await res.json();
       if (res.ok) {
         setPersons(data);
-
-        // Extract unique levels and classes
-        const levels = new Set<string>();
-        const classes = new Set<string>();
-        data.forEach((p: PersonWithPayments) => {
-          if (p.level) levels.add(p.level);
-          if (p.class) classes.add(p.class);
-        });
-        setUniqueLevels(Array.from(levels).sort());
-        setUniqueClasses(Array.from(classes).sort());
       }
     } catch (e) {
       console.error("Failed to load persons", e);
@@ -111,35 +98,111 @@ export default function LogsTable() {
     [],
   );
 
-  const getSortValue = (log: AttendanceLog, key: string): any => {
-    switch (key) {
-      case "timestamp":
-        return new Date(log.timestamp).getTime();
-      case "person_id":
-        return log.person_id;
-      case "person_name":
-        return log.person_name.toLowerCase();
-      case "person_type":
-        return log.person_type.toLowerCase();
-      case "level":
-        return log.level?.toLowerCase() || "";
-      case "class":
-        return log.class?.toLowerCase() || "";
-      case "action":
-        return log.action;
-      case "status":
-        return log.status;
-      case "rfid_uuid":
-        return log.rfid_uuid.toLowerCase();
-      default:
-        return "";
-    }
-  };
+  const logColumns = useMemo<ColumnDef<AttendanceLog>[]>(
+    () => [
+      {
+        accessorKey: "timestamp",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Timestamp" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600">
+            {new Date(row.original.timestamp).toLocaleString()}
+          </span>
+        ),
+        sortingFn: (rowA, rowB) =>
+          new Date(rowA.original.timestamp).getTime() -
+          new Date(rowB.original.timestamp).getTime(),
+      },
+      {
+        id: "person",
+        accessorFn: (row) => row.person_name,
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title="Person"
+            className={DEFAULT_TABLE_HEADER_CLASSNAME}
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3 justify-start pl-6">
+            <PersonAvatar
+              photoPath={row.original.photo}
+              name={row.original.person_name}
+              size="md"
+            />
+            <div className="font-medium text-gray-900">
+              {row.original.person_name}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "person_id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Person ID" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600 font-mono">
+            {row.getValue("person_id")}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "person_type",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Type" />
+        ),
+        cell: ({ row }) => <BadgeGray>{row.getValue("person_type")}</BadgeGray>,
+      },
+      {
+        accessorKey: "action",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Action" />
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2 justify-center">
+            {actionIcons[row.original.action]}
+            <span className="text-sm text-gray-700 capitalize">
+              {row.original.action}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
+        cell: ({ row }) => (
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${
+              statusColors[row.original.status]
+            }`}
+          >
+            {row.original.status}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "rfid_uuid",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="RFID UUID" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-600 font-mono">
+            {row.getValue("rfid_uuid")}
+          </span>
+        ),
+      },
+    ],
+    [actionIcons],
+  );
 
   async function handlePersonSelect(personId: number) {
     const person = persons.find((p) => p.id === personId);
     if (person) {
-      setPersonSearchTerm(`${person.prenom} ${person.nom}`);
+      setPersonSearchTerm(`${person.first_name} ${person.last_name}`);
     }
     setSelectedPersonId(personId);
     await loadLogs();
@@ -175,7 +238,7 @@ export default function LogsTable() {
       {/* Filters */}
       <div className="mb-6">
         <div className="flex gap-3 items-end overflow-x-auto pb-2">
-          <div className="flex-1 min-w-[300px] flex-shrink-0">
+          <div className="flex-1 min-w-[300px] shrink-0">
             <PersonSearchDropdown
               persons={persons}
               selectedPersonId={selectedPersonId}
@@ -197,7 +260,7 @@ export default function LogsTable() {
               }}
             />
           </div>
-          <div className="w-40 flex-shrink-0">
+          <div className="w-40 shrink-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Start date
             </label>
@@ -210,7 +273,7 @@ export default function LogsTable() {
               className={inputClasses}
             />
           </div>
-          <div className="w-40 flex-shrink-0">
+          <div className="w-40 shrink-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               End date
             </label>
@@ -223,7 +286,7 @@ export default function LogsTable() {
               className={inputClasses}
             />
           </div>
-          <div className="w-32 flex-shrink-0">
+          <div className="w-32 shrink-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Status
             </label>
@@ -239,7 +302,7 @@ export default function LogsTable() {
               <option value="failed">Failed</option>
             </select>
           </div>
-          <div className="w-32 flex-shrink-0">
+          <div className="w-32 shrink-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Action
             </label>
@@ -255,45 +318,7 @@ export default function LogsTable() {
               <option value="out">Exit (Out)</option>
             </select>
           </div>
-          <div className="w-40 flex-shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Level
-            </label>
-            <select
-              value={filters.level}
-              onChange={(e) =>
-                setFilters({ ...filters, level: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Levels</option>
-              {uniqueLevels.map((level) => (
-                <option key={level} value={level}>
-                  {level.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="w-40 flex-shrink-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Class
-            </label>
-            <select
-              value={filters.class}
-              onChange={(e) =>
-                setFilters({ ...filters, class: e.target.value })
-              }
-              className={selectClasses}
-            >
-              <option value="">All Classes</option>
-              {uniqueClasses.map((classItem) => (
-                <option key={classItem} value={classItem}>
-                  {classItem}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="w-48 flex-shrink-0">
+          <div className="w-48 shrink-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type
             </label>
@@ -318,112 +343,17 @@ export default function LogsTable() {
         </div>
       )}
 
-      <DataTable
-        data={logs}
-        columns={useMemo<Column<AttendanceLog>[]>(
-          () => [
-            {
-              key: "timestamp",
-              label: "Timestamp",
-              sortKey: "timestamp",
-              render: (log) => (
-                <span className="text-sm text-gray-600">
-                  {new Date(log.timestamp).toLocaleString()}
-                </span>
-              ),
-            },
-            {
-              key: "person",
-              label: "Person",
-              sortKey: "person_name",
-              render: (log) => (
-                <div className="flex items-center gap-3">
-                  <PersonAvatar
-                    photoPath={log.photo_path}
-                    name={log.person_name}
-                    size="md"
-                  />
-                  <div className="font-medium text-gray-900">
-                    {log.person_name}
-                  </div>
-                </div>
-              ),
-            },
-            {
-              key: "person_id",
-              label: "Person ID",
-              sortKey: "person_id",
-              render: (log) => (
-                <span className="text-sm text-gray-600 font-mono">
-                  {log.person_id}
-                </span>
-              ),
-            },
-            {
-              key: "person_type",
-              label: "Type",
-              sortKey: "person_type",
-              render: (log) => <BadgeGray>{log.person_type}</BadgeGray>,
-            },
-            {
-              key: "level",
-              label: "Level",
-              sortKey: "level",
-              render: (log) => <BadgeGray>{formatLevel(log.level)}</BadgeGray>,
-            },
-            {
-              key: "class",
-              label: "Class",
-              sortKey: "class",
-              render: (log) => <BadgeGray>{log.class || "-"}</BadgeGray>,
-            },
-            {
-              key: "action",
-              label: "Action",
-              sortKey: "action",
-              render: (log) => (
-                <div className="flex items-center gap-2">
-                  {actionIcons[log.action]}
-                  <span className="text-sm text-gray-700 capitalize">
-                    {log.action}
-                  </span>
-                </div>
-              ),
-            },
-            {
-              key: "status",
-              label: "Status",
-              sortKey: "status",
-              render: (log) => (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    statusColors[log.status]
-                  }`}
-                >
-                  {log.status}
-                </span>
-              ),
-            },
-            {
-              key: "rfid_uuid",
-              label: "RFID UUID",
-              sortKey: "rfid_uuid",
-              render: (log) => (
-                <span className="text-sm text-gray-600 font-mono">
-                  {log.rfid_uuid}
-                </span>
-              ),
-            },
-          ],
-          [actionIcons],
-        )}
-        loading={loading}
-        emptyMessage="No records found"
-        limit={filters.limit}
-        defaultSortKey="timestamp"
-        defaultSortDirection="desc"
-        getSortValue={getSortValue}
-      />
+      {loading ? (
+        <Loading />
+      ) : (
+        <DataTable<AttendanceLog, unknown>
+          data={logs}
+          columns={logColumns}
+          emptyMessage="No records found"
+          pageSize={filters.limit}
+          initialSorting={[{ id: "timestamp", desc: true }]}
+        />
+      )}
 
       <div className="flex justify-end mt-4">
         <div className="w-40">
@@ -437,6 +367,7 @@ export default function LogsTable() {
             }
             className={selectClasses}
           >
+            <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
