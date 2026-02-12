@@ -187,7 +187,7 @@ export function LoginForm() {
   );
 }
 
-export function Login({ className }: { className?: string }) {
+export default function Login({ className }: { className?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

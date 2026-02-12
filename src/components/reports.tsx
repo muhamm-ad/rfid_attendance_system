@@ -1,4 +1,4 @@
-// @/components/dashboard-reports.tsx
+// @/components/reports.tsx
 
 "use client";
 

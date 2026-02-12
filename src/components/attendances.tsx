@@ -1,4 +1,4 @@
-// @/components/dashboard-logs.tsx
+// @/components/attendances.tsx
 
 "use client";
 
@@ -13,7 +13,7 @@ import {
   DEFAULT_TABLE_HEADER_CLASSNAME,
 } from "./ui/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
-import PersonAvatar from "./shared/person-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { statusColors, BadgeGray } from "@/lib/ui-utils";
 import Loading from "./ui/loading";
 import {
@@ -262,7 +262,7 @@ function LogsFiltersSection({
   );
 }
 
-export default function LogsTable() {
+export default function Attendances() {
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -367,10 +367,9 @@ export default function LogsTable() {
         ),
         cell: ({ row }) => (
           <div className="flex items-center gap-3 justify-start pl-6">
-            <PersonAvatar
-              photoPath={row.original.photo}
+            <UserAvatar
+              src={row.original.photo}
               name={row.original.person_name}
-              size="md"
             />
             <div className="font-medium text-gray-900">
               {row.original.person_name}

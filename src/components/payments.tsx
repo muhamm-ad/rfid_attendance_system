@@ -1,4 +1,4 @@
-// @/components/dashboard-payment.tsx
+// @/components/payments.tsx
 
 "use client";
 
@@ -34,7 +34,7 @@ type Student = {
   photo_path?: string;
 };
 
-export default function PaymentManagement() {
+export default function Payments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);

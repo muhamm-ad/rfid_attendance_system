@@ -5,9 +5,8 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Search, ChevronDown, X } from "lucide-react";
-import { useClickOutside } from "@/hooks/use-click-outside";
 import { filterPersons } from "@/lib/ui-utils";
-import PersonAvatar from "./person-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { PersonWithPayments } from "@/types";
 
 interface PersonSearchDropdownProps {
@@ -151,17 +150,7 @@ export default function PersonSearchDropdown({
     };
   }, [isOpen, updateDropdownPosition]);
 
-  const filteredPersons = filterPersons(
-    persons as Array<
-      PersonWithPayments & {
-        nom: string;
-        prenom: string;
-        id: number;
-        rfid_uuid: string;
-      }
-    >,
-    searchTerm,
-  );
+  const filteredPersons = filterPersons(persons, searchTerm);
 
   const handleInputChange = (value: string) => {
     onSearchChange(value);
@@ -250,13 +239,13 @@ export default function PersonSearchDropdown({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <PersonAvatar
-                          photoPath={person.photo_path}
-                          name={`${person.prenom} ${person.nom}`}
+                        <UserAvatar
+                          src={person.photo}
+                          name={`${person.first_name} ${person.last_name}`}
                           size="sm"
                         />
                         <span className="text-sm font-medium text-gray-900">
-                          {person.prenom} {person.nom}
+                          {person.first_name} {person.last_name}
                         </span>
                       </div>
                       <div className="flex flex-col items-end">

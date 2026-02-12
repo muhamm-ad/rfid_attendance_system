@@ -2,7 +2,7 @@
 
 "use client";
 
-import Loading from "#/src/components/ui/loading";
+import Loading from "@/components/ui/loading";
 
 export default function AppLoading() {
   return <Loading label="Loading..." />;

@@ -11,7 +11,7 @@ import {
   DataTableColumnHeader,
 } from "./ui/data-table";
 import PersonSearchDropdown from "./shared/person-search-dropdown";
-import PersonAvatar from "./shared/person-avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -119,7 +119,7 @@ function PersonFiltersSection({
   );
 }
 
-export default function PersonManagement() {
+export default function Persons() {
   const [persons, setPersons] = useState<PersonWithPayments[]>([]);
   const [allPersons, setAllPersons] = useState<PersonWithPayments[]>([]); // Store all persons for dropdown
   const [loading, setLoading] = useState(false);
@@ -535,10 +535,9 @@ export default function PersonManagement() {
           const person = row.original;
           return (
             <div className="flex items-center gap-3 justify-center">
-              <PersonAvatar
-                photoPath={person.photo}
+              <UserAvatar
+                src={person.photo}
                 name={`${person.first_name} ${person.last_name}`}
-                size="md"
               />
               <div className="font-medium" style={{ color: "var(--foreground)" }}>
                 {person.first_name} {person.last_name}

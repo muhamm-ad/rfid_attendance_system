@@ -27,9 +27,7 @@ export const Badge: React.FC<{
 
 export const BadgeGray: React.FC<{ children: React.ReactNode }> = ({
   children,
-}) => (
-  <Badge className="theme-badge-muted capitalize">{children}</Badge>
-);
+}) => <Badge className="theme-badge-muted capitalize">{children}</Badge>;
 
 export const BadgeBlue: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -55,21 +53,45 @@ export function formatLevel(level: string | null | undefined): string {
   return level.replace("_", " ");
 }
 
-// Helper to filter persons (case-insensitive)
-export function filterPersons<
-  T extends { nom: string; prenom: string; id: number; rfid_uuid: string },
->(persons: T[], searchTerm: string): T[] {
+// Helper to get initials from a name (e.g. "John Doe" -> "JD")
+export function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+type PersonLike =
+  | { first_name: string; last_name: string; id: number; rfid_uuid: string }
+  | { nom: string; prenom: string; id: number; rfid_uuid: string };
+
+function getSearchName(person: PersonLike): { first: string; last: string } {
+  if ("first_name" in person && "last_name" in person) {
+    return { first: person.first_name, last: person.last_name };
+  }
+  return { first: person.prenom, last: person.nom };
+}
+
+// Helper to filter persons (case-insensitive). Supports both first_name/last_name and nom/prenom.
+export function filterPersons<T extends PersonLike>(
+  persons: T[],
+  searchTerm: string,
+): T[] {
   if (!searchTerm) return persons;
   const search = searchTerm.toLowerCase().trim();
   return persons.filter((person) => {
-    const nomLower = person.nom.toLowerCase();
-    const prenomLower = person.prenom.toLowerCase();
-    const fullName = `${prenomLower} ${nomLower}`;
-    const fullNameReverse = `${nomLower} ${prenomLower}`;
+    const { first, last } = getSearchName(person);
+    const firstLower = first.toLowerCase();
+    const lastLower = last.toLowerCase();
+    const fullName = `${firstLower} ${lastLower}`;
+    const fullNameReverse = `${lastLower} ${firstLower}`;
 
     return (
-      nomLower.includes(search) ||
-      prenomLower.includes(search) ||
+      firstLower.includes(search) ||
+      lastLower.includes(search) ||
       fullName.includes(search) ||
       fullNameReverse.includes(search) ||
       person.id.toString().includes(search) ||

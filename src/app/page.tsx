@@ -5,10 +5,9 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Loading } from "#/src/components/ui/loading";
+import Loading from "@/components/ui/loading";
 
 export default function Home() {
-
   const router = useRouter();
   const { status } = useSession({
     required: true,
