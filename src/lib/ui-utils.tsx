@@ -2,6 +2,23 @@
 
 import React from "react";
 
+export const DROP_DOWN_LABEL_CLASSNAME = "ml-1 mb-1.5 block text-sm font-medium";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Common CSS classes (theme-aligned)
 export const inputClasses =
   "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors";

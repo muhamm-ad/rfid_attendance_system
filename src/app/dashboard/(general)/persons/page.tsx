@@ -689,7 +689,7 @@ export default function PersonsPage() {
             className="text-2xl font-bold flex items-center gap-2"
             style={{ color: "var(--foreground)" }}
           >
-            <Users size={28} className="text-[var(--brand)]" />
+            <Users size={28} className="text-(--brand)" />
             Person Management
           </h2>
           <p className="theme-text-muted mt-1">

@@ -7,7 +7,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '#/src/components/ui/collapsible'
+} from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -18,8 +18,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from '#/src/components/ui/sidebar'
-import { Badge } from '#/src/components/ui/badge'
+} from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '#/src/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu'
 import {
   type NavCollapsible,
   type NavItem,

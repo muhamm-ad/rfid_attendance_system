@@ -8,10 +8,11 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <main className="flex-1 overflow-auto pl-64">
-          <div className="min-h-screen theme-page p-4 md:p-6">{children}</div>
+        {/* <main className="relative flex-1 min-h-0 w-full bg-red-200"> */}
+        <main className="relative flex-1 min-h-0 w-full">
+          {children}
         </main>
       </div>
     </SidebarProvider>

@@ -9,10 +9,10 @@ import {
   RefreshCw,
   LogIn,
   LogOut,
+  BarChart3,
+  RotateCcw,
   UserCircle2,
-  ChevronDownIcon,
 } from "lucide-react";
-import { format } from "date-fns";
 import {
   DataTable,
   type ColumnDef,
@@ -21,16 +21,10 @@ import {
 } from "@/components/data-table";
 import PersonSearchDropdown from "@/components/person-search-dropdown";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { statusColors, BadgeGray } from "@/lib/ui-utils";
+import { statusColors, BadgeGray, DROP_DOWN_LABEL_CLASSNAME } from "@/lib/ui-utils";
 import Loading from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -38,80 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/cn-utils";
+import { useRouter } from "next/navigation";
+import DateTimePicker from "@/components/date-time-picker";
 
-/** Date + time picker in a popover (shadcn-style) */
-function DatePickerTime({
-  label,
-  dateValue,
-  timeValue = "00:00",
-  onDateChange,
-  onTimeChange,
-  id,
-}: {
-  label: string;
-  dateValue: string;
-  timeValue?: string;
-  onDateChange: (value: string) => void;
-  onTimeChange?: (value: string) => void;
-  id: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const date = dateValue ? new Date(dateValue + "T00:00:00") : undefined;
-
-  return (
-    <div className="flex flex-col gap-2">
-      {label && (
-        <Label htmlFor={id} className="text-sm font-medium theme-text-muted">
-          {label}
-        </Label>
-      )}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            id={id}
-            className={cn(
-              "w-full justify-between font-normal",
-              !dateValue && "text-muted-foreground",
-            )}
-          >
-            {dateValue ? format(date!, "PPP") : "Select date"}
-            <ChevronDownIcon className="h-4 w-4 text-(--brand) opacity-70" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-4" align="start">
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-date`}>Date</Label>
-              <Input
-                type="date"
-                id={`${id}-date`}
-                value={dateValue}
-                onChange={(e) => onDateChange(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-time`}>Time</Label>
-              <Input
-                type="time"
-                id={`${id}-time`}
-                step="1"
-                value={timeValue}
-                onChange={(e) => onTimeChange?.(e.target.value)}
-                className={cn(
-                  "bg-background w-full appearance-none",
-                  "[&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none",
-                )}
-              />
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-}
 
 /** Filters section for attendance logs */
 function LogsFiltersSection({
@@ -156,125 +79,121 @@ function LogsFiltersSection({
   onResetFilters: () => void;
 }) {
   return (
-    <div className="mb-6 theme-accordion-filters">
-      <div className="flex items-center gap-2 py-4">
-        <span className="text-(--brand) font-semibold">Filters</span>
+    <div className="flex flex-wrap gap-4 p-2 pb-6 items-end">
+      <div className="flex-1 min-w-[280px]">
+        <PersonSearchDropdown
+          persons={persons}
+          selectedPersonId={selectedPersonId}
+          searchTerm={personSearchTerm}
+          onSearchChange={setPersonSearchTerm}
+          onPersonSelect={onPersonSelect}
+          onClear={onClearPerson}
+          placeholder="Search by name, ID or UUID..."
+          label={
+            <span className="flex items-center gap-2">
+              <UserCircle2 size={16} className="text-(--brand) shrink-0" />
+              Search person
+            </span>
+          }
+          onFocus={() => {
+            if (persons.length === 0) loadPersons();
+          }}
+        />
       </div>
-      <div className="flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[280px]">
-          <PersonSearchDropdown
-            persons={persons}
-            selectedPersonId={selectedPersonId}
-            searchTerm={personSearchTerm}
-            onSearchChange={setPersonSearchTerm}
-            onPersonSelect={onPersonSelect}
-            onClear={onClearPerson}
-            placeholder="Search by name, ID or UUID..."
-            label={
-              <span className="flex items-center gap-2">
-                <UserCircle2 size={16} />
-                Recherche personne
-              </span>
-            }
-            onFocus={() => {
-              if (persons.length === 0) loadPersons();
-            }}
-          />
-        </div>
-        <div className="w-40">
-          <DatePickerTime
-            id="start-date"
-            label="Start date"
-            dateValue={filters.startDate}
-            onDateChange={(v) =>
-              setFilters((f) => ({ ...f, startDate: v }))
-            }
-          />
-        </div>
-        <div className="w-40">
-          <DatePickerTime
-            id="end-date"
-            label="End date"
-            dateValue={filters.endDate}
-            onDateChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
-          />
-        </div>
-        <div className="w-36">
-          <Label className="mb-2 block text-sm font-medium theme-text-muted">
-            Status
-          </Label>
-          <Select
-            value={filters.status || "all"}
-            onValueChange={(v) =>
-              setFilters((f) => ({ ...f, status: v === "all" ? "" : v }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="success">Success</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-36">
-          <Label className="mb-2 block text-sm font-medium theme-text-muted">
-            Action
-          </Label>
-          <Select
-            value={filters.action || "all"}
-            onValueChange={(v) =>
-              setFilters((f) => ({ ...f, action: v === "all" ? "" : v }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="in">Entry (In)</SelectItem>
-              <SelectItem value="out">Exit (Out)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-40">
-          <Label className="mb-2 block text-sm font-medium theme-text-muted">
-            Type
-          </Label>
-          <Select
-            value={filters.type || "all"}
-            onValueChange={(v) =>
-              setFilters((f) => ({ ...f, type: v === "all" ? "" : v }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="student">Students</SelectItem>
-              <SelectItem value="teacher">Teachers</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="visitor">Visitors</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button
-          onClick={onResetFilters}
-          variant="outline"
-          size="sm"
-          title="Reset all filters"
+      <div className="w-50">
+        <DateTimePicker
+          id="start-date"
+          label="Start date"
+          dateValue={filters.startDate}
+          onDateChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
+          onTimeChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
+        />
+      </div>
+      <div className="w-50">
+        <DateTimePicker
+          id="end-date"
+          label="End date"
+          dateValue={filters.endDate}
+          onDateChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
+          onTimeChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
+        />
+      </div>
+      <div className="w-36">
+        <Label className={DROP_DOWN_LABEL_CLASSNAME}>
+          Status
+        </Label>
+        <Select
+          value={filters.status || "all"}
+          onValueChange={(v) =>
+            setFilters((f) => ({ ...f, status: v === "all" ? "" : v }))
+          }
         >
-          <RefreshCw className="h-4 w-4 text-(--brand)" />
-        </Button>
+          <SelectTrigger>
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+      <div className="w-36">
+        <Label className={DROP_DOWN_LABEL_CLASSNAME}>
+          Action
+        </Label>
+        <Select
+          value={filters.action || "all"}
+          onValueChange={(v) =>
+            setFilters((f) => ({ ...f, action: v === "all" ? "" : v }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="in">Entry (In)</SelectItem>
+            <SelectItem value="out">Exit (Out)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-40">
+        <Label className="mb-2 block text-sm font-medium theme-text-muted">
+          Type
+        </Label>
+        <Select
+          value={filters.type || "all"}
+          onValueChange={(v) =>
+            setFilters((f) => ({ ...f, type: v === "all" ? "" : v }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="student">Students</SelectItem>
+            <SelectItem value="teacher">Teachers</SelectItem>
+            <SelectItem value="staff">Staff</SelectItem>
+            <SelectItem value="visitor">Visitors</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button
+        onClick={onResetFilters}
+        variant="outline"
+        size="sm"
+        title="Reset all filters"
+      >
+        <RotateCcw className="h-4 w-4 text-(--brand)" />
+      </Button>
     </div>
   );
 }
 
-export default function Attendances() {
+export default function AttendancesPage() {
+  const router = useRouter();
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -481,7 +400,7 @@ export default function Attendances() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -492,10 +411,21 @@ export default function Attendances() {
             View all access attempts and attendance records
           </p>
         </div>
-        <Button onClick={loadLogs}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            className="gap-0"
+            title="View attendance statistics"
+            onClick={() => router.push("/dashboard/attendances/statistics")}
+          >
+            <BarChart3 className="size-4 mr-2" />
+            Statistics
+          </Button>
+          <Button onClick={loadLogs} className="gap-0" title="Refresh logs">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <LogsFiltersSection
