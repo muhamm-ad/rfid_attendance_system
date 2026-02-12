@@ -1,11 +1,8 @@
 // @/app/dashboard/(general)/payments/statistics/page.tsx
 
-import { PaymentsStats } from "@/components/statistics/payments-stats";
+"use client";
 
 export default function PaymentsStatisticsPage() {
-  return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <PaymentsStats />
-    </div>
-  );
+  // TODO: Implement payments statistics
+  return <div>Payments Statistics</div>;
 }

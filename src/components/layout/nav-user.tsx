@@ -1,3 +1,5 @@
+// @/components/layout/nav-user.tsx
+
 import Link from "next/link";
 import { Bell, ChevronsUpDown, KeyRound, LogOut } from "lucide-react";
 import useDialogState from "@/hooks/use-dialog-state";
@@ -17,7 +19,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import Logout from "@/components/logout";
+import Logout from "@/components/logout-dialog";
 
 export function NavUser({
   user,
@@ -39,19 +41,23 @@ export function NavUser({
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                className="rounded-lg tracking-normal data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <UserAvatar
                   src={user.avatar}
                   name={user.name}
-                  className="h-8 w-8 rounded-lg"
-                  fallbackClassName="rounded-lg"
+                  className="h-8 w-8 rounded-md"
+                  fallbackClassName="rounded-md"
                 />
                 <div className="grid flex-1 text-start text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-semibold text-sidebar-foreground">
+                    {user.name}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
-                <ChevronsUpDown className="ms-auto size-4" />
+                <ChevronsUpDown className="ms-auto size-4 text-sidebar-foreground" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -61,16 +67,20 @@ export function NavUser({
               sideOffset={4}
             >
               <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm tracking-normal">
                   <UserAvatar
                     src={user.avatar}
                     name={user.name}
-                    className="h-8 w-8 rounded-lg"
-                    fallbackClassName="rounded-lg"
+                    className="h-8 w-8 rounded-md"
+                    fallbackClassName="rounded-md"
                   />
                   <div className="grid flex-1 text-start text-sm leading-tight">
-                    <span className="truncate font-semibold">{user.name}</span>
-                    <span className="truncate text-xs">{user.email}</span>
+                    <span className="truncate font-semibold text-popover-foreground">
+                      {user.name}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuLabel>

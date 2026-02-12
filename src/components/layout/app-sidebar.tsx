@@ -1,3 +1,5 @@
+// @/components/layout/app-sidebar.tsx
+
 "use client";
 
 import {
@@ -18,8 +20,9 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { NavUser } from "./nav-user";
-import { NavGroup } from "./nav-group";
+import { NavUser } from "@/components/layout/nav-user";
+import { NavGroup } from "@/components/layout/nav-group";
+import Loading from "@/components/ui/loading";
 
 const navGroups = [
   {
@@ -83,7 +86,7 @@ export function AppSidebar() {
   const isAdmin = userRole === "ADMIN";
 
   if (status === "loading" || !session) {
-    return null;
+    return <Loading />;
   }
 
   return (

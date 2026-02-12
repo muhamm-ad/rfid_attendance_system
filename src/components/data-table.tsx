@@ -126,7 +126,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="theme-table-row border-b theme-border hover:bg-[var(--surface-muted)]"
+                  className="theme-table-row border-b theme-border hover:bg-(--surface-muted)"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -194,8 +194,8 @@ function DataTablePaginationControls<TData>({
             value={String(pageSize)}
             onChange={(e) => onPageSizeChange(e.target.value)}
             className={cn(
-              "theme-border bg-[var(--surface)] h-8 w-[70px] rounded-md border px-2 text-sm theme-text-muted",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:ring-offset-2 focus:border-[var(--brand)]"
+              "theme-border bg-(--surface) h-8 w-[70px] rounded-md border px-2 text-sm theme-text-muted",
+              "focus:outline-none focus:ring-2 focus:ring-(--brand)/50 focus:ring-offset-2 focus:border-(--brand)"
             )}
           >
             {pageSizeOptions.map((n) => (
