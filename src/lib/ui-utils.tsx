@@ -2,7 +2,9 @@
 
 import React from "react";
 
-export const DROP_DOWN_LABEL_CLASSNAME = "ml-1 mb-1.5 block text-sm font-medium";
+/** Single label style for filter dropdowns (Status, Action, Type, etc.) */
+export const DROP_DOWN_LABEL_CLASSNAME =
+  "mb-1.5 block text-sm font-medium theme-text-muted";
 
 
 

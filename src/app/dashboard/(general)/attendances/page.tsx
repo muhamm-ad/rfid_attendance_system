@@ -35,6 +35,65 @@ import {
 import { useRouter } from "next/navigation";
 import DateTimePicker from "@/components/date-time-picker";
 
+const DEFAULT_LOG_LIMIT = 25;
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "success", label: "Success" },
+  { value: "failed", label: "Failed" },
+] as const;
+
+const ACTION_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "in", label: "Entry (In)" },
+  { value: "out", label: "Exit (Out)" },
+] as const;
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "student", label: "Students" },
+  { value: "teacher", label: "Teachers" },
+  { value: "staff", label: "Staff" },
+  { value: "visitor", label: "Visitors" },
+] as const;
+
+type FilterOption = { value: string; label: string };
+
+function FilterSelect({
+  label,
+  value,
+  onValueChange,
+  options,
+  widthClass = "w-36",
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: readonly FilterOption[];
+  widthClass?: string;
+}) {
+  const current = value || "all";
+  return (
+    <div className={widthClass}>
+      <Label className={DROP_DOWN_LABEL_CLASSNAME}>{label}</Label>
+      <Select
+        value={current}
+        onValueChange={(v) => onValueChange(v === "all" ? "" : v)}
+      >
+        <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <SelectValue placeholder="All" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(({ value: optVal, label: optLabel }) => (
+            <SelectItem key={optVal} value={optVal}>
+              {optLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 /** Filters section for attendance logs */
 function LogsFiltersSection({
@@ -47,7 +106,6 @@ function LogsFiltersSection({
   onPersonSelect,
   onClearPerson,
   loadPersons,
-  loadLogs,
   onResetFilters,
 }: {
   filters: {
@@ -75,11 +133,10 @@ function LogsFiltersSection({
   onPersonSelect: (id: number) => void;
   onClearPerson: () => void;
   loadPersons: () => void;
-  loadLogs: () => void;
   onResetFilters: () => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-4 p-2 pb-6 items-end">
+    <div className="filter-bar">
       <div className="flex-1 min-w-[280px]">
         <PersonSearchDropdown
           persons={persons}
@@ -91,7 +148,7 @@ function LogsFiltersSection({
           placeholder="Search by name, ID or UUID..."
           label={
             <span className="flex items-center gap-2">
-              <UserCircle2 size={16} className="text-(--brand) shrink-0" />
+              <UserCircle2 size={16} className="page-title-icon shrink-0" />
               Search person
             </span>
           }
@@ -118,75 +175,33 @@ function LogsFiltersSection({
           onTimeChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
         />
       </div>
-      <div className="w-36">
-        <Label className={DROP_DOWN_LABEL_CLASSNAME}>
-          Status
-        </Label>
-        <Select
-          value={filters.status || "all"}
-          onValueChange={(v) =>
-            setFilters((f) => ({ ...f, status: v === "all" ? "" : v }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="success">Success</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="w-36">
-        <Label className={DROP_DOWN_LABEL_CLASSNAME}>
-          Action
-        </Label>
-        <Select
-          value={filters.action || "all"}
-          onValueChange={(v) =>
-            setFilters((f) => ({ ...f, action: v === "all" ? "" : v }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="in">Entry (In)</SelectItem>
-            <SelectItem value="out">Exit (Out)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="w-40">
-        <Label className="mb-2 block text-sm font-medium theme-text-muted">
-          Type
-        </Label>
-        <Select
-          value={filters.type || "all"}
-          onValueChange={(v) =>
-            setFilters((f) => ({ ...f, type: v === "all" ? "" : v }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="student">Students</SelectItem>
-            <SelectItem value="teacher">Teachers</SelectItem>
-            <SelectItem value="staff">Staff</SelectItem>
-            <SelectItem value="visitor">Visitors</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterSelect
+        label="Status"
+        value={filters.status}
+        onValueChange={(v) => setFilters((f) => ({ ...f, status: v }))}
+        options={STATUS_OPTIONS}
+      />
+      <FilterSelect
+        label="Action"
+        value={filters.action}
+        onValueChange={(v) => setFilters((f) => ({ ...f, action: v }))}
+        options={ACTION_OPTIONS}
+      />
+      <FilterSelect
+        label="Type"
+        value={filters.type}
+        onValueChange={(v) => setFilters((f) => ({ ...f, type: v }))}
+        options={TYPE_OPTIONS}
+        widthClass="w-40"
+      />
       <Button
         onClick={onResetFilters}
         variant="outline"
         size="sm"
         title="Reset all filters"
+        className="shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <RotateCcw className="h-4 w-4 text-(--brand)" />
+        <RotateCcw className="h-4 w-4 text-primary" />
       </Button>
     </div>
   );
@@ -203,7 +218,7 @@ export default function AttendancesPage() {
     status: "",
     action: "",
     type: "",
-    limit: 10,
+    limit: DEFAULT_LOG_LIMIT,
   });
   const [persons, setPersons] = useState<PersonWithPayments[]>([]);
   const [personSearchTerm, setPersonSearchTerm] = useState("");
@@ -278,7 +293,7 @@ export default function AttendancesPage() {
           <DataTableColumnHeader column={column} title="Timestamp" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm text-gray-600">
+          <span className="cell-timestamp">
             {new Date(row.original.timestamp).toLocaleString()}
           </span>
         ),
@@ -302,9 +317,7 @@ export default function AttendancesPage() {
               src={row.original.photo}
               name={row.original.person_name}
             />
-            <div className="font-medium text-gray-900">
-              {row.original.person_name}
-            </div>
+            <span className="cell-person-name">{row.original.person_name}</span>
           </div>
         ),
       },
@@ -314,9 +327,7 @@ export default function AttendancesPage() {
           <DataTableColumnHeader column={column} title="Person ID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm theme-text-muted font-mono">
-            {row.getValue("person_id")}
-          </span>
+          <span className="cell-muted-mono">{row.getValue("person_id")}</span>
         ),
       },
       {
@@ -334,7 +345,7 @@ export default function AttendancesPage() {
         cell: ({ row }) => (
           <div className="flex items-center gap-2 justify-center">
             {actionIcons[row.original.action]}
-            <span className="text-sm text-gray-700 capitalize">
+            <span className="cell-timestamp capitalize">
               {row.original.action}
             </span>
           </div>
@@ -361,9 +372,7 @@ export default function AttendancesPage() {
           <DataTableColumnHeader column={column} title="RFID UUID" />
         ),
         cell: ({ row }) => (
-          <span className="text-sm theme-text-muted font-mono">
-            {row.getValue("rfid_uuid")}
-          </span>
+          <span className="cell-muted-mono">{row.getValue("rfid_uuid")}</span>
         ),
       },
     ],
@@ -392,7 +401,7 @@ export default function AttendancesPage() {
       status: "",
       action: "",
       type: "",
-      limit: 10,
+      limit: DEFAULT_LOG_LIMIT,
     });
     setPersonSearchTerm("");
     setSelectedPersonId(null);
@@ -400,33 +409,33 @@ export default function AttendancesPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Clock size={28} />
+    <div className="page-container">
+      <header className="page-header">
+        <div className="page-title-group">
+          <h1 className="page-title">
+            <Clock size={28} className="page-title-icon" aria-hidden />
             Attendance Logs
-          </h2>
-          <p className="text-gray-600 mt-1">
+          </h1>
+          <p className="page-subtitle">
             View all access attempts and attendance records
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="page-actions">
           <Button
             variant="outline"
-            className="gap-0"
+            className="gap-2"
             title="View attendance statistics"
             onClick={() => router.push("/dashboard/attendances/statistics")}
           >
-            <BarChart3 className="size-4 mr-2" />
+            <BarChart3 className="size-4" />
             Statistics
           </Button>
-          <Button onClick={loadLogs} className="gap-0" title="Refresh logs">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button onClick={loadLogs} className="gap-2" title="Refresh logs">
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
         </div>
-      </div>
+      </header>
 
       <LogsFiltersSection
         filters={filters}
@@ -438,18 +447,12 @@ export default function AttendancesPage() {
         onPersonSelect={handlePersonSelect}
         onClearPerson={clearPersonSelection}
         loadPersons={loadPersons}
-        loadLogs={loadLogs}
         onResetFilters={resetAllFilters}
       />
 
       {error && (
-        <div
-          className="mb-4 rounded-lg theme-border border p-4"
-          style={{ backgroundColor: "var(--error-bg)" }}
-        >
-          <p className="text-sm" style={{ color: "var(--error)" }}>
-            {error}
-          </p>
+        <div className="alert-error" role="alert">
+          {error}
         </div>
       )}
 

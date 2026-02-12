@@ -10,8 +10,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        {/* <main className="relative flex-1 min-h-0 w-full bg-red-200"> */}
-        <main className="relative flex-1 min-h-0 w-full">
+        <main className="relative flex-1 min-h-0 w-full bg-primary/5">
           {children}
         </main>
       </div>

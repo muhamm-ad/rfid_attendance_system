@@ -33,10 +33,10 @@ import {
 import { cn } from "@/lib/cn-utils";
 
 export const DEFAULT_TABLE_HEADER_CLASSNAME =
-  "text-center font-medium text-gray-500 cursor-pointer hover:bg-gray-100";
+  "text-center font-medium theme-text-muted cursor-pointer hover:bg-accent/50 transition-colors";
 
 export const DEFAULT_TABLE_CELL_CLASSNAME =
-  "text-center whitespace-nowrap items-center justify-center";
+  "text-center whitespace-nowrap items-center justify-center text-foreground";
 
 export type { ColumnDef };
 
@@ -99,8 +99,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <Table className="min-w-full divide-y theme-border [&_tr]:border-b theme-border">
+      <div className="overflow-x-auto rounded-lg border theme-border bg-background">
+        <Table className="min-w-full [&_tr]:border-b theme-border">
           <TableHeader className="theme-table-header [&_tr]:border-b theme-border">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -120,13 +120,13 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="bg-white divide-y divide-gray-200">
+          <TableBody className="theme-table-body">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="theme-table-row border-b theme-border hover:bg-(--surface-muted)"
+                  className="border-b theme-border theme-table-row-hover"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -194,8 +194,9 @@ function DataTablePaginationControls<TData>({
             value={String(pageSize)}
             onChange={(e) => onPageSizeChange(e.target.value)}
             className={cn(
-              "theme-border bg-(--surface) h-8 w-[70px] rounded-md border px-2 text-sm theme-text-muted",
-              "focus:outline-none focus:ring-2 focus:ring-(--brand)/50 focus:ring-offset-2 focus:border-(--brand)"
+              "theme-border bg-background h-8 w-[70px] rounded-md border px-2 text-sm theme-text-muted transition-colors",
+              "hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50",
+              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-primary"
             )}
           >
             {pageSizeOptions.map((n) => (
@@ -275,7 +276,6 @@ export function DataTableColumnHeader<TData, TValue>({
     <Button
       variant="ghost"
       size="sm"
-      // className="-ml-3 h-8 data-[state=open]:bg-accent"
       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     >
       {title}
