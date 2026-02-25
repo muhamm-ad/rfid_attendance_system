@@ -1,21 +1,15 @@
-// @/components/ui/person-search-dropdown.tsx
-
+// @/components/person-search-dropdown.tsx
 "use client";
-
-import React, { useState, useEffect } from "react";
-import { Search, X, ChevronDownIcon } from "lucide-react";
-import { DROP_DOWN_LABEL_CLASSNAME, filterPersons } from "@/lib/ui-utils";
+import React, { useMemo, useRef } from "react";
+import { Search, X, ChevronDown } from "lucide-react";
+import { DROP_DOWN_LABEL_CLASSNAME } from "@/lib/ui-utils";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/cn-utils";
+import { InputSelect } from "@/components/ui/input-select";
+import { SelectOption } from "@/types";
 import { Person } from "@/types";
+import { cn } from "@/lib/cn-utils";
+
+type PersonOption = SelectOption & { person: Person };
 
 export default function PersonSearchDropdown({
   persons,
@@ -38,145 +32,185 @@ export default function PersonSearchDropdown({
   label?: React.ReactNode | string;
   onFocus?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const filteredPersons = filterPersons(persons, searchTerm);
-  const selectedPerson = persons.find((p) => p.id === selectedPersonId);
+  const options: PersonOption[] = useMemo(
+    () =>
+      persons.map((p) => ({
+        value: String(p.id),
+        label: `${p.first_name} ${p.last_name} (ID: ${p.id}, UUID: ${p.rfid_uuid})`,
+        person: p,
+      })),
+    [persons],
+  );
 
-  useEffect(() => {
-    if (open) {
-      onFocus?.();
-      if (selectedPerson) {
-        onSearchChange(
-          `${selectedPerson.first_name} ${selectedPerson.last_name}`,
-        );
-      }
-    }
-  }, [open, onFocus, selectedPerson, onSearchChange]);
+  // Filter options based on searchTerm
+  const filteredOptions = useMemo(() => {
+    if (!searchTerm.trim()) return options;
+    const lower = searchTerm.toLowerCase();
+    return options.filter(
+      (o) =>
+        o.person.first_name.toLowerCase().includes(lower) ||
+        o.person.last_name.toLowerCase().includes(lower) ||
+        String(o.person.id).includes(lower) ||
+        o.person.rfid_uuid?.toLowerCase().includes(lower),
+    );
+  }, [options, searchTerm]);
 
-  const handleValueChange = (value: string) => {
-    if (value === "") {
+  const value = selectedPersonId != null ? String(selectedPersonId) : "";
+
+  const selectedPerson = useMemo(
+    () => options.find((o) => o.value === value)?.person ?? null,
+    [options, value],
+  );
+
+  const handleValueChange = (v: string) => {
+    if (v === "") {
       onClear();
     } else {
-      onPersonSelect(Number(value));
+      onPersonSelect(Number(v));
+      // Reset search after selection
+      onSearchChange("");
     }
-    setOpen(false);
   };
 
-  const displayValue = open
-    ? searchTerm
-    : selectedPerson
-      ? `${selectedPerson.first_name} ${selectedPerson.last_name}`
-      : "";
+  const handleClear = () => {
+    onClear();
+    onSearchChange("");
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="relative">
       {label && <label className={DROP_DOWN_LABEL_CLASSNAME}>{label}</label>}
-      <div className="relative flex h-9 w-full items-center">
-        <Search
-          className="absolute left-3 top-1/2 z-20 size-4 -translate-y-1/2 shrink-0 text-muted-foreground pointer-events-none"
-          aria-hidden
-        />
-        <Select
-          open={open}
-          onOpenChange={setOpen}
-          value={selectedPersonId != null ? String(selectedPersonId) : ""}
-          onValueChange={handleValueChange}
-        >
-          {/* Invisible trigger for positioning only; real input is below */}
-          <SelectTrigger
-            className="absolute inset-0 h-full w-full opacity-0 pointer-events-none cursor-text"
-            aria-hidden
-          >
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent
-            className="max-h-60 overflow-y-auto overflow-x-hidden p-0 w-(--radix-select-trigger-width)"
-            position="popper"
-            sideOffset={4}
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            {filteredPersons.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                No persons found
-              </div>
-            ) : (
-              filteredPersons.slice(0, 50).map((person) => (
-                <SelectItem
-                  key={person.id}
-                  value={String(person.id)}
-                  className="p-2 px-10 w-full"
-                >
-                  <div className="relative flex items-center justify-between gap-3 w-full min-w-0">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <UserAvatar
-                        src={person.photo ?? undefined}
-                        name={`${person.first_name} ${person.last_name}`}
-                        className="h-7 w-7 shrink-0 rounded-md"
-                        fallbackClassName="rounded-md"
-                      />
-                      <span className="truncate font-medium text-foreground">
-                        {person.first_name} {person.last_name}
-                      </span>
-                    </div>
-                    <div className="flex gap-5 items-center shrink-0">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        ID: {person.id}
-                      </span>
-                      <span className="text-xs text-muted-foreground/80 font-mono">
-                        UUID: {person.rfid_uuid}
-                      </span>
-                    </div>
-                  </div>
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        <Input
-          type="text"
-          value={displayValue}
-          onChange={(e) => {
-            const v = e.target.value;
-            onSearchChange(v);
-            setOpen(true);
-            if (v === "") onClear();
-          }}
-          onFocus={() => {
-            setOpen(true);
+      <InputSelect
+        options={filteredOptions}
+        value={value}
+        onValueChange={handleValueChange}
+        placeholder={placeholder}
+        clearable
+        // Pass searchValue to hide the internal CommandInput
+        searchValue={searchTerm}
+        contentClassName="max-h-60 overflow-y-auto overflow-x-hidden p-0 w-[var(--radix-popover-trigger-width)]"
+        onOpenChange={(open) => {
+          if (open) {
             onFocus?.();
-          }}
-          placeholder={placeholder}
-          className={cn(
-            "border-input bg-background ring-offset-background placeholder:text-muted-foreground h-9 w-full rounded-md border px-3 py-2 text-sm shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-            "hover:bg-accent hover:text-accent-foreground dark:hover:bg-input/50",
-            "relative z-10 pl-10 pr-10",
-            !selectedPerson && !open && "text-muted-foreground",
-          )}
-          readOnly={!open && selectedPerson != null}
-        />
-        <ChevronDownIcon
-          className={cn(
-            "pointer-events-none absolute right-3 top-1/2 z-20 size-4 -translate-y-1/2 shrink-0 opacity-50 transition-transform",
-            open && "rotate-180",
-          )}
-          aria-hidden
-        />
-        {selectedPersonId != null && (
+            // Re-focus input when popover opens
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }
+        }}
+        renderOption={(option) => {
+          const opt = option as PersonOption;
+          const p = opt.person;
+          if (!p) return <span>{opt.label}</span>;
+          return (
+            <div className="relative flex w-full min-w-0 items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <UserAvatar
+                  src={p.photo ?? undefined}
+                  name={`${p.first_name} ${p.last_name}`}
+                  className="h-7 w-7 shrink-0 rounded-md"
+                  fallbackClassName="rounded-md"
+                />
+                <span className="truncate font-medium text-foreground">
+                  {p.first_name} {p.last_name}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-5">
+                <span className="text-xs font-mono text-muted-foreground">
+                  ID: {p.id}
+                </span>
+                <span className="text-xs font-mono text-muted-foreground/80">
+                  UUID: {p.rfid_uuid}
+                </span>
+              </div>
+            </div>
+          );
+        }}
+      >
+        {({ isPopoverOpen, setIsPopoverOpen }) => (
+          /*
+           * Custom trigger: a single input field that doubles as the search bar.
+           * When a person is selected it shows their info, otherwise it shows
+           * the raw search text the user is typing.
+           */
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onClear();
+            className={cn(
+              "relative flex h-9 min-h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm",
+              "hover:bg-accent hover:text-accent-foreground",
+              "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
+              isPopoverOpen && "ring-1 ring-ring",
+            )}
+            onClick={() => {
+              setIsPopoverOpen(true);
+              setTimeout(() => inputRef.current?.focus(), 0);
             }}
-            className="absolute right-9 top-1/2 z-20 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted"
-            aria-label="Clear selection"
           >
-            <X className="size-4" />
+            {/* Left search icon */}
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+
+            {/* If a person is selected and we're not actively searching, show avatar + name */}
+            {selectedPerson && !searchTerm ? (
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <UserAvatar
+                  src={selectedPerson.photo ?? undefined}
+                  name={`${selectedPerson.first_name} ${selectedPerson.last_name}`}
+                  className="h-5 w-5 shrink-0 rounded-md"
+                  fallbackClassName="rounded-md"
+                />
+                <span className="truncate font-medium text-foreground">
+                  {selectedPerson.first_name} {selectedPerson.last_name}
+                </span>
+              </div>
+            ) : (
+              /* Single search input — this IS the search bar */
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchTerm}
+                placeholder={selectedPerson ? `${selectedPerson.first_name} ${selectedPerson.last_name}` : placeholder}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  // Open dropdown as soon as user starts typing
+                  if (!isPopoverOpen) setIsPopoverOpen(true);
+                }}
+                onFocus={() => {
+                  onFocus?.();
+                  if (!isPopoverOpen) setIsPopoverOpen(true);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="min-w-0 flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+              />
+            )}
+
+            {/* Right side: clear button or chevron */}
+            <div className="ml-auto flex shrink-0 items-center gap-0.5">
+              {(selectedPerson || searchTerm) && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClear();
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleClear()}
+                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Clear selection"
+                >
+                  <X className="h-4 w-4" />
+                </span>
+              )}
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 opacity-50 transition-transform",
+                  isPopoverOpen && "rotate-180",
+                )}
+              />
+            </div>
           </button>
         )}
-      </div>
+      </InputSelect>
     </div>
   );
 }

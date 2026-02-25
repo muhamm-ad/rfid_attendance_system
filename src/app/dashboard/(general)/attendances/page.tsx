@@ -80,7 +80,7 @@ function FilterSelect({
         value={current}
         onValueChange={(v) => onValueChange(v === "all" ? "" : v)}
       >
-        <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+        <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border-input">
           <SelectValue placeholder="All" />
         </SelectTrigger>
         <SelectContent>
@@ -136,8 +136,8 @@ function LogsFiltersSection({
   onResetFilters: () => void;
 }) {
   return (
-    <div className="filter-bar">
-      <div className="flex-1 min-w-[280px]">
+    <div className="filter-bar flex flex-wrap gap-4 items-end">
+      <div className="flex-1">
         <PersonSearchDropdown
           persons={persons}
           selectedPersonId={selectedPersonId}

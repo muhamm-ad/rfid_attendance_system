@@ -88,6 +88,14 @@ export interface AttendanceLog {
 
 // ======================= UI TYPES ======================
 
+export type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
+
+export interface SelectOption {
+  value: string;
+  label: string;
+  icon?: React.ElementType;
+}
+
 type BaseNavItem = {
   title: string;
   badge?: string;

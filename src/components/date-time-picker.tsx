@@ -19,8 +19,8 @@ import { DROP_DOWN_LABEL_CLASSNAME } from "@/lib/ui-utils";
 /** Date + time picker in a popover (shadcn-style) */
 export default function DateTimePicker({
   label,
-  dateValue,
-  timeValue = "00:00",
+  dateValue = new Date().toISOString().split('T')[0], // today's date
+  timeValue = new Date().toISOString().split('T')[1].split(':').slice(0, 2).join(':'), // current time
   onDateChange,
   onTimeChange,
   id,
@@ -35,7 +35,7 @@ export default function DateTimePicker({
   const [open, setOpen] = useState(false);
   const [contentWidth, setContentWidth] = useState<number | undefined>(undefined);
   const triggerRef = useRef<HTMLDivElement>(null);
-  const date = dateValue ? new Date(dateValue + "T00:00:00") : undefined;
+  const date = dateValue ? new Date(dateValue) : undefined;
 
   useEffect(() => {
     if (open && triggerRef.current) {
@@ -52,7 +52,7 @@ export default function DateTimePicker({
             variant="outline"
             id={id}
             className={cn(
-              "w-full justify-between font-normal",
+              "w-full justify-between font-normal border-input",
               !dateValue && "text-muted-foreground",
             )}
           >
