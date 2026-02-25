@@ -53,6 +53,8 @@ export interface DataTableProps<TData, TValue> {
   pageSizeOptions?: number[];
   /** Called when user changes rows per page (e.g. to sync with parent state) */
   onPageSizeChange?: (pageSize: number) => void;
+  /** Extra classes on the root element (e.g. "flex-1 min-h-0") */
+  className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -63,6 +65,7 @@ export function DataTable<TData, TValue>({
   initialSorting = [],
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   onPageSizeChange,
+  className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [pagination, setPagination] = React.useState<PaginationState>({
@@ -98,7 +101,7 @@ export function DataTable<TData, TValue>({
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn("flex flex-col h-full min-h-0", className)}>
       <div className="overflow-x-auto rounded-lg border theme-border bg-background">
         <Table className="min-w-full [&_tr]:border-b theme-border">
           <TableHeader className="theme-table-header [&_tr]:border-b theme-border">
@@ -156,11 +159,13 @@ export function DataTable<TData, TValue>({
       </div>
 
       {data.length > 0 && (
-        <DataTablePaginationControls
-          table={table}
-          pageSizeOptions={pageSizeOptions}
-          onPageSizeChange={handlePageSizeChange}
-        />
+        <div className="mt-auto pt-3">
+          <DataTablePaginationControls
+            table={table}
+            pageSizeOptions={pageSizeOptions}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </div>
       )}
     </div>
   );

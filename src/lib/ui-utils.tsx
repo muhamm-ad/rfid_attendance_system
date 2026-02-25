@@ -1,69 +1,159 @@
 // @/lib/ui-utils.tsx
 
 import React from "react";
+import { AlertCircle } from "lucide-react";
+import { cn } from "./cn-utils";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// ─── Label & focus constants ───────────────────────────────────────────────────
 
 /** Single label style for filter dropdowns (Status, Action, Type, etc.) */
 export const DROP_DOWN_LABEL_CLASSNAME =
   "mb-1.5 block text-sm font-medium theme-text-muted";
 
+/** Label inside a form field (spacing handled by parent space-y). */
+export const FORM_LABEL_CLASSNAME = "block text-sm font-medium theme-text-muted";
 
+/** Focus ring applied on interactive controls (buttons, triggers, inputs). */
+export const FOCUS_RING_CLASSNAME =
+  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Common CSS classes (theme-aligned)
-export const inputClasses =
-  "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors";
-
-export const selectClasses =
-  "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors";
-
-export const buttonPrimaryClasses =
-  "flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-lg hover:opacity-90 transition-opacity";
-
-export const buttonSecondaryClasses =
-  "flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors";
-
-// Badge components
-export const Badge: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-}> = ({ children, className = "" }) => (
-  <span className={`px-2 py-1 text-xs font-medium rounded-full ${className}`}>
-    {children}
-  </span>
+/** SelectTrigger base class: focus ring + border. */
+export const FILTER_SELECT_TRIGGER_CLASSNAME = cn(
+  FOCUS_RING_CLASSNAME,
+  "border-input",
 );
 
-export const BadgeGray: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => <Badge className="theme-badge-muted capitalize">{children}</Badge>;
+/** Reset-filter button class: shrink + focus ring. */
+export const RESET_FILTER_BUTTON_CLASSNAME = cn(
+  "shrink-0",
+  FOCUS_RING_CLASSNAME,
+);
 
-export const BadgeBlue: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => <Badge className="bg-blue-50 text-blue-700">{children}</Badge>;
+/**
+ * Focus ring for *container* elements with nested interactive children
+ * (e.g. a combobox trigger whose inner <input> receives focus).
+ * Uses focus-within so the ring appears on the wrapper, not the child.
+ */
+export const FOCUS_WITHIN_RING_CLASSNAME =
+  "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring";
 
-// Status colors (aligned with theme)
-export const statusColors = {
-  success: "theme-badge-success",
-  failed: "theme-badge-error",
-};
+/** Ring applied when a popover / dropdown trigger is in its open state. */
+export const OPEN_STATE_RING_CLASSNAME = "ring-1 ring-ring";
 
-// Type colors (aligned with theme)
+// ─── Conditional class helpers ────────────────────────────────────────────────
+
+export const ERROR_CLASSNAME = (hasError: boolean) =>
+  cn(hasError && "border-destructive focus-visible:ring-destructive");
+
+export const DISABLED_CLASSNAME = (disabled: boolean) =>
+  cn(disabled && "opacity-50 cursor-not-allowed");
+
+export const MUTED_CLASSNAME = (muted: boolean) =>
+  cn(muted && "text-muted-foreground");
+
+export const FOCUSED_CLASSNAME = (focused: boolean) =>
+  cn(focused && FOCUS_RING_CLASSNAME);
+
+/** SelectTrigger class with optional disabled / error states. */
+export const SELECT_TRIGGER_CLASSNAME = (
+  disabled: boolean,
+  hasError: boolean,
+) =>
+  cn(
+    FILTER_SELECT_TRIGGER_CLASSNAME,
+    DISABLED_CLASSNAME(disabled),
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** DateTimePicker trigger button class. */
+export const DATE_PICKER_TRIGGER_CLASSNAME = (
+  dateValue: string,
+  disabled: boolean,
+  hasError: boolean,
+) =>
+  cn(
+    "w-full justify-between font-normal border-input",
+    MUTED_CLASSNAME(!dateValue),
+    DISABLED_CLASSNAME(disabled),
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** Base class for native form inputs and selects (text, file, select…). */
+export const INPUT_CLASSNAME = (hasError: boolean) =>
+  cn(
+    "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors",
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** Inline error message displayed beneath a form field. */
+export function FormFieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden />
+      {message}
+    </p>
+  );
+}
+
+// ─── Shared FilterSelect component ────────────────────────────────────────────
+
+export type FilterOption = { value: string; label: string };
+
+/**
+ * Reusable labelled Select for filter bars.
+ * Treats the empty string as "all" internally.
+ */
+export function FilterSelect({
+  label,
+  value,
+  onValueChange,
+  options,
+  widthClass = "w-36",
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: readonly FilterOption[];
+  widthClass?: string;
+}) {
+  const current = value || "all";
+  return (
+    <div className={widthClass}>
+      <Label className={DROP_DOWN_LABEL_CLASSNAME}>{label}</Label>
+      <Select
+        value={current}
+        onValueChange={(v) => onValueChange(v === "all" ? "" : v)}
+      >
+        <SelectTrigger className={FILTER_SELECT_TRIGGER_CLASSNAME}>
+          <SelectValue placeholder="All" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(({ value: optVal, label: optLabel }) => (
+            <SelectItem key={optVal} value={optVal}>
+              {optLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+
 export const typeColors = {
-  student: "theme-badge-brand",
-  teacher: "bg-[#f3e8ff] text-[#7c3aed]",
-  staff: "theme-badge-success",
-  visitor: "bg-[#fff7ed] text-[#ea580c]",
+  student: "bg-[#ede9fe]",   // light purple for good black contrast
+  teacher: "bg-[#f3e8ff]",   // very light lavender
+  staff: "bg-[#dcfce7]",     // light green
+  visitor: "bg-[#fff7ed]",   // light orange-cream
 };
 
 // Helper to format level

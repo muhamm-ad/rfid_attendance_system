@@ -13,6 +13,7 @@ import {
   RotateCcw,
   UserCircle2,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DataTable,
   type ColumnDef,
@@ -21,17 +22,13 @@ import {
 } from "@/components/data-table";
 import PersonSearchDropdown from "@/components/person-search-dropdown";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { statusColors, BadgeGray, DROP_DOWN_LABEL_CLASSNAME } from "@/lib/ui-utils";
+import {
+  FilterSelect,
+  RESET_FILTER_BUTTON_CLASSNAME,
+  typeColors,
+} from "@/lib/ui-utils";
 import Loading from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import DateTimePicker from "@/components/date-time-picker";
 
@@ -57,43 +54,6 @@ const TYPE_OPTIONS = [
   { value: "visitor", label: "Visitors" },
 ] as const;
 
-type FilterOption = { value: string; label: string };
-
-function FilterSelect({
-  label,
-  value,
-  onValueChange,
-  options,
-  widthClass = "w-36",
-}: {
-  label: string;
-  value: string;
-  onValueChange: (v: string) => void;
-  options: readonly FilterOption[];
-  widthClass?: string;
-}) {
-  const current = value || "all";
-  return (
-    <div className={widthClass}>
-      <Label className={DROP_DOWN_LABEL_CLASSNAME}>{label}</Label>
-      <Select
-        value={current}
-        onValueChange={(v) => onValueChange(v === "all" ? "" : v)}
-      >
-        <SelectTrigger className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border-input">
-          <SelectValue placeholder="All" />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map(({ value: optVal, label: optLabel }) => (
-            <SelectItem key={optVal} value={optVal}>
-              {optLabel}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 /** Filters section for attendance logs */
 function LogsFiltersSection({
@@ -110,7 +70,9 @@ function LogsFiltersSection({
 }: {
   filters: {
     startDate: string;
+    startTime: string;
     endDate: string;
+    endTime: string;
     status: string;
     action: string;
     type: string;
@@ -119,7 +81,9 @@ function LogsFiltersSection({
   setFilters: React.Dispatch<
     React.SetStateAction<{
       startDate: string;
+      startTime: string;
       endDate: string;
+      endTime: string;
       status: string;
       action: string;
       type: string;
@@ -162,8 +126,9 @@ function LogsFiltersSection({
           id="start-date"
           label="Start date"
           dateValue={filters.startDate}
+          timeValue={filters.startTime}
           onDateChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
-          onTimeChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
+          onTimeChange={(v) => setFilters((f) => ({ ...f, startTime: v }))}
         />
       </div>
       <div className="w-50">
@@ -171,8 +136,9 @@ function LogsFiltersSection({
           id="end-date"
           label="End date"
           dateValue={filters.endDate}
+          timeValue={filters.endTime}
           onDateChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
-          onTimeChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
+          onTimeChange={(v) => setFilters((f) => ({ ...f, endTime: v }))}
         />
       </div>
       <FilterSelect
@@ -199,7 +165,7 @@ function LogsFiltersSection({
         variant="outline"
         size="sm"
         title="Reset all filters"
-        className="shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className={RESET_FILTER_BUTTON_CLASSNAME}
       >
         <RotateCcw className="h-4 w-4 text-primary" />
       </Button>
@@ -214,7 +180,9 @@ export default function AttendancesPage() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     startDate: "",
+    startTime: "",
     endDate: "",
+    endTime: "",
     status: "",
     action: "",
     type: "",
@@ -233,8 +201,20 @@ export default function AttendancesPage() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
+      if (filters.startDate && filters.startTime) {
+        params.append("startDate", `${filters.startDate}T${filters.startTime}`);
+      } else if (filters.startDate) {
+        params.append("startDate", filters.startDate);
+      } else if (filters.startTime) {
+        params.append("startTime", filters.startTime);
+      }
+      if (filters.endDate && filters.endTime) {
+        params.append("endDate", `${filters.endDate}T${filters.endTime}`);
+      } else if (filters.endDate) {
+        params.append("endDate", filters.endDate);
+      } else if (filters.endTime) {
+        params.append("endTime", filters.endTime);
+      }
       if (filters.status) params.append("status", filters.status);
       if (filters.action) params.append("action", filters.action);
       if (selectedPersonId) {
@@ -253,7 +233,9 @@ export default function AttendancesPage() {
     }
   }, [
     filters.startDate,
+    filters.startTime,
     filters.endDate,
+    filters.endTime,
     filters.status,
     filters.action,
     filters.type,
@@ -335,7 +317,14 @@ export default function AttendancesPage() {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Type" />
         ),
-        cell: ({ row }) => <BadgeGray>{row.getValue("person_type")}</BadgeGray>,
+        cell: ({ row }) => {
+          const type = row.original.person_type as keyof typeof typeColors;
+          return (
+            <Badge className={`${typeColors[type] ?? "theme-badge-muted"}`}>
+              {type}
+            </Badge>
+          );
+        },
       },
       {
         accessorKey: "action",
@@ -357,13 +346,15 @@ export default function AttendancesPage() {
           <DataTableColumnHeader column={column} title="Status" />
         ),
         cell: ({ row }) => (
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              statusColors[row.original.status]
+          <Badge
+            className={`capitalize ${
+              row.original.status === "success"
+                ? "theme-badge-success"
+                : "theme-badge-error"
             }`}
           >
             {row.original.status}
-          </span>
+          </Badge>
         ),
       },
       {
@@ -397,7 +388,9 @@ export default function AttendancesPage() {
   function resetAllFilters() {
     setFilters({
       startDate: "",
+      startTime: "",
       endDate: "",
+      endTime: "",
       status: "",
       action: "",
       type: "",
@@ -456,20 +449,22 @@ export default function AttendancesPage() {
         </div>
       )}
 
-      {loading ? (
-        <Loading />
-      ) : (
-        <DataTable<AttendanceLog, unknown>
-          data={logs}
-          columns={logColumns}
-          emptyMessage="No records found"
-          pageSize={filters.limit}
-          initialSorting={[{ id: "timestamp", desc: true }]}
-          onPageSizeChange={(size) =>
-            setFilters((f) => ({ ...f, limit: size }))
-          }
-        />
-      )}
+      <div className="relative flex-1 h-full w-full">
+        {loading ? (
+          <Loading />
+        ) : (
+          <DataTable<AttendanceLog, unknown>
+            data={logs}
+            columns={logColumns}
+            emptyMessage="No records found"
+            pageSize={filters.limit}
+            initialSorting={[{ id: "timestamp", desc: true }]}
+            onPageSizeChange={(size) =>
+              setFilters((f) => ({ ...f, limit: size }))
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -3,23 +3,32 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { PersonWithPayments } from "@/types";
 import {
   Users,
   Plus,
   Edit2,
   Trash2,
-  X,
   Scan,
   MoreHorizontal,
-  RefreshCw,
+  BarChart3,
+  RotateCcw,
   UserCircle2,
+  RefreshCw,
 } from "lucide-react";
 import {
   DataTable,
   type ColumnDef,
   DataTableColumnHeader,
 } from "@/components/data-table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import PersonSearchDropdown from "@/components/person-search-dropdown";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -33,21 +42,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   typeColors,
-  BadgeGray,
-  inputClasses,
-  selectClasses,
-  buttonPrimaryClasses,
-  buttonSecondaryClasses,
+  FilterSelect,
+  DROP_DOWN_LABEL_CLASSNAME,
+  RESET_FILTER_BUTTON_CLASSNAME,
+  INPUT_CLASSNAME,
+  FORM_LABEL_CLASSNAME,
+  FormFieldError,
 } from "@/lib/ui-utils";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-/** Filters section in an accordion, using shadcn components */
+import Loading from "@/components/ui/loading";
+import { useRouter } from "next/navigation";
+
+const PERSON_TYPE_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: "student", label: "Students" },
+  { value: "teacher", label: "Teachers" },
+  { value: "staff", label: "Staff" },
+  { value: "visitor", label: "Visitors" },
+] as const;
+
+/** Filters section for persons */
 function PersonFiltersSection({
   typeFilter,
   setTypeFilter,
@@ -58,6 +71,7 @@ function PersonFiltersSection({
   onPersonSelect,
   onClearSearch,
   loadPersons,
+  onResetFilters,
 }: {
   typeFilter: string;
   setTypeFilter: (v: string) => void;
@@ -71,63 +85,57 @@ function PersonFiltersSection({
   onResetFilters: () => void;
 }) {
   return (
-    <div className="mb-6 theme-accordion-filters">
-      <div className="flex items-center gap-2 py-4">
-        <span className="text-(--brand) font-semibold">Filters</span>
+    <div className="filter-bar flex flex-wrap gap-4 items-end">
+      <div className="flex-1 min-w-[280px]">
+        <PersonSearchDropdown
+          persons={allPersons}
+          selectedPersonId={selectedPersonId}
+          searchTerm={searchTerm}
+          onSearchChange={onSearchChange}
+          onPersonSelect={onPersonSelect}
+          onClear={onClearSearch}
+          placeholder="Search by UUID, ID or Name..."
+          label={
+            <span className="flex items-center gap-2">
+              <UserCircle2 size={16} className="page-title-icon shrink-0" />
+              Search person
+            </span>
+          }
+          onFocus={() => {
+            if (allPersons.length === 0) loadPersons();
+          }}
+        />
       </div>
-      <div className="flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[280px]">
-          <PersonSearchDropdown
-            persons={allPersons}
-            selectedPersonId={selectedPersonId}
-            searchTerm={searchTerm}
-            onSearchChange={onSearchChange}
-            onPersonSelect={onPersonSelect}
-            onClear={onClearSearch}
-            placeholder="Search by UUID, ID or Name..."
-            label={
-              <span className="flex items-center gap-2">
-                <UserCircle2
-                  size={16}
-                  className="text-(--brand) shrink-0"
-                />
-                Recherche personne
-              </span>
-            }
-            onFocus={() => {
-              if (allPersons.length === 0) loadPersons();
-            }}
-          />
-        </div>
-        <div className="w-48">
-          <Label className="mb-2 block text-sm font-medium theme-text-muted">
-            Type
-          </Label>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="student">Students</SelectItem>
-              <SelectItem value="teacher">Teachers</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="visitor">Visitors</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <FilterSelect
+        label="Type"
+        value={typeFilter}
+        onValueChange={setTypeFilter}
+        options={PERSON_TYPE_OPTIONS}
+        widthClass="w-40"
+      />
+      <Button
+        onClick={onResetFilters}
+        variant="outline"
+        size="sm"
+        title="Reset all filters"
+        className={RESET_FILTER_BUTTON_CLASSNAME}
+      >
+        <RotateCcw className="h-4 w-4 text-primary" />
+      </Button>
     </div>
   );
 }
 
 export default function PersonsPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
   const [persons, setPersons] = useState<PersonWithPayments[]>([]);
   const [allPersons, setAllPersons] = useState<PersonWithPayments[]>([]); // Store all persons for dropdown
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("");
   const [filters, setFilters] = useState({
     limit: 10,
   });
@@ -153,15 +161,19 @@ export default function PersonsPage() {
   const [lastScanTimestamp, setLastScanTimestamp] = useState<string | null>(
     null,
   );
+  const [formErrors, setFormErrors] = useState<{
+    rfid_uuid?: string;
+    nom?: string;
+    prenom?: string;
+  }>({});
 
   const loadPersons = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const url =
-        typeFilter === "all"
-          ? "/api/persons"
-          : `/api/persons?type=${typeFilter}`;
+      const url = typeFilter
+        ? `/api/persons?type=${typeFilter}`
+        : "/api/persons";
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to load persons");
@@ -209,10 +221,9 @@ export default function PersonsPage() {
           );
         } else {
           // If allPersons is not loaded, load it first
-          const url =
-            typeFilter === "all"
-              ? "/api/persons"
-              : `/api/persons?type=${typeFilter}`;
+          const url = typeFilter
+            ? `/api/persons?type=${typeFilter}`
+            : "/api/persons";
           const res = await fetch(url);
           const fetchedData = await res.json();
           if (!res.ok)
@@ -223,12 +234,9 @@ export default function PersonsPage() {
           );
         }
       } else {
-        const url =
-          typeFilter === "all"
-            ? `/api/search?q=${encodeURIComponent(searchTerm)}`
-            : `/api/search?q=${encodeURIComponent(
-                searchTerm,
-              )}&type=${typeFilter}`;
+        const url = typeFilter
+          ? `/api/search?q=${encodeURIComponent(searchTerm)}&type=${typeFilter}`
+          : `/api/search?q=${encodeURIComponent(searchTerm)}`;
         const res = await fetch(url);
         const fetchedData = await res.json();
         if (!res.ok) throw new Error(fetchedData?.error || "Search failed");
@@ -261,10 +269,9 @@ export default function PersonsPage() {
         setPersons(filtered);
       } else {
         // If allPersons is not loaded, load it first
-        const url =
-          typeFilter === "all"
-            ? "/api/persons"
-            : `/api/persons?type=${typeFilter}`;
+        const url = typeFilter
+          ? `/api/persons?type=${typeFilter}`
+          : "/api/persons";
         const res = await fetch(url);
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Failed to load persons");
@@ -283,10 +290,6 @@ export default function PersonsPage() {
 
   function handleSearchInputChange(value: string) {
     setSearchTerm(value);
-    if (value === "") {
-      setSelectedPersonId(null);
-      loadPersons();
-    }
   }
 
   function clearSearchSelection() {
@@ -296,7 +299,7 @@ export default function PersonsPage() {
   }
 
   async function resetAllFilters() {
-    setTypeFilter("all");
+    setTypeFilter("");
     setSearchTerm("");
     setSelectedPersonId(null);
     setLoading(true);
@@ -329,6 +332,7 @@ export default function PersonsPage() {
     setIsScanning(false);
     setScanStatus("idle");
     setLastScanTimestamp(null);
+    setFormErrors({});
   }
 
   // Check if UUID already exists
@@ -430,8 +434,22 @@ export default function PersonsPage() {
     return data.photo_path;
   }
 
+  function validateForm(): boolean {
+    const errors: typeof formErrors = {};
+    if (!formData.rfid_uuid.trim()) {
+      errors.rfid_uuid = "RFID UUID is required.";
+    } else if (checkDuplicateUUID(formData.rfid_uuid)) {
+      errors.rfid_uuid = "This UUID already exists in the system.";
+    }
+    if (!formData.nom.trim()) errors.nom = "Last name is required.";
+    if (!formData.prenom.trim()) errors.prenom = "First name is required.";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validateForm()) return;
     setError(null);
     setUploadingPhoto(true);
 
@@ -530,28 +548,35 @@ export default function PersonsPage() {
         ),
       },
       {
-        id: "name",
-        accessorFn: (row) => `${row.first_name} ${row.last_name}`,
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Name" />
+        id: "avatar",
+        enableSorting: false,
+        header: "",
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <UserAvatar
+              src={row.original.photo}
+              name={`${row.original.first_name} ${row.original.last_name}`}
+            />
+          </div>
         ),
-        cell: ({ row }) => {
-          const person = row.original;
-          return (
-            <div className="flex items-center gap-3 justify-center">
-              <UserAvatar
-                src={person.photo}
-                name={`${person.first_name} ${person.last_name}`}
-              />
-              <div
-                className="font-medium"
-                style={{ color: "var(--foreground)" }}
-              >
-                {person.first_name} {person.last_name}
-              </div>
-            </div>
-          );
-        },
+      },
+      {
+        accessorKey: "first_name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="First Name" />
+        ),
+        cell: ({ row }) => (
+          <span className="cell-person-name">{row.original.first_name}</span>
+        ),
+      },
+      {
+        accessorKey: "last_name",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Last Name" />
+        ),
+        cell: ({ row }) => (
+          <span className="cell-person-name">{row.original.last_name}</span>
+        ),
       },
       {
         accessorKey: "type",
@@ -682,41 +707,49 @@ export default function PersonsPage() {
   );
 
   return (
-    <div className="theme-card rounded-xl p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2
-            className="text-2xl font-bold flex items-center gap-2"
-            style={{ color: "var(--foreground)" }}
-          >
-            <Users size={28} className="text-(--brand)" />
+    <div className="page-container h-full">
+      <header className="page-header">
+        <div className="page-title-group">
+          <h1 className="page-title">
+            <Users size={28} className="page-title-icon" aria-hidden />
             Person Management
-          </h2>
-          <p className="theme-text-muted mt-1">
+          </h1>
+          <p className="page-subtitle">
             Manage students, teachers, staff, and visitors
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="page-actions">
+          {isAdmin && (
+            <Button
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
+              className="gap-2"
+            >
+              <Plus size={20} />
+              Add Person
+            </Button>
+          )}
           <Button
-            onClick={resetAllFilters}
             variant="outline"
-            title="Reset all filters and refresh"
+            className="gap-2"
+            title="View person statistics"
+            onClick={() => router.push("/dashboard/persons/statistics")}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Reset & Refresh
+            <BarChart3 className="size-4" />
+            Statistics
           </Button>
           <Button
-            onClick={() => {
-              resetForm();
-              setShowForm(true);
-            }}
-            className={buttonPrimaryClasses}
+            onClick={loadPersons}
+            className="gap-2"
+            title="Refresh persons"
           >
-            <Plus size={20} />
-            Add Person
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
         </div>
-      </div>
+      </header>
 
       <PersonFiltersSection
         typeFilter={typeFilter}
@@ -732,228 +765,236 @@ export default function PersonsPage() {
       />
 
       {error && (
-        <div
-          className="mb-4 rounded-lg theme-border border p-4"
-          style={{ backgroundColor: "var(--error-bg)" }}
-        >
-          <p className="text-sm" style={{ color: "var(--error)" }}>
-            {error}
-          </p>
+        <div className="alert-error" role="alert">
+          {error}
         </div>
       )}
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="theme-card rounded-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className="text-xl font-bold"
-                style={{ color: "var(--foreground)" }}
-              >
-                {editingPerson ? "Edit Person" : "Add New Person"}
-              </h3>
-              <button
-                onClick={resetForm}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div
-                  className="mb-4 rounded-lg theme-border border p-4"
-                  style={{ backgroundColor: "var(--error-bg)" }}
+      {/* Form Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+              {editingPerson ? (
+                <>
+                  <Edit2 size={18} className="text-primary" />
+                  Edit Person
+                </>
+              ) : (
+                <>
+                  <UserCircle2 size={18} className="text-primary" />
+                  Add New Person
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 mt-1">
+            {error && (
+              <div className="alert-error" role="alert">
+                {error}
+              </div>
+            )}
+
+            {/* RFID UUID */}
+            <div className="space-y-1.5">
+              <label className={FORM_LABEL_CLASSNAME}>
+                RFID UUID <span className="text-destructive">*</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.rfid_uuid}
+                  onChange={(e) => {
+                    setFormData({ ...formData, rfid_uuid: e.target.value });
+                    setScanStatus("idle");
+                    if (formErrors.rfid_uuid)
+                      setFormErrors((prev) => ({ ...prev, rfid_uuid: undefined }));
+                  }}
+                  required
+                  className={`${INPUT_CLASSNAME(!!formErrors.rfid_uuid)} h-10 flex-1`}
+                  placeholder={
+                    isScanning
+                      ? "Scanning… please scan the badge"
+                      : "Enter UUID or scan badge"
+                  }
+                  disabled={isScanning}
+                />
+                <Button
+                  type="button"
+                  onClick={isScanning ? stopScanning : startScanning}
+                  title={isScanning ? "Stop scanning" : "Start scanning badge"}
+                  variant="outline"
+                  className={`gap-1.5 px-3 shrink-0 transition-colors ${
+                    isScanning
+                      ? "border-destructive text-destructive hover:bg-destructive/10"
+                      : scanStatus === "success"
+                        ? "border-green-500 text-green-600 hover:bg-green-50"
+                        : scanStatus === "error"
+                          ? "border-destructive text-destructive"
+                          : "border-primary text-primary hover:bg-primary/10"
+                  }`}
                 >
-                  <p className="text-sm" style={{ color: "var(--error)" }}>
-                    {error}
-                  </p>
+                  <Scan
+                    size={16}
+                    className={isScanning ? "animate-pulse" : ""}
+                  />
+                  {isScanning ? "Stop" : "Scan"}
+                </Button>
+              </div>
+              {isScanning && (
+                <p className="text-xs text-primary flex items-center gap-1">
+                  <span className="animate-pulse">●</span>
+                  Listening for badge scan…
+                </p>
+              )}
+              {scanStatus === "success" && !isScanning && (
+                <p className="text-xs text-green-600">✓ Badge scanned successfully!</p>
+              )}
+              {scanStatus === "error" && !isScanning && (
+                <p className="text-xs text-destructive">✗ Scan failed or duplicate UUID detected</p>
+              )}
+              <FormFieldError message={formErrors.rfid_uuid} />
+            </div>
+
+            {/* Type */}
+            <div className="space-y-1.5">
+              <label className={FORM_LABEL_CLASSNAME}>
+                Type <span className="text-destructive">*</span>
+              </label>
+              <select
+                value={formData.type}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    type: e.target.value as
+                      | "student"
+                      | "teacher"
+                      | "staff"
+                      | "visitor",
+                  })
+                }
+                required
+                className={`${INPUT_CLASSNAME(false)} h-10`}
+              >
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="staff">Staff</option>
+                <option value="visitor">Visitor</option>
+              </select>
+            </div>
+
+            {/* Last Name */}
+            <div className="space-y-1.5">
+              <label className={FORM_LABEL_CLASSNAME}>
+                Last Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nom}
+                onChange={(e) => {
+                  setFormData({ ...formData, nom: e.target.value });
+                  if (formErrors.nom)
+                    setFormErrors((prev) => ({ ...prev, nom: undefined }));
+                }}
+                required
+                className={`${INPUT_CLASSNAME(!!formErrors.nom)} h-10`}
+                placeholder="Enter last name"
+              />
+              <FormFieldError message={formErrors.nom} />
+            </div>
+
+            {/* First Name */}
+            <div className="space-y-1.5">
+              <label className={FORM_LABEL_CLASSNAME}>
+                First Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.prenom}
+                onChange={(e) => {
+                  setFormData({ ...formData, prenom: e.target.value });
+                  if (formErrors.prenom)
+                    setFormErrors((prev) => ({ ...prev, prenom: undefined }));
+                }}
+                required
+                className={`${INPUT_CLASSNAME(!!formErrors.prenom)} h-10`}
+                placeholder="Enter first name"
+              />
+              <FormFieldError message={formErrors.prenom} />
+            </div>
+
+            {/* Photo */}
+            <div className="space-y-1.5">
+              <label className={FORM_LABEL_CLASSNAME}>
+                Photo
+              </label>
+              {photoPreview && (
+                <div className="mb-2">
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-20 h-20 object-cover rounded-lg border theme-border"
+                  />
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-1">
-                  RFID UUID *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.rfid_uuid}
-                    onChange={(e) => {
-                      setFormData({ ...formData, rfid_uuid: e.target.value });
-                      setScanStatus("idle");
-                    }}
-                    required
-                    className={`${inputClasses} flex-1`}
-                    placeholder={
-                      isScanning
-                        ? "Scanning... Please scan the badge"
-                        : "Enter UUID or scan badge"
-                    }
-                    disabled={isScanning}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isScanning) {
-                        stopScanning();
-                      } else {
-                        startScanning();
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                      isScanning
-                        ? "bg-red-500 hover:bg-red-600 text-white"
-                        : scanStatus === "success"
-                          ? "bg-green-500 text-white"
-                          : scanStatus === "error"
-                            ? "bg-red-500 text-white"
-                            : "bg-indigo-500 hover:bg-indigo-600 text-white"
-                    }`}
-                    title={
-                      isScanning ? "Stop scanning" : "Start scanning badge"
-                    }
-                  >
-                    <Scan
-                      size={18}
-                      className={isScanning ? "animate-pulse" : ""}
-                    />
-                    {isScanning ? "Stop" : "Scan"}
-                  </button>
-                </div>
-                {isScanning && (
-                  <p className="text-xs text-indigo-600 mt-1 flex items-center gap-1">
-                    <span className="animate-pulse">●</span>
-                    Listening for badge scan...
-                  </p>
-                )}
-                {scanStatus === "success" && !isScanning && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ Badge scanned successfully!
-                  </p>
-                )}
-                {scanStatus === "error" && !isScanning && (
-                  <p className="text-xs text-red-600 mt-1">
-                    ✗ Scan failed or duplicate UUID detected
-                  </p>
-                )}
-                {formData.rfid_uuid &&
-                  checkDuplicateUUID(formData.rfid_uuid) && (
-                    <p className="text-xs text-red-600 mt-1">
-                      ⚠ This UUID already exists in the system
-                    </p>
-                  )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-1">
-                  Type *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      type: e.target.value as
-                        | "student"
-                        | "teacher"
-                        | "staff"
-                        | "visitor",
-                    })
-                  }
-                  required
-                  className={selectClasses}
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="staff">Staff</option>
-                  <option value="visitor">Visitor</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-1">
-                  Last Name (Nom) *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nom}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nom: e.target.value })
-                  }
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-1">
-                  First Name (Prenom) *
-                </label>
-                <input
-                  type="text"
-                  value={formData.prenom}
-                  onChange={(e) =>
-                    setFormData({ ...formData, prenom: e.target.value })
-                  }
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium theme-text-muted mb-1">
-                  Photo
-                </label>
-                {photoPreview && (
-                  <div className="mb-2">
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="w-24 h-24 object-cover rounded-lg border border-gray-300"
-                    />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handlePhotoChange}
-                  className={inputClasses}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Formats acceptés: JPEG, PNG, WebP (max 5MB) - Optionnel
-                </p>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={uploadingPhoto}
-                  className={`${buttonPrimaryClasses} flex-1 disabled:opacity-50`}
-                >
-                  {uploadingPhoto
-                    ? "Uploading..."
-                    : editingPerson
-                      ? "Update"
-                      : "Create"}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  disabled={uploadingPhoto}
-                  className={`${buttonSecondaryClasses} flex-1`}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handlePhotoChange}
+                className={`${INPUT_CLASSNAME(false)} h-10 file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-muted-foreground cursor-pointer`}
+              />
+              <p className="text-xs theme-text-muted">
+                Accepted: JPEG, PNG, WebP (max 5 MB) — optional
+              </p>
+            </div>
 
-      {/* Table */}
-      <DataTable<PersonWithPayments, unknown>
-        data={persons}
-        columns={personColumns}
-        emptyMessage="No persons found"
-        pageSize={filters.limit}
-        onPageSizeChange={(size) => setFilters((f) => ({ ...f, limit: size }))}
-      />
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetForm}
+                disabled={uploadingPhoto}
+                className="flex-1 h-10"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadingPhoto}
+                className="flex-1 h-10 gap-2"
+              >
+                {uploadingPhoto ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Uploading…
+                  </>
+                ) : editingPerson ? (
+                  "Update"
+                ) : (
+                  "Create"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="relative flex-1 h-full w-full">
+        {loading ? (
+          <Loading />
+        ) : (
+          <DataTable<PersonWithPayments, unknown>
+            data={persons}
+            columns={personColumns}
+            emptyMessage="No persons found"
+            pageSize={filters.limit}
+            onPageSizeChange={(size) =>
+              setFilters((f) => ({ ...f, limit: size }))
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }

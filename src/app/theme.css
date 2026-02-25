@@ -15,8 +15,8 @@
   --accent-foreground: oklch(0.5413 0.2466 293.0090);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.70 0.06 303.4042);
-  --input: oklch(0.78 0.04 305.4040);
+  --border: oklch(0.56 0.08 303.4042);
+  --input: oklch(0.64 0.06 305.4040);
   --ring: oklch(0.6056 0.2189 292.7172);
   /* Semantic aliases for components */
   --brand: var(--primary);
@@ -78,8 +78,8 @@
   --accent-foreground: oklch(0.8112 0.1013 293.5712);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.48 0.06 304.6618);
-  --input: oklch(0.34 0.05 302.6490);
+  --border: oklch(0.54 0.08 304.6618);
+  --input: oklch(0.40 0.07 302.6490);
   --ring: oklch(0.7090 0.1592 293.5412);
   --brand: var(--primary);
   --surface: var(--card);

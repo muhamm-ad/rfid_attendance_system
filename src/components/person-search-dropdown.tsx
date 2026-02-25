@@ -2,7 +2,11 @@
 "use client";
 import React, { useMemo, useRef } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
-import { DROP_DOWN_LABEL_CLASSNAME } from "@/lib/ui-utils";
+import {
+  DROP_DOWN_LABEL_CLASSNAME,
+  FOCUS_WITHIN_RING_CLASSNAME,
+  OPEN_STATE_RING_CLASSNAME,
+} from "@/lib/ui-utils";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { InputSelect } from "@/components/ui/input-select";
 import { SelectOption } from "@/types";
@@ -139,8 +143,8 @@ export default function PersonSearchDropdown({
             className={cn(
               "relative flex h-9 min-h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm",
               "hover:bg-accent hover:text-accent-foreground",
-              "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring",
-              isPopoverOpen && "ring-1 ring-ring",
+              FOCUS_WITHIN_RING_CLASSNAME,
+              isPopoverOpen && OPEN_STATE_RING_CLASSNAME,
             )}
             onClick={() => {
               setIsPopoverOpen(true);
@@ -153,12 +157,12 @@ export default function PersonSearchDropdown({
             {/* If a person is selected and we're not actively searching, show avatar + name */}
             {selectedPerson && !searchTerm ? (
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                <UserAvatar
+                {/* <UserAvatar
                   src={selectedPerson.photo ?? undefined}
                   name={`${selectedPerson.first_name} ${selectedPerson.last_name}`}
                   className="h-5 w-5 shrink-0 rounded-md"
                   fallbackClassName="rounded-md"
-                />
+                /> */}
                 <span className="truncate font-medium text-foreground">
                   {selectedPerson.first_name} {selectedPerson.last_name}
                 </span>
