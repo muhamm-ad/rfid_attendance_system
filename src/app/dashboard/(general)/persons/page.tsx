@@ -32,6 +32,7 @@ import {
 import PersonSearchDropdown from "@/components/person-search-dropdown";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -115,14 +116,275 @@ function PersonFiltersSection({
       />
       <Button
         onClick={onResetFilters}
-        variant="outline"
-        size="sm"
         title="Reset all filters"
         className={RESET_FILTER_BUTTON_CLASSNAME}
       >
-        <RotateCcw className="h-4 w-4 text-primary" />
+        <RotateCcw className="h-4 w-4" />
       </Button>
     </div>
+  );
+}
+
+type FormData = {
+  rfid_uuid: string;
+  type: "student" | "teacher" | "staff" | "visitor";
+  nom: string;
+  prenom: string;
+  photo_path: string;
+};
+
+type FormErrors = {
+  rfid_uuid?: string;
+  nom?: string;
+  prenom?: string;
+};
+
+function PersonFormDialog({
+  open,
+  onOpenChange,
+  editingPerson,
+  error,
+  formData,
+  setFormData,
+  formErrors,
+  setFormErrors,
+  isScanning,
+  scanStatus,
+  setScanStatus,
+  startScanning,
+  stopScanning,
+  photoPreview,
+  handlePhotoChange,
+  handleSubmit,
+  uploadingPhoto,
+  resetForm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingPerson: PersonWithPayments | null;
+  error: string | null;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  formErrors: FormErrors;
+  setFormErrors: React.Dispatch<React.SetStateAction<FormErrors>>;
+  isScanning: boolean;
+  scanStatus: "idle" | "scanning" | "success" | "error";
+  setScanStatus: (s: "idle" | "scanning" | "success" | "error") => void;
+  startScanning: () => void;
+  stopScanning: () => void;
+  photoPreview: string | null;
+  handlePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.FormEvent) => void;
+  uploadingPhoto: boolean;
+  resetForm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onOpenChange(false)}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+            {editingPerson ? (
+              <>
+                <Edit2 size={18} className="text-primary" />
+                Edit Person
+              </>
+            ) : (
+              <>
+                <UserCircle2 size={18} className="text-primary" />
+                Add New Person
+              </>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-1">
+          {error && (
+            <div className="alert-error" role="alert">
+              {error}
+            </div>
+          )}
+
+          {/* RFID UUID */}
+          <div className="space-y-1.5">
+            <label className={FORM_LABEL_CLASSNAME}>
+              RFID UUID <span className="text-destructive">*</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.rfid_uuid}
+                onChange={(e) => {
+                  setFormData({ ...formData, rfid_uuid: e.target.value });
+                  setScanStatus("idle");
+                  if (formErrors.rfid_uuid)
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      rfid_uuid: undefined,
+                    }));
+                }}
+                required
+                className={`${INPUT_CLASSNAME(!!formErrors.rfid_uuid)} h-10 flex-1`}
+                placeholder={
+                  isScanning
+                    ? "Scanning… please scan the badge"
+                    : "Enter UUID or scan badge"
+                }
+                disabled={isScanning}
+              />
+              <Button
+                type="button"
+                onClick={isScanning ? stopScanning : startScanning}
+                title={isScanning ? "Stop scanning" : "Start scanning badge"}
+                variant="outline"
+                className={`gap-1.5 px-3 shrink-0 transition-colors ${
+                  isScanning
+                    ? "border-destructive text-destructive hover:bg-destructive/10"
+                    : scanStatus === "success"
+                      ? "border-green-500 text-green-600 hover:bg-green-50"
+                      : scanStatus === "error"
+                        ? "border-destructive text-destructive"
+                        : "border-primary text-primary hover:bg-primary/10"
+                }`}
+              >
+                <Scan size={16} className={isScanning ? "animate-pulse" : ""} />
+                {isScanning ? "Stop" : "Scan"}
+              </Button>
+            </div>
+            {isScanning && (
+              <p className="text-xs text-primary flex items-center gap-1">
+                <span className="animate-pulse">●</span>
+                Listening for badge scan…
+              </p>
+            )}
+            {scanStatus === "success" && !isScanning && (
+              <p className="text-xs text-green-600">
+                ✓ Badge scanned successfully!
+              </p>
+            )}
+            {scanStatus === "error" && !isScanning && (
+              <p className="text-xs text-destructive">
+                ✗ Scan failed or duplicate UUID detected
+              </p>
+            )}
+            <FormFieldError message={formErrors.rfid_uuid} />
+          </div>
+
+          {/* Type */}
+          <div className="space-y-1.5">
+            <label className={FORM_LABEL_CLASSNAME}>
+              Type <span className="text-destructive">*</span>
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  type: e.target.value as FormData["type"],
+                })
+              }
+              required
+              className={`${INPUT_CLASSNAME(false)} h-10`}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="staff">Staff</option>
+              <option value="visitor">Visitor</option>
+            </select>
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-1.5">
+            <label className={FORM_LABEL_CLASSNAME}>
+              Last Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.nom}
+              onChange={(e) => {
+                setFormData({ ...formData, nom: e.target.value });
+                if (formErrors.nom)
+                  setFormErrors((prev) => ({ ...prev, nom: undefined }));
+              }}
+              required
+              className={`${INPUT_CLASSNAME(!!formErrors.nom)} h-10`}
+              placeholder="Enter last name"
+            />
+            <FormFieldError message={formErrors.nom} />
+          </div>
+
+          {/* First Name */}
+          <div className="space-y-1.5">
+            <label className={FORM_LABEL_CLASSNAME}>
+              First Name <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.prenom}
+              onChange={(e) => {
+                setFormData({ ...formData, prenom: e.target.value });
+                if (formErrors.prenom)
+                  setFormErrors((prev) => ({ ...prev, prenom: undefined }));
+              }}
+              required
+              className={`${INPUT_CLASSNAME(!!formErrors.prenom)} h-10`}
+              placeholder="Enter first name"
+            />
+            <FormFieldError message={formErrors.prenom} />
+          </div>
+
+          {/* Photo */}
+          <div className="space-y-1.5">
+            <label className={FORM_LABEL_CLASSNAME}>Photo</label>
+            {photoPreview && (
+              <div className="mb-2">
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="w-20 h-20 object-cover rounded-lg border theme-border"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handlePhotoChange}
+              className={`${INPUT_CLASSNAME(false)} h-10 file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-muted-foreground cursor-pointer`}
+            />
+            <p className="text-xs theme-text-muted">
+              Accepted: JPEG, PNG, WebP (max 5 MB) — optional
+            </p>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={resetForm}
+              disabled={uploadingPhoto}
+              className="flex-1 h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={uploadingPhoto}
+              className="flex-1 h-10 gap-2"
+            >
+              {uploadingPhoto ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  Uploading…
+                </>
+              ) : editingPerson ? (
+                "Update"
+              ) : (
+                "Create"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -537,6 +799,21 @@ export default function PersonsPage() {
   const personColumns = useMemo<ColumnDef<PersonWithPayments>[]>(
     () => [
       {
+        id: "avatar",
+        enableSorting: false,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="" />
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <UserAvatar
+              src={row.original.photo}
+              name={`${row.original.first_name} ${row.original.last_name}`}
+            />
+          </div>
+        ),
+      },
+      {
         accessorKey: "id",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="ID" />
@@ -547,19 +824,7 @@ export default function PersonsPage() {
           </span>
         ),
       },
-      {
-        id: "avatar",
-        enableSorting: false,
-        header: "",
-        cell: ({ row }) => (
-          <div className="flex justify-center">
-            <UserAvatar
-              src={row.original.photo}
-              name={`${row.original.first_name} ${row.original.last_name}`}
-            />
-          </div>
-        ),
-      },
+
       {
         accessorKey: "first_name",
         header: ({ column }) => (
@@ -584,13 +849,12 @@ export default function PersonsPage() {
           <DataTableColumnHeader column={column} title="Type" />
         ),
         cell: ({ row }) => (
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
-              typeColors[row.original.type]
-            }`}
+          <Badge
+            variant="outline"
+            className={`capitalize ${typeColors[row.original.type] ?? "theme-badge-muted"}`}
           >
             {row.original.type}
-          </span>
+          </Badge>
         ),
       },
       {
@@ -608,7 +872,9 @@ export default function PersonsPage() {
         id: "payment_status",
         accessorKey: "payment_status",
         enableSorting: false,
-        header: "Payment Status",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Payment Status" />
+        ),
         cell: ({ row }) => {
           const person = row.original;
           return (
@@ -771,214 +1037,26 @@ export default function PersonsPage() {
       )}
 
       {/* Form Dialog */}
-      <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              {editingPerson ? (
-                <>
-                  <Edit2 size={18} className="text-primary" />
-                  Edit Person
-                </>
-              ) : (
-                <>
-                  <UserCircle2 size={18} className="text-primary" />
-                  Add New Person
-                </>
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4 mt-1">
-            {error && (
-              <div className="alert-error" role="alert">
-                {error}
-              </div>
-            )}
-
-            {/* RFID UUID */}
-            <div className="space-y-1.5">
-              <label className={FORM_LABEL_CLASSNAME}>
-                RFID UUID <span className="text-destructive">*</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData.rfid_uuid}
-                  onChange={(e) => {
-                    setFormData({ ...formData, rfid_uuid: e.target.value });
-                    setScanStatus("idle");
-                    if (formErrors.rfid_uuid)
-                      setFormErrors((prev) => ({ ...prev, rfid_uuid: undefined }));
-                  }}
-                  required
-                  className={`${INPUT_CLASSNAME(!!formErrors.rfid_uuid)} h-10 flex-1`}
-                  placeholder={
-                    isScanning
-                      ? "Scanning… please scan the badge"
-                      : "Enter UUID or scan badge"
-                  }
-                  disabled={isScanning}
-                />
-                <Button
-                  type="button"
-                  onClick={isScanning ? stopScanning : startScanning}
-                  title={isScanning ? "Stop scanning" : "Start scanning badge"}
-                  variant="outline"
-                  className={`gap-1.5 px-3 shrink-0 transition-colors ${
-                    isScanning
-                      ? "border-destructive text-destructive hover:bg-destructive/10"
-                      : scanStatus === "success"
-                        ? "border-green-500 text-green-600 hover:bg-green-50"
-                        : scanStatus === "error"
-                          ? "border-destructive text-destructive"
-                          : "border-primary text-primary hover:bg-primary/10"
-                  }`}
-                >
-                  <Scan
-                    size={16}
-                    className={isScanning ? "animate-pulse" : ""}
-                  />
-                  {isScanning ? "Stop" : "Scan"}
-                </Button>
-              </div>
-              {isScanning && (
-                <p className="text-xs text-primary flex items-center gap-1">
-                  <span className="animate-pulse">●</span>
-                  Listening for badge scan…
-                </p>
-              )}
-              {scanStatus === "success" && !isScanning && (
-                <p className="text-xs text-green-600">✓ Badge scanned successfully!</p>
-              )}
-              {scanStatus === "error" && !isScanning && (
-                <p className="text-xs text-destructive">✗ Scan failed or duplicate UUID detected</p>
-              )}
-              <FormFieldError message={formErrors.rfid_uuid} />
-            </div>
-
-            {/* Type */}
-            <div className="space-y-1.5">
-              <label className={FORM_LABEL_CLASSNAME}>
-                Type <span className="text-destructive">*</span>
-              </label>
-              <select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    type: e.target.value as
-                      | "student"
-                      | "teacher"
-                      | "staff"
-                      | "visitor",
-                  })
-                }
-                required
-                className={`${INPUT_CLASSNAME(false)} h-10`}
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="staff">Staff</option>
-                <option value="visitor">Visitor</option>
-              </select>
-            </div>
-
-            {/* Last Name */}
-            <div className="space-y-1.5">
-              <label className={FORM_LABEL_CLASSNAME}>
-                Last Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.nom}
-                onChange={(e) => {
-                  setFormData({ ...formData, nom: e.target.value });
-                  if (formErrors.nom)
-                    setFormErrors((prev) => ({ ...prev, nom: undefined }));
-                }}
-                required
-                className={`${INPUT_CLASSNAME(!!formErrors.nom)} h-10`}
-                placeholder="Enter last name"
-              />
-              <FormFieldError message={formErrors.nom} />
-            </div>
-
-            {/* First Name */}
-            <div className="space-y-1.5">
-              <label className={FORM_LABEL_CLASSNAME}>
-                First Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.prenom}
-                onChange={(e) => {
-                  setFormData({ ...formData, prenom: e.target.value });
-                  if (formErrors.prenom)
-                    setFormErrors((prev) => ({ ...prev, prenom: undefined }));
-                }}
-                required
-                className={`${INPUT_CLASSNAME(!!formErrors.prenom)} h-10`}
-                placeholder="Enter first name"
-              />
-              <FormFieldError message={formErrors.prenom} />
-            </div>
-
-            {/* Photo */}
-            <div className="space-y-1.5">
-              <label className={FORM_LABEL_CLASSNAME}>
-                Photo
-              </label>
-              {photoPreview && (
-                <div className="mb-2">
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="w-20 h-20 object-cover rounded-lg border theme-border"
-                  />
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                onChange={handlePhotoChange}
-                className={`${INPUT_CLASSNAME(false)} h-10 file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-muted-foreground cursor-pointer`}
-              />
-              <p className="text-xs theme-text-muted">
-                Accepted: JPEG, PNG, WebP (max 5 MB) — optional
-              </p>
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetForm}
-                disabled={uploadingPhoto}
-                className="flex-1 h-10"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={uploadingPhoto}
-                className="flex-1 h-10 gap-2"
-              >
-                {uploadingPhoto ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Uploading…
-                  </>
-                ) : editingPerson ? (
-                  "Update"
-                ) : (
-                  "Create"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <PersonFormDialog
+        open={showForm}
+        onOpenChange={(open) => !open && resetForm()}
+        editingPerson={editingPerson}
+        error={error}
+        formData={formData}
+        setFormData={setFormData}
+        formErrors={formErrors}
+        setFormErrors={setFormErrors}
+        isScanning={isScanning}
+        scanStatus={scanStatus}
+        setScanStatus={setScanStatus}
+        startScanning={startScanning}
+        stopScanning={stopScanning}
+        photoPreview={photoPreview}
+        handlePhotoChange={handlePhotoChange}
+        handleSubmit={handleSubmit}
+        uploadingPhoto={uploadingPhoto}
+        resetForm={resetForm}
+      />
 
       <div className="relative flex-1 h-full w-full">
         {loading ? (

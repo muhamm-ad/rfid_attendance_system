@@ -69,12 +69,12 @@
   color: var(--muted-foreground);
 }
 @utility theme-badge-success {
-  background: color-mix(in oklch, var(--chart-3) 22%, transparent);
-  color: var(--chart-3);
+  background: oklch(0.88 0.12 155);
+  color: oklch(0.28 0.18 155);
 }
 @utility theme-badge-error {
-  background: var(--error-bg);
-  color: var(--error);
+  background: oklch(0.92 0.3 25);
+  color: oklch(0.36 0.24 25);
 }
 @utility theme-badge-brand {
   background: color-mix(in oklch, var(--brand) 20%, transparent);
@@ -159,7 +159,6 @@
   border-bottom: 1px solid var(--border);
 }
 .theme-table-header th {
-  color: var(--muted-foreground);
   font-weight: 600;
   padding: 0.75rem 0.5rem;
 }

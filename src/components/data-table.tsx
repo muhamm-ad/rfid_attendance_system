@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/cn-utils";
 
 export const DEFAULT_TABLE_HEADER_CLASSNAME =
-  "text-center font-medium theme-text-muted cursor-pointer hover:bg-accent/50 transition-colors";
+  "text-center font-bold text-primary uppercase cursor-pointer hover:bg-accent/50 transition-colors hover:text-primary";
 
 export const DEFAULT_TABLE_CELL_CLASSNAME =
   "text-center whitespace-nowrap items-center justify-center text-foreground";
@@ -275,12 +275,13 @@ export function DataTableColumnHeader<TData, TValue>({
   className?: string;
 }) {
   if (!column.getCanSort()) {
-    return <span className={className}>{title}</span>;
+    return <span className={cn("font-bold text-primary uppercase", className)}>{title}</span>;
   }
   return (
     <Button
       variant="ghost"
       size="sm"
+      className={cn("font-bold text-primary uppercase hover:bg-transparent hover:text-primary", className)}
       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     >
       {title}

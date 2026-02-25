@@ -184,7 +184,7 @@ export default function PersonSearchDropdown({
                   if (!isPopoverOpen) setIsPopoverOpen(true);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="min-w-0 flex-1 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none"
               />
             )}
 

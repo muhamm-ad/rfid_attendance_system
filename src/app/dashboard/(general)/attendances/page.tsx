@@ -162,12 +162,10 @@ function LogsFiltersSection({
       />
       <Button
         onClick={onResetFilters}
-        variant="outline"
-        size="sm"
         title="Reset all filters"
         className={RESET_FILTER_BUTTON_CLASSNAME}
       >
-        <RotateCcw className="h-4 w-4 text-primary" />
+        <RotateCcw className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -320,7 +318,7 @@ export default function AttendancesPage() {
         cell: ({ row }) => {
           const type = row.original.person_type as keyof typeof typeColors;
           return (
-            <Badge className={`${typeColors[type] ?? "theme-badge-muted"}`}>
+            <Badge variant="outline" className={`${typeColors[type] ?? "theme-badge-muted"}`}>
               {type}
             </Badge>
           );
@@ -347,6 +345,7 @@ export default function AttendancesPage() {
         ),
         cell: ({ row }) => (
           <Badge
+            variant="outline"
             className={`capitalize ${
               row.original.status === "success"
                 ? "theme-badge-success"
