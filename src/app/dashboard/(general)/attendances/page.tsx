@@ -274,7 +274,7 @@ export default function AttendancesPage() {
         ),
         cell: ({ row }) => (
           <span className="cell-timestamp">
-            {new Date(row.original.timestamp).toLocaleString()}
+            {new Date(row.original.timestamp).toLocaleString("en-US")}
           </span>
         ),
         sortingFn: (rowA, rowB) =>

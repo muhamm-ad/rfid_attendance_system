@@ -236,7 +236,7 @@ function PersonFormDialog({
                 onClick={isScanning ? stopScanning : startScanning}
                 title={isScanning ? "Stop scanning" : "Start scanning badge"}
                 variant="outline"
-                className={`gap-1.5 px-3 shrink-0 transition-colors ${
+                className={`h-10 gap-1.5 px-3 shrink-0 transition-colors ${
                   isScanning
                     ? "border-destructive text-destructive hover:bg-destructive/10"
                     : scanStatus === "success"
@@ -927,7 +927,7 @@ export default function PersonsPage() {
         ),
         cell: ({ row }) => (
           <span className="text-sm theme-text-muted">
-            {new Date(row.original.updated_at).toLocaleDateString("fr-FR", {
+            {new Date(row.original.updated_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",
@@ -950,7 +950,7 @@ export default function PersonsPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
                 <DropdownMenuItem onClick={() => startEdit(person)}>
                   <Edit2 className="mr-2 h-4 w-4" />
                   Edit
