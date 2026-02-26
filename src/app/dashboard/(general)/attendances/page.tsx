@@ -19,7 +19,7 @@ import {
   type ColumnDef,
   DataTableColumnHeader,
   DEFAULT_TABLE_HEADER_CLASSNAME,
-} from "@/components/data-table";
+} from "@/components/old-data-table";
 import PersonSearchDropdown from "@/components/person-search-dropdown";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {

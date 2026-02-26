@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { loginSchema, LoginSchema } from "@/schemas";
 import { useTransition } from "react";
+import { PasswordInput } from "@/components/password-input";
 
 import {
   Form,
@@ -37,7 +38,6 @@ import { useRouter } from "next/navigation";
 import { AuthError } from "next-auth";
 
 export function LoginForm() {
-  const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -114,7 +114,7 @@ export function LoginForm() {
                 <Input
                   type="email"
                   placeholder="john.doe@example.com"
-                  className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  // className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
                   disabled={isPending}
                   {...field}
                 />
@@ -133,27 +133,12 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password*</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <Input
-                    type={isVisible ? "text" : "password"}
-                    placeholder="••••••••••••••••"
-                    className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
-                    disabled={isPending}
-                    {...field}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    onClick={() => setIsVisible((prev: boolean) => !prev)}
-                    className="text-gray-500 hover:text-violet-600 focus-visible:ring-violet-500/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
-                  >
-                    {isVisible ? <EyeOffIcon /> : <EyeIcon />}
-                    <span className="sr-only">
-                      {isVisible ? "Hide password" : "Show password"}
-                    </span>
-                  </Button>
-                </div>
+                <PasswordInput
+                  placeholder="••••••••••••••••"
+                  // className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  disabled={isPending}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

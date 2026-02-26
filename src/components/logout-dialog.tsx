@@ -2,7 +2,7 @@
 
 "use client";
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";

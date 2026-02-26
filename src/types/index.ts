@@ -13,6 +13,7 @@ import { LinkProps } from "next/link";
 import { NextResponse } from "next/server";
 
 // Re-export Prisma types for consumers that need them
+export { UserRole as UserRoleEnum, PersonType as PersonTypeEnum } from "@/prisma/generated/client";
 export type { UserRole, User, PersonType };
 
 // ======================= AUTHENTICATION TYPES ======================

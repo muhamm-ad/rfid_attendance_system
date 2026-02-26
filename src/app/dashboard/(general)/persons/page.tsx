@@ -21,7 +21,7 @@ import {
   DataTable,
   type ColumnDef,
   DataTableColumnHeader,
-} from "@/components/data-table";
+} from "@/components/old-data-table";
 import {
   Dialog,
   DialogContent,
