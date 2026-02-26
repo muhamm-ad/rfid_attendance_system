@@ -1,6 +1,6 @@
 import { PersonsActionDialog } from "@/components/persons-action-dialog";
 import { PersonsDeleteDialog } from "@/components/persons-delete-dialog";
-import { usePersons } from "@/components/providers/persons-provider";
+import { usePersons } from "@/hooks/use-persons";
 
 export function PersonsDialogs({ onSuccess }: { onSuccess?: () => void }) {
   const { open, setOpen, currentRow, setCurrentRow } = usePersons();

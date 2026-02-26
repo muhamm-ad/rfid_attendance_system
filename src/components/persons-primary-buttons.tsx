@@ -3,7 +3,7 @@
 import { Plus } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { usePersons } from '@/components/providers/persons-provider'
+import { usePersons } from '@/hooks/use-persons'
 
 export function PersonsPrimaryButtons() {
   const { setOpen } = usePersons()

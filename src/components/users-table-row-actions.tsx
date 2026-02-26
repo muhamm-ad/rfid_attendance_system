@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "@/types";
-import { useUsers } from "@/components/providers/users-provider";
+import { useUsers } from "@/hooks/use-users";
 
 export function UsersTableRowActions({ row }: { row: Row<User> }) {
   const { setOpen, setCurrentRow } = useUsers();

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Person } from "@/types";
-import { usePersons } from "@/components/providers/persons-provider";
+import { usePersons } from "@/hooks/use-persons";
 
 export function PersonsTableRowActions({ row }: { row: Row<Person> }) {
   const { setOpen, setCurrentRow } = usePersons();

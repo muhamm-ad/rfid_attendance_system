@@ -1,6 +1,6 @@
 import { MailPlus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useUsers } from '@/components/providers/users-provider'
+import { useUsers } from '@/hooks/use-users'
 
 export function UsersPrimaryButtons() {
   const { setOpen } = useUsers()

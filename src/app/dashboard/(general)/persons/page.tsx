@@ -1,3 +1,15 @@
+// "use client";
+
+// import { PersonsPage } from "@/components/persons";
+
+// export default function Page() {
+//   return <PersonsPage />;
+// }
+
+
+
+
+
 // @/app/dashboard/(general)/persons/page.tsx
 
 "use client";

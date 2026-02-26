@@ -1,7 +1,7 @@
 import { UsersActionDialog } from "@/components/users-action-dialog";
 import { UsersDeleteDialog } from "@/components/users-delete-dialog";
 import { UsersInviteDialog } from "@/components/users-invite-dialog";
-import { useUsers } from "@/components/providers/users-provider";
+import { useUsers } from "@/hooks/use-users";
 
 export function UsersDialogs({ onSuccess }: { onSuccess?: () => void }) {
   const { open, setOpen, currentRow, setCurrentRow } = useUsers();

@@ -11,26 +11,18 @@ type PersonsContextType = {
   setCurrentRow: React.Dispatch<React.SetStateAction<Person | null>>;
 };
 
-const PersonsContext = React.createContext<PersonsContextType | null>(null);
+export const PersonsContext =
+  React.createContext<PersonsContextType | null>(null);
 
 export function PersonsProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useDialogState<PersonsDialogType>(null);
   const [currentRow, setCurrentRow] = useState<Person | null>(null);
 
   return (
-    <PersonsContext value={{ open, setOpen, currentRow, setCurrentRow }}>
+    <PersonsContext.Provider
+      value={{ open, setOpen, currentRow, setCurrentRow }}
+    >
       {children}
-    </PersonsContext>
+    </PersonsContext.Provider>
   );
 }
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const usePersons = () => {
-  const personsContext = React.useContext(PersonsContext);
-
-  if (!personsContext) {
-    throw new Error("usePersons has to be used within <PersonsContext>");
-  }
-
-  return personsContext;
-};
