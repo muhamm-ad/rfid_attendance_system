@@ -3,15 +3,11 @@ import { UsersDialogs } from "@/components/users/dialogs";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { UsersTable } from "@/components/users/table";
 import { User } from "@/types";
-import { MailPlus, RefreshCw, UserPlus, Users as UsersIcon } from "lucide-react";
+import { MailPlus, UserPlus, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUsers } from "@/hooks/use-users";
 
-export function UsersPrimaryButtons({
-  onRefresh,
-}: {
-  onRefresh?: () => void;
-}) {
+export function UsersPrimaryButtons() {
   const { setOpen } = useUsers();
   return (
     <div className="flex items-center gap-2">
@@ -27,16 +23,6 @@ export function UsersPrimaryButtons({
         <UserPlus size={20} />
         Add User
       </Button>
-      {onRefresh && (
-        <Button
-          onClick={onRefresh}
-          className="gap-2"
-          title="Refresh users"
-        >
-          <RefreshCw size={20} />
-          Refresh
-        </Button>
-      )}
     </div>
   );
 }
@@ -45,18 +31,15 @@ export function Users({
   data,
   search,
   navigate,
-  variant = "default",
   onRefresh,
   error,
 }: {
   data: User[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
-  variant?: "default" | "page";
   onRefresh?: () => void;
   error?: string | null;
 }) {
-  if (variant === "page") {
     return (
       <UsersProvider>
         <div className="page-container h-full">
@@ -67,11 +50,11 @@ export function Users({
                 User Management
               </h1>
               <p className="page-subtitle">
-                Manage users, roles, and access
+                Manage users and their roles and access permissions
               </p>
             </div>
             <div className="page-actions">
-              <UsersPrimaryButtons onRefresh={onRefresh} />
+              <UsersPrimaryButtons />
             </div>
           </header>
           {error && (
@@ -91,21 +74,4 @@ export function Users({
         </div>
       </UsersProvider>
     );
-  }
-
-  return (
-    <UsersProvider>
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">User List</h2>
-          <p className="text-muted-foreground">
-            Manage your users and their roles here.
-          </p>
-        </div>
-        <UsersPrimaryButtons />
-      </div>
-      <UsersTable data={data} search={search} navigate={navigate} />
-      <UsersDialogs />
-    </UsersProvider>
-  );
 }

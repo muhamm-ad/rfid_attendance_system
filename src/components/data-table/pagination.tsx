@@ -12,29 +12,29 @@ import { Button } from "@/components/ui/button";
 
 type DataTablePaginationProps<TData> = {
   table: Table<TData>;
+  pageIndex?: number;
   className?: string;
 };
 
 export function DataTablePagination<TData>({
   table,
+  pageIndex: pageIndexProp,
   className,
 }: DataTablePaginationProps<TData>) {
+  const statePagination = table.getState().pagination;
+  const pageIndex =
+    pageIndexProp !== undefined ? pageIndexProp : statePagination.pageIndex;
+  const pageSize = statePagination.pageSize;
   const pageCount = table.getPageCount();
-  const canPrev = table.getCanPreviousPage();
-  const canNext = table.getCanNextPage();
-  const pageSize = table.getState().pagination.pageSize;
-  const pageIndex = table.getState().pagination.pageIndex;
   const rowCount = table.getRowCount();
+
+  const canPrev = pageIndex > 0;
+  const canNext = pageIndex < Math.max(0, pageCount - 1);
 
   if (pageCount <= 1 && pageSize >= rowCount) return null;
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center px-2",
-        className,
-      )}
-    >
+    <div className={cn("flex items-center justify-center px-2", className)}>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium theme-text-muted">
           Page {pageIndex + 1} of {pageCount || 1}

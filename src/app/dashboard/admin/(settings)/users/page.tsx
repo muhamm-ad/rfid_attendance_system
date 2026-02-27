@@ -128,7 +128,6 @@ export default function UsersPage() {
       data={users}
       search={search}
       navigate={navigate}
-      variant="page"
       onRefresh={loadUsers}
       error={error}
     />

@@ -4,38 +4,39 @@ import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonsTable } from "@/components/persons/table";
 import { Person } from "@/types";
 
-import { BarChart3, Plus, RefreshCw, Users } from "lucide-react";
+import { BarChart3, Plus, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePersons } from "@/hooks/use-persons";
 
-export function PersonsPrimaryButtons({
-  onRefresh,
-}: {
-  onRefresh?: () => void;
-}) {
+function PersonsPrimaryButtons() {
   const { setOpen } = usePersons();
   const { data: session } = useSession();
   const router = useRouter();
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-4">
+      <Button
+        variant="outline"
+        name="View person statistics"
+        className="gap-2"
+        title="View person statistics"
+        onClick={() => router.push("/dashboard/persons/statistics")}
+      >
+        <BarChart3 size={20} />
+        Statistics
+      </Button>
       {isAdmin && (
-        <Button className="gap-2" onClick={() => setOpen("add")}>
+        <Button
+          className="gap-2"
+          name="Add Person"
+          title="Add Person"
+          onClick={() => setOpen("add")}
+        >
           <Plus size={20} />
           Add Person
-        </Button>
-      )}
-      {onRefresh && (
-        <Button
-          onClick={onRefresh}
-          className="gap-2"
-          title="Refresh persons"
-        >
-          <RefreshCw size={20} />
-          Refresh
         </Button>
       )}
     </div>
@@ -46,80 +47,47 @@ export function Persons({
   data,
   search,
   navigate,
-  variant = "default",
   onRefresh,
   error,
 }: {
   data: Person[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
-  variant?: "default" | "page";
   onRefresh?: () => void;
   error?: string | null;
 }) {
-  const router = useRouter();
-
-  if (variant === "page") {
-    return (
-      <PersonsProvider>
-        <div className="page-container h-full">
-          <header className="page-header">
-            <div className="page-title-group">
-              <h1 className="page-title">
-                <Users size={28} className="page-title-icon" aria-hidden />
-                Person Management
-              </h1>
-              <p className="page-subtitle">
-                Manage students, teachers, staff, and visitors
-              </p>
-            </div>
-            <div className="page-actions">
-              <PersonsPrimaryButtons onRefresh={onRefresh} />
-            </div>
-          </header>
-          {error && (
-            <div className="alert-error" role="alert">
-              {error}
-            </div>
-          )}
-          <div className="relative flex-1 min-h-0 w-full overflow-hidden flex flex-col">
-            <PersonsTable
-              data={data}
-              search={search}
-              navigate={navigate}
-              onRefresh={onRefresh}
-            />
-          </div>
-          <PersonsDialogs />
-        </div>
-      </PersonsProvider>
-    );
-  }
-
   return (
     <PersonsProvider>
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
-            Person List
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8 shrink-0 text-primary hover:text-primary hover:bg-primary/10"
-              title="View person statistics"
-              onClick={() => router.push("/dashboard/persons/statistics")}
-            >
-              <BarChart3 size={20} />
-            </Button>
-          </h2>
-          <p className="text-muted-foreground">
-            Manage your persons and their roles here.
-          </p>
+      <div className="page-container h-full">
+        <header className="page-header">
+          <div className="flex items-center gap-3 text-left">
+            <Users size={28} className="page-title-icon shrink-0" aria-hidden />
+            <div className="page-title-group min-w-0">
+              <h1 className="page-title gap-0">Person & Badge Management</h1>
+              <p className="page-subtitle">
+                Manage persons, badges and their types
+              </p>
+            </div>
+          </div>
+          <div className="page-actions">
+            <PersonsPrimaryButtons />
+          </div>
+        </header>
+        {error && (
+          <div className="alert-error" role="alert">
+            {error}
+          </div>
+        )}
+        <div className="relative flex-1 min-h-0 w-full overflow-hidden flex flex-col">
+          <PersonsTable
+            data={data}
+            search={search}
+            navigate={navigate}
+            onRefresh={onRefresh}
+          />
         </div>
-        <PersonsPrimaryButtons />
+        <PersonsDialogs />
       </div>
-      <PersonsTable data={data} search={search} navigate={navigate} />
-      <PersonsDialogs />
     </PersonsProvider>
   );
 }

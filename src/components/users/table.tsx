@@ -117,7 +117,10 @@ export function UsersTable({
       {/* Toolbar */}
       <DataTableToolbar
         table={table}
+        globalFilterValue={globalFilter ?? ""}
         searchPlaceholder="Filter by name, email..."
+        onRefresh={onRefresh}
+        refreshTitle="Refresh users"
         filters={[
           {
             columnId: "is_active",
@@ -207,7 +210,10 @@ export function UsersTable({
 
         {data.length > 0 && (
           <div className="mt-auto pt-3">
-            <DataTablePagination table={table} />
+            <DataTablePagination
+              table={table}
+              pageIndex={pagination.pageIndex}
+            />
           </div>
         )}
       </div>

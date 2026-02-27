@@ -142,7 +142,6 @@ export default function PersonsPage() {
       data={persons}
       search={search}
       navigate={navigate}
-      variant="page"
       onRefresh={loadPersons}
       error={error}
     />

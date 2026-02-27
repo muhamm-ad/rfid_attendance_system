@@ -2,6 +2,7 @@
 
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { type Table } from "@tanstack/react-table";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableFacetedFilter } from "./faceted-filter";
@@ -9,8 +10,11 @@ import { DataTableViewOptions } from "./view-options";
 
 type DataTableToolbarProps<TData> = {
   table: Table<TData>;
+  globalFilterValue?: string;
   searchPlaceholder?: string;
   searchKey?: string;
+  onRefresh?: () => void;
+  refreshTitle?: string;
   filters?: {
     columnId: string;
     title: string;
@@ -24,12 +28,19 @@ type DataTableToolbarProps<TData> = {
 
 export function DataTableToolbar<TData>({
   table,
+  globalFilterValue,
   searchPlaceholder = "Filter...",
   searchKey,
+  onRefresh,
+  refreshTitle = "Refresh",
   filters = [],
 }: DataTableToolbarProps<TData>) {
+  const stateGlobalFilter = table.getState().globalFilter ?? "";
+  const searchInputValue =
+    globalFilterValue !== undefined ? globalFilterValue : stateGlobalFilter;
   const isFiltered =
-    table.getState().columnFilters.length > 0 || table.getState().globalFilter;
+    table.getState().columnFilters.length > 0 ||
+    (globalFilterValue !== undefined ? !!globalFilterValue : !!stateGlobalFilter);
 
   return (
     <div className="flex items-center justify-between">
@@ -48,7 +59,7 @@ export function DataTableToolbar<TData>({
         ) : (
           <Input
             placeholder={searchPlaceholder}
-            value={table.getState().globalFilter ?? ""}
+            value={searchInputValue}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
             className="h-8 w-[150px] lg:w-[250px]"
           />
@@ -74,14 +85,28 @@ export function DataTableToolbar<TData>({
               table.resetColumnFilters();
               table.setGlobalFilter("");
             }}
-            className="h-8 px-2 lg:px-3"
+            className="h-8 px-1 lg:px-3 border"
           >
             Reset
-            <Cross2Icon className="ms-2 h-4 w-4" />
+            <Cross2Icon className=" h-4 w-4" />
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      <div className="flex items-center gap-2">
+        {onRefresh && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRefresh}
+            name={refreshTitle}
+            title={refreshTitle}
+            className="h-8 gap-2"
+          >
+            <RefreshCw size={16} />
+          </Button>
+        )}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   );
 }

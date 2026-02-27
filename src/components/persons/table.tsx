@@ -114,7 +114,10 @@ export function PersonsTable({
       {/* Toolbar */}
       <DataTableToolbar
         table={table}
+        globalFilterValue={globalFilter ?? ""}
         searchPlaceholder="Filter by name, RFID..."
+        onRefresh={onRefresh}
+        refreshTitle="Refresh persons"
         filters={[
           {
             columnId: "type",
@@ -195,7 +198,10 @@ export function PersonsTable({
         </div>
         {data.length > 0 && (
           <div className="mt-auto pt-3">
-            <DataTablePagination table={table} />
+            <DataTablePagination
+              table={table}
+              pageIndex={pagination.pageIndex}
+            />
           </div>
         )}
       </div>
