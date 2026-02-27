@@ -110,7 +110,7 @@ export function UsersTable({
   return (
     <div
       className={cn(
-        "flex flex-1 flex-col h-full w-full gap-4",
+        "flex flex-1 flex-col h-full w-full gap-2",
         className,
       )}
     >

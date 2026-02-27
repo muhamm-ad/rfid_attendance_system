@@ -2,6 +2,7 @@ import { type NavigateFn } from "@/hooks/use-table-url-state";
 import { PersonsDialogs } from "@/components/persons/dialogs";
 import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonsTable } from "@/components/persons/table";
+import { PageHeader } from "@/components/page-header";
 import { Person } from "@/types";
 
 import { BarChart3, Plus, Users } from "lucide-react";
@@ -59,20 +60,12 @@ export function Persons({
   return (
     <PersonsProvider>
       <div className="page-container h-full">
-        <header className="page-header">
-          <div className="flex items-center gap-3 text-left">
-            <Users size={28} className="page-title-icon shrink-0" aria-hidden />
-            <div className="page-title-group min-w-0">
-              <h1 className="page-title gap-0">Person & Badge Management</h1>
-              <p className="page-subtitle">
-                Manage persons, badges and their types
-              </p>
-            </div>
-          </div>
-          <div className="page-actions">
-            <PersonsPrimaryButtons />
-          </div>
-        </header>
+        <PageHeader
+          icon={Users}
+          title="Person & Badge Management"
+          subtitle="Manage persons, badges and their types"
+          actions={<PersonsPrimaryButtons />}
+        />
         {error && (
           <div className="alert-error" role="alert">
             {error}

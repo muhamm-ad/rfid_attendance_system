@@ -98,3 +98,15 @@ export const userInviteSchema = z.object({
 });
 
 export type UserInviteForm = z.infer<typeof userInviteSchema>;
+
+export const apiKeyNameSchema = z.object({
+  name: z.string().min(1, "Name is required.").max(100),
+});
+
+export type ApiKeyNameForm = z.infer<typeof apiKeyNameSchema>;
+
+export const jwtExpiresInSchema = z.object({
+  expiresIn: z.string().min(1, "Expiration is required.").max(20),
+});
+
+export type JwtExpiresInForm = z.infer<typeof jwtExpiresInSchema>;

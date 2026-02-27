@@ -2,6 +2,7 @@ import { type NavigateFn } from "@/hooks/use-table-url-state";
 import { UsersDialogs } from "@/components/users/dialogs";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { UsersTable } from "@/components/users/table";
+import { PageHeader } from "@/components/page-header";
 import { User } from "@/types";
 import { MailPlus, UserPlus, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,38 +41,30 @@ export function Users({
   onRefresh?: () => void;
   error?: string | null;
 }) {
-    return (
-      <UsersProvider>
-        <div className="page-container h-full">
-          <header className="page-header">
-            <div className="page-title-group">
-              <h1 className="page-title">
-                <UsersIcon size={28} className="page-title-icon" aria-hidden />
-                User Management
-              </h1>
-              <p className="page-subtitle">
-                Manage users and their roles and access permissions
-              </p>
-            </div>
-            <div className="page-actions">
-              <UsersPrimaryButtons />
-            </div>
-          </header>
-          {error && (
-            <div className="alert-error" role="alert">
-              {error}
-            </div>
-          )}
-          <div className="relative flex-1 min-h-0 w-full overflow-hidden flex flex-col">
-            <UsersTable
-              data={data}
-              search={search}
-              navigate={navigate}
-              onRefresh={onRefresh}
-            />
+  return (
+    <UsersProvider>
+      <div className="page-container h-full">
+        <PageHeader
+          icon={UsersIcon}
+          title="User Management"
+          subtitle="Manage users and their roles and access permissions"
+          actions={<UsersPrimaryButtons />}
+        />
+        {error && (
+          <div className="alert-error" role="alert">
+            {error}
           </div>
-          <UsersDialogs />
+        )}
+        <div className="relative flex-1 min-h-0 w-full overflow-hidden flex flex-col">
+          <UsersTable
+            data={data}
+            search={search}
+            navigate={navigate}
+            onRefresh={onRefresh}
+          />
         </div>
-      </UsersProvider>
-    );
+        <UsersDialogs />
+      </div>
+    </UsersProvider>
+  );
 }

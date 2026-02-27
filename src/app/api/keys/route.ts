@@ -7,6 +7,7 @@ import { prisma, generateApiKey, authenticateSession } from "@/lib";
 
 /**
  * GET: List API keys for the current user (any authenticated user).
+ * Resolves user from DB by id or email so keys are found even if session id is stale.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -15,8 +16,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: auth_user.id }, { email: auth_user.email }],
+      },
+      select: { id: true },
+    });
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: "User not found. Please log out and log in again." },
+        { status: 401 },
+      );
+    }
+
     const keys = await prisma.apiKey.findMany({
-      where: { user_id: auth_user!.id },
+      where: { user_id: dbUser.id },
       orderBy: { created_at: "desc" },
       select: {
         id: true,
