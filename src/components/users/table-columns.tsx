@@ -75,18 +75,32 @@ export const usersColumns: ColumnDef<User>[] = [
     },
   },
 
-  // ─── Full name ─────────────────────────────────────────────────────────────
+  // ─── First name ─────────────────────────────────────────────────────────────
   {
-    id: "fullName",
+    accessorKey: "first_name",
+    enableSorting: true,
+    enableHiding: true,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="First Name" />
     ),
-    cell: ({ row }) => {
-      const { first_name, last_name } = row.original;
-      const fullName = [first_name, last_name].filter(Boolean).join(" ") || "—";
-      return <LongText className="max-w-40">{fullName}</LongText>;
-    },
-    meta: { className: "w-40" },
+    cell: ({ row }) => (
+      <LongText className="cell-person-name">
+        {row.original.first_name}
+      </LongText>
+    ),
+  },
+
+  // ─── Last name ───────────────────────────────────────────────────────────────
+  {
+    accessorKey: "last_name",
+    enableSorting: true,
+    enableHiding: true,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Name" />
+    ),
+    cell: ({ row }) => (
+      <LongText className="cell-person-name">{row.original.last_name}</LongText>
+    ),
   },
 
   // ─── Email ─────────────────────────────────────────────────────────────────
@@ -96,7 +110,7 @@ export const usersColumns: ColumnDef<User>[] = [
       <DataTableColumnHeader column={column} title="Email" />
     ),
     cell: ({ row }) => (
-      <div className="w-fit text-nowrap ps-2">{row.getValue("email")}</div>
+      <span className="text-sm theme-text-muted">{row.getValue("email")}</span>
     ),
   },
 
@@ -111,7 +125,10 @@ export const usersColumns: ColumnDef<User>[] = [
       const config = roleConfig[role];
       const Icon = config?.icon ?? ShieldOff;
       return (
-        <Badge variant="outline" className={cn("gap-1 capitalize", config?.className)}>
+        <Badge
+          variant="outline"
+          className={cn("gap-1 capitalize", config?.className ?? "theme-badge-muted")}
+        >
           <Icon size={12} />
           {role.toLowerCase()}
         </Badge>
@@ -156,7 +173,7 @@ export const usersColumns: ColumnDef<User>[] = [
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
+      <span className="text-sm theme-text-muted">
         {new Date(row.getValue<string>("createdAt")).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",

@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TABLE_HEADER_CLASSNAME, TABLE_CELL_CLASSNAME } from "@/lib/ui-utils";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { Person, PersonTypeEnum } from "@/types";
 import { PersonsTableBulkActions } from "@/components/persons/table-bulk-actions";
@@ -30,9 +31,15 @@ type DataTableProps = {
   data: Person[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
+  onRefresh?: () => void;
 };
 
-export function PersonsTable({ data, search, navigate }: DataTableProps) {
+export function PersonsTable({
+  data,
+  search,
+  navigate,
+  onRefresh,
+}: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -56,15 +63,14 @@ export function PersonsTable({ data, search, navigate }: DataTableProps) {
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: "filter" },
-    columnFilters: [
-      { columnId: "type", searchKey: "type", type: "array" },
-    ],
+    columnFilters: [{ columnId: "type", searchKey: "type", type: "array" }],
   });
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row: Person) => String(row.id),
     state: {
       sorting,
       pagination,
@@ -113,18 +119,20 @@ export function PersonsTable({ data, search, navigate }: DataTableProps) {
           },
         ]}
       />
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="group/row">
-                {headerGroup.headers.map((header) => {
-                  return (
+      <div className={cn("flex flex-col h-full min-h-0", "flex-1")}>
+        <div className="overflow-x-auto rounded-lg border theme-border bg-background">
+          <Table className="min-w-full [&_tr]:border-b theme-border">
+            <TableHeader 
+            className="bg-background [&_tr]:border-b theme-border"
+            >
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
                       className={cn(
-                        "bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted",
+                        TABLE_HEADER_CLASSNAME,
                         header.column.columnDef.meta?.className,
                         header.column.columnDef.meta?.thClassName,
                       )}
@@ -136,51 +144,55 @@ export function PersonsTable({ data, search, navigate }: DataTableProps) {
                             header.getContext(),
                           )}
                     </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="group/row"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        "bg-background group-hover/row:bg-muted group-data-[state=selected]/row:bg-muted",
-                        cell.column.columnDef.meta?.className,
-                        cell.column.columnDef.meta?.tdClassName,
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody className="theme-table-body">
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="border-b theme-border theme-table-row-hover"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          TABLE_CELL_CLASSNAME,
+                          cell.column.columnDef.meta?.className,
+                          cell.column.columnDef.meta?.tdClassName,
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No persons found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {data.length > 0 && (
+          <div className="mt-auto pt-3">
+            <DataTablePagination table={table} />
+          </div>
+        )}
       </div>
-      <DataTablePagination table={table} className="mt-auto" />
-      <PersonsTableBulkActions table={table} />
+      <PersonsTableBulkActions table={table} onSuccess={onRefresh} />
     </div>
   );
 }

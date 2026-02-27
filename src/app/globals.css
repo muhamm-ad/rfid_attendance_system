@@ -155,14 +155,6 @@
 }
 
 /* Data table (theme-aligned, same hover as filters) */
-.theme-table-header {
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
-}
-.theme-table-header th {
-  font-weight: 600;
-  padding: 0.75rem 0.5rem;
-}
 .theme-table-body {
   background: var(--background);
 }

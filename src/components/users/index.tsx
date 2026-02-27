@@ -3,24 +3,40 @@ import { UsersDialogs } from "@/components/users/dialogs";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { UsersTable } from "@/components/users/table";
 import { User } from "@/types";
-import { MailPlus, UserPlus } from "lucide-react";
+import { MailPlus, RefreshCw, UserPlus, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUsers } from "@/hooks/use-users";
 
-export function UsersPrimaryButtons() {
+export function UsersPrimaryButtons({
+  onRefresh,
+}: {
+  onRefresh?: () => void;
+}) {
   const { setOpen } = useUsers();
   return (
-    <div className="flex gap-2">
+    <div className="flex items-center gap-2">
       <Button
         variant="outline"
-        className="space-x-1"
+        className="gap-2"
         onClick={() => setOpen("invite")}
       >
-        <span>Invite User</span> <MailPlus size={18} />
+        <MailPlus size={20} />
+        Invite User
       </Button>
-      <Button className="space-x-1" onClick={() => setOpen("add")}>
-        <span>Add User</span> <UserPlus size={18} />
+      <Button className="gap-2" onClick={() => setOpen("add")}>
+        <UserPlus size={20} />
+        Add User
       </Button>
+      {onRefresh && (
+        <Button
+          onClick={onRefresh}
+          className="gap-2"
+          title="Refresh users"
+        >
+          <RefreshCw size={20} />
+          Refresh
+        </Button>
+      )}
     </div>
   );
 }
@@ -29,14 +45,56 @@ export function Users({
   data,
   search,
   navigate,
+  variant = "default",
+  onRefresh,
+  error,
 }: {
   data: User[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
+  variant?: "default" | "page";
+  onRefresh?: () => void;
+  error?: string | null;
 }) {
+  if (variant === "page") {
+    return (
+      <UsersProvider>
+        <div className="page-container h-full">
+          <header className="page-header">
+            <div className="page-title-group">
+              <h1 className="page-title">
+                <UsersIcon size={28} className="page-title-icon" aria-hidden />
+                User Management
+              </h1>
+              <p className="page-subtitle">
+                Manage users, roles, and access
+              </p>
+            </div>
+            <div className="page-actions">
+              <UsersPrimaryButtons onRefresh={onRefresh} />
+            </div>
+          </header>
+          {error && (
+            <div className="alert-error" role="alert">
+              {error}
+            </div>
+          )}
+          <div className="relative flex-1 h-full w-full">
+            <UsersTable
+              data={data}
+              search={search}
+              navigate={navigate}
+              onRefresh={onRefresh}
+            />
+          </div>
+          <UsersDialogs />
+        </div>
+      </UsersProvider>
+    );
+  }
+
   return (
     <UsersProvider>
-      {/* <Main className="flex flex-1 flex-col gap-4 sm:gap-6"> */}
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">User List</h2>
@@ -47,8 +105,6 @@ export function Users({
         <UsersPrimaryButtons />
       </div>
       <UsersTable data={data} search={search} navigate={navigate} />
-      {/* </Main> */}
-
       <UsersDialogs />
     </UsersProvider>
   );

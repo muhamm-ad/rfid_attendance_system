@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Persons } from "@/components/persons";
-import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonWithPayments } from "@/types";
 import type { NavigateFn } from "@/hooks/use-table-url-state";
 import Loading from "@/components/ui/loading";
@@ -102,69 +101,59 @@ export default function PersonsPage() {
   const filterStr = (search.filter as string)?.trim() ?? "";
   const typeArr = (search.type as string[]) ?? [];
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadPersons = useCallback(async () => {
     setLoading(true);
     setError(null);
-
-    const fetchPersons = async () => {
-      try {
-        if (filterStr.length >= 2) {
-          const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
-          const url = typeParam
-            ? `/api/search?q=${encodeURIComponent(filterStr)}&type=${encodeURIComponent(typeParam)}`
-            : `/api/search?q=${encodeURIComponent(filterStr)}`;
-          const res = await fetch(url);
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error || "Search failed");
-          if (!cancelled) setPersons(Array.isArray(data) ? data : []);
-        } else {
-          const typeParam =
-            typeArr.length === 1 ? typeArr[0] : undefined;
-          const url = typeParam
-            ? `/api/persons?type=${encodeURIComponent(typeParam)}`
-            : "/api/persons";
-          const res = await fetch(url);
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error || "Failed to load persons");
-          let list = Array.isArray(data) ? data : [];
-          if (typeArr.length > 1) {
-            list = list.filter((p: PersonWithPayments) =>
-              typeArr.includes(p.type)
-            );
-          }
-          if (!cancelled) setPersons(list);
+    try {
+      if (filterStr.length >= 2) {
+        const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
+        const url = typeParam
+          ? `/api/search?q=${encodeURIComponent(filterStr)}&type=${encodeURIComponent(typeParam)}`
+          : `/api/search?q=${encodeURIComponent(filterStr)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Search failed");
+        setPersons(Array.isArray(data) ? data : []);
+      } else {
+        const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
+        const url = typeParam
+          ? `/api/persons?type=${encodeURIComponent(typeParam)}`
+          : "/api/persons";
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Failed to load persons");
+        let list = Array.isArray(data) ? data : [];
+        if (typeArr.length > 1) {
+          list = list.filter((p: PersonWithPayments) =>
+            typeArr.includes(p.type)
+          );
         }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Unexpected error");
-          setPersons([]);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+        setPersons(list);
       }
-    };
-
-    fetchPersons();
-    return () => {
-      cancelled = true;
-    };
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unexpected error");
+      setPersons([]);
+    } finally {
+      setLoading(false);
+    }
   }, [filterStr, typeArr.join(",")]);
+
+  useEffect(() => {
+    loadPersons();
+  }, [loadPersons]);
 
   if (loading && persons.length === 0) {
     return <Loading />;
   }
 
   return (
-    <PersonsProvider>
-      <div className="flex flex-1 flex-col gap-4">
-        {error && (
-          <div className="alert-error" role="alert">
-            {error}
-          </div>
-        )}
-        <Persons data={persons} search={search} navigate={navigate} />
-      </div>
-    </PersonsProvider>
+    <Persons
+      data={persons}
+      search={search}
+      navigate={navigate}
+      variant="page"
+      onRefresh={loadPersons}
+      error={error}
+    />
   );
 }

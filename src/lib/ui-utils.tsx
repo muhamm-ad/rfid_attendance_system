@@ -49,6 +49,13 @@ export const FOCUS_WITHIN_RING_CLASSNAME =
 /** Ring applied when a popover / dropdown trigger is in its open state. */
 export const OPEN_STATE_RING_CLASSNAME = "ring-1 ring-ring";
 
+export const TABLE_HEADER_CLASSNAME =
+  "text-center font-bold text-primary uppercase cursor-pointer hover:bg-accent/50 transition-colors hover:text-primary";
+
+export const TABLE_CELL_CLASSNAME =
+  "text-center whitespace-nowrap items-center justify-center text-foreground";
+
+
 // ─── Conditional class helpers ────────────────────────────────────────────────
 
 export const ERROR_CLASSNAME = (hasError: boolean) =>
