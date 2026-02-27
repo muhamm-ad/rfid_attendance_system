@@ -1,6 +1,6 @@
-import { UsersActionDialog } from "@/components/users-action-dialog";
-import { UsersDeleteDialog } from "@/components/users-delete-dialog";
-import { UsersInviteDialog } from "@/components/users-invite-dialog";
+import { UsersActionDialog } from "@/components/users/action-dialog";
+import { UsersDeleteDialog } from "@/components/users/delete-dialog";
+import { UsersInviteDialog } from "@/components/users/invite-dialog";
 import { useUsers } from "@/hooks/use-users";
 
 export function UsersDialogs({ onSuccess }: { onSuccess?: () => void }) {

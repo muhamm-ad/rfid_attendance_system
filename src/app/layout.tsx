@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
-import SessionProvider from "../components/providers/session";
+import SessionProvider from "../components/providers/session-provider";
 import { auth } from "@/lib";
 import { Session } from "next-auth";
 

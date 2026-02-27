@@ -7,7 +7,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { DataTableColumnHeader } from "@/components/data-table";
 import { LongText } from "@/components/long-text";
 import { User, UserRoleEnum } from "@/types";
-import { UsersTableRowActions } from "@/components/users-table-row-actions";
+import { UsersTableRowActions } from "@/components/users/table-row-actions";
 
 // Role metadata: icon + badge colour
 const roleConfig: Record<

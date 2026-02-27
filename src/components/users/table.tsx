@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn-utils";
 import { type NavigateFn, useTableUrlState } from "@/hooks/use-table-url-state";
 import {
   Table,
@@ -22,12 +22,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
-import { Person, PersonTypeEnum } from "@/types";
-import { PersonsTableBulkActions } from "@/components/persons-table-bulk-actions";
-import { personsColumns as columns } from "@/components/persons-columns";
+import { User, UserRoleEnum } from "@/types";
+import { UserTableBulkActions } from "@/components/users/table-bulk-actions";
+import { usersColumns as columns } from "@/components/users/table-columns";
 
 type DataTableProps = {
-  data: Person[];
+  data: User[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
 };
@@ -55,9 +55,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: false },
     columnFilters: [
-      // username per-column text filter
-      { columnId: "username", searchKey: "username", type: "string" },
-      { columnId: "status", searchKey: "status", type: "array" },
+      { columnId: "is_active", searchKey: "is_active", type: "array" },
       { columnId: "role", searchKey: "role", type: "array" },
     ],
   });
@@ -116,7 +114,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
           {
             columnId: "role",
             title: "Role",
-            options: Object.values(PersonTypeEnum).map((role) => ({
+            options: Object.values(UserRoleEnum).map((role) => ({
               label: role,
               value: role,
             })),
@@ -190,7 +188,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
         </Table>
       </div>
       <DataTablePagination table={table} className="mt-auto" />
-      <PersonsTableBulkActions table={table} />
+      <UserTableBulkActions table={table} />
     </div>
   );
 }

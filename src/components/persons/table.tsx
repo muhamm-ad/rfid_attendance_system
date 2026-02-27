@@ -22,17 +22,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
-import { User, UserRoleEnum } from "@/types";
-import { UserTableBulkActions } from "@/components/users-table-bulk-actions";
-import { usersColumns as columns } from "@/components/users-columns";
+import { Person, PersonTypeEnum } from "@/types";
+import { PersonsTableBulkActions } from "@/components/persons/table-bulk-actions";
+import { personsColumns as columns } from "@/components/persons/table-columns";
 
 type DataTableProps = {
-  data: User[];
+  data: Person[];
   search: Record<string, unknown>;
   navigate: NavigateFn;
 };
 
-export function UsersTable({ data, search, navigate }: DataTableProps) {
+export function PersonsTable({ data, search, navigate }: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -42,8 +42,10 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
   // const [columnFilters, onColumnFiltersChange] = useState<ColumnFiltersState>([])
   // const [pagination, onPaginationChange] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
 
-  // Synced with URL states (keys/defaults mirror users route search schema)
+  // Synced with URL states (keys/defaults mirror persons route search schema)
   const {
+    globalFilter,
+    onGlobalFilterChange,
     columnFilters,
     onColumnFiltersChange,
     pagination,
@@ -53,10 +55,9 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     search,
     navigate,
     pagination: { defaultPage: 1, defaultPageSize: 10 },
-    globalFilter: { enabled: false },
+    globalFilter: { enabled: true, key: "filter" },
     columnFilters: [
-      { columnId: "is_active", searchKey: "is_active", type: "array" },
-      { columnId: "role", searchKey: "role", type: "array" },
+      { columnId: "type", searchKey: "type", type: "array" },
     ],
   });
 
@@ -70,10 +71,12 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
       rowSelection,
       columnFilters,
       columnVisibility,
+      globalFilter,
     },
     enableRowSelection: true,
     onPaginationChange,
     onColumnFiltersChange,
+    onGlobalFilterChange,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
@@ -98,25 +101,14 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder="Filter users..."
-        searchKey="username"
+        searchPlaceholder="Filter by name, RFID..."
         filters={[
           {
-            columnId: "status",
-            title: "Status",
-            options: [
-              { label: "Active", value: "active" },
-              { label: "Inactive", value: "inactive" },
-              { label: "Invited", value: "invited" },
-              { label: "Suspended", value: "suspended" },
-            ],
-          },
-          {
-            columnId: "role",
-            title: "Role",
-            options: Object.values(UserRoleEnum).map((role) => ({
-              label: role,
-              value: role,
+            columnId: "type",
+            title: "Type",
+            options: Object.values(PersonTypeEnum).map((t) => ({
+              label: t.charAt(0).toUpperCase() + t.slice(1),
+              value: t,
             })),
           },
         ]}
@@ -188,7 +180,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
         </Table>
       </div>
       <DataTablePagination table={table} className="mt-auto" />
-      <UserTableBulkActions table={table} />
+      <PersonsTableBulkActions table={table} />
     </div>
   );
 }

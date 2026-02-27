@@ -1,5 +1,5 @@
 import React from "react";
-import { PersonsContext } from "@/components/providers/persons";
+import { PersonsContext } from "@/components/providers/persons-provider";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function usePersons() {

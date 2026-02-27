@@ -2,8 +2,8 @@
 
 "use client";
 
-import { UsersPage } from "@/components/users";
+import { Users } from "@/components/users";
 
-export default function Page() {
-  return <UsersPage />;
+export default function UsersPage() {
+  return <Users data={[]} search={{}} navigate={() => {}} />;
 }
