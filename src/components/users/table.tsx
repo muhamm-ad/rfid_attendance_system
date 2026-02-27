@@ -21,7 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TABLE_HEADER_CLASSNAME, TABLE_CELL_CLASSNAME } from "@/lib/ui-utils";
+import {
+  DEFAULT_PAGE_SIZE,
+  TABLE_HEADER_CLASSNAME,
+  TABLE_CELL_CLASSNAME,
+} from "@/lib/ui-utils";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { User, UserRoleEnum } from "@/types";
 import { UserTableBulkActions } from "@/components/users/table-bulk-actions";
@@ -32,6 +36,7 @@ type DataTableProps = {
   search: Record<string, unknown>;
   navigate: NavigateFn;
   onRefresh?: () => void;
+  className?: string;
 };
 
 export function UsersTable({
@@ -39,6 +44,7 @@ export function UsersTable({
   search,
   navigate,
   onRefresh,
+  className,
 }: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({});
@@ -61,7 +67,7 @@ export function UsersTable({
   } = useTableUrlState({
     search,
     navigate,
-    pagination: { defaultPage: 1, defaultPageSize: 10 },
+    pagination: { defaultPage: 1, defaultPageSize: DEFAULT_PAGE_SIZE },
     globalFilter: { enabled: true, key: "filter" },
     columnFilters: [
       { columnId: "is_active", searchKey: "is_active", type: "array" },
@@ -104,10 +110,11 @@ export function UsersTable({
   return (
     <div
       className={cn(
-        'max-sm:has-[div[role="toolbar"]]:mb-16', // Add margin bottom to the table on mobile when the toolbar is visible
-        "flex flex-1 flex-col gap-4",
+        "flex flex-1 flex-col h-full w-full gap-4",
+        className,
       )}
     >
+      {/* Toolbar */}
       <DataTableToolbar
         table={table}
         searchPlaceholder="Filter by name, email..."
@@ -130,7 +137,9 @@ export function UsersTable({
           },
         ]}
       />
-      <div className={cn("flex flex-col h-full min-h-0", "flex-1")}>
+
+      {/* Table container */}
+      <div className={cn("flex flex-col min-h-0 flex-1 overflow-hidden")}>
         <div className="overflow-x-auto rounded-lg border theme-border bg-background">
           <Table className="min-w-full [&_tr]:border-b theme-border">
             <TableHeader className="bg-background [&_tr]:border-b theme-border">
@@ -195,12 +204,15 @@ export function UsersTable({
             </TableBody>
           </Table>
         </div>
+
         {data.length > 0 && (
           <div className="mt-auto pt-3">
             <DataTablePagination table={table} />
           </div>
         )}
       </div>
+
+      {/* Bulk actions */}
       <UserTableBulkActions table={table} onSuccess={onRefresh} />
     </div>
   );

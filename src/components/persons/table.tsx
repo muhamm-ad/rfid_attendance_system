@@ -21,7 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TABLE_HEADER_CLASSNAME, TABLE_CELL_CLASSNAME } from "@/lib/ui-utils";
+import {
+  DEFAULT_PAGE_SIZE,
+  TABLE_HEADER_CLASSNAME,
+  TABLE_CELL_CLASSNAME,
+} from "@/lib/ui-utils";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { Person, PersonTypeEnum } from "@/types";
 import { PersonsTableBulkActions } from "@/components/persons/table-bulk-actions";
@@ -32,6 +36,7 @@ type DataTableProps = {
   search: Record<string, unknown>;
   navigate: NavigateFn;
   onRefresh?: () => void;
+  className?: string;
 };
 
 export function PersonsTable({
@@ -39,6 +44,7 @@ export function PersonsTable({
   search,
   navigate,
   onRefresh,
+  className,
 }: DataTableProps) {
   // Local UI-only states
   const [rowSelection, setRowSelection] = useState({});
@@ -61,7 +67,7 @@ export function PersonsTable({
   } = useTableUrlState({
     search,
     navigate,
-    pagination: { defaultPage: 1, defaultPageSize: 10 },
+    pagination: { defaultPage: 1, defaultPageSize: DEFAULT_PAGE_SIZE },
     globalFilter: { enabled: true, key: "filter" },
     columnFilters: [{ columnId: "type", searchKey: "type", type: "array" }],
   });
@@ -101,10 +107,11 @@ export function PersonsTable({
   return (
     <div
       className={cn(
-        'max-sm:has-[div[role="toolbar"]]:mb-16', // Add margin bottom to the table on mobile when the toolbar is visible
-        "flex flex-1 flex-col gap-4",
+        "flex flex-1 flex-col h-full w-full gap-4",
+        className,
       )}
     >
+      {/* Toolbar */}
       <DataTableToolbar
         table={table}
         searchPlaceholder="Filter by name, RFID..."
@@ -119,12 +126,12 @@ export function PersonsTable({
           },
         ]}
       />
-      <div className={cn("flex flex-col h-full min-h-0", "flex-1")}>
+
+      {/* Table container */}
+      <div className={cn("flex flex-col min-h-0 flex-1 overflow-hidden")}>
         <div className="overflow-x-auto rounded-lg border theme-border bg-background">
           <Table className="min-w-full [&_tr]:border-b theme-border">
-            <TableHeader 
-            className="bg-background [&_tr]:border-b theme-border"
-            >
+            <TableHeader className="bg-background [&_tr]:border-b theme-border">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -192,6 +199,8 @@ export function PersonsTable({
           </div>
         )}
       </div>
+
+      {/* Bulk actions */}
       <PersonsTableBulkActions table={table} onSuccess={onRefresh} />
     </div>
   );

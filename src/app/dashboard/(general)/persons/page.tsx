@@ -19,12 +19,6 @@ function searchParamsToRecord(
     if (!isNaN(n)) record.page = n;
   }
 
-  const pageSize = searchParams.get("pageSize");
-  if (pageSize) {
-    const n = parseInt(pageSize, 10);
-    if (!isNaN(n)) record.pageSize = n;
-  }
-
   const filter = searchParams.get("filter");
   if (filter) record.filter = filter;
 
@@ -42,9 +36,6 @@ function recordToSearchString(record: Record<string, unknown>): string {
 
   if (typeof record.page === "number" && record.page > 1) {
     params.set("page", String(record.page));
-  }
-  if (typeof record.pageSize === "number" && record.pageSize !== 10) {
-    params.set("pageSize", String(record.pageSize));
   }
   if (typeof record.filter === "string" && record.filter.trim()) {
     params.set("filter", record.filter.trim());

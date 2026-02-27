@@ -1,6 +1,5 @@
 // @/lib/ui-utils.tsx
 
-import React from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "./cn-utils";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+export const DEFAULT_PAGE_SIZE = 11;
+
 
 // ─── Label & focus constants ───────────────────────────────────────────────────
 

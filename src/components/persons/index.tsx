@@ -28,15 +28,6 @@ export function PersonsPrimaryButtons({
           Add Person
         </Button>
       )}
-      <Button
-        variant="outline"
-        className="gap-2"
-        title="View person statistics"
-        onClick={() => router.push("/dashboard/persons/statistics")}
-      >
-        <BarChart3 size={20} />
-        Statistics
-      </Button>
       {onRefresh && (
         <Button
           onClick={onRefresh}
@@ -66,6 +57,8 @@ export function Persons({
   onRefresh?: () => void;
   error?: string | null;
 }) {
+  const router = useRouter();
+
   if (variant === "page") {
     return (
       <PersonsProvider>
@@ -89,7 +82,7 @@ export function Persons({
               {error}
             </div>
           )}
-          <div className="relative flex-1 h-full w-full">
+          <div className="relative flex-1 min-h-0 w-full overflow-hidden flex flex-col">
             <PersonsTable
               data={data}
               search={search}
@@ -107,7 +100,18 @@ export function Persons({
     <PersonsProvider>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Person List</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
+            Person List
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 shrink-0 text-primary hover:text-primary hover:bg-primary/10"
+              title="View person statistics"
+              onClick={() => router.push("/dashboard/persons/statistics")}
+            >
+              <BarChart3 size={20} />
+            </Button>
+          </h2>
           <p className="text-muted-foreground">
             Manage your persons and their roles here.
           </p>
