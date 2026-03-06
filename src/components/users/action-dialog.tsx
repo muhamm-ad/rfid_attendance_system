@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { SelectDropdown } from "@/components/select-dropdown";
+import { Switch } from "@/components/ui/switch";
 import { User, UserRoleEnum } from "@/types";
 import { userFormSchema, type UserForm } from "@/schemas";
 
@@ -206,26 +207,50 @@ export function UsersActionDialog({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4">
+                    <FormLabel className="col-span-2 text-end">
+                      Status
+                    </FormLabel>
+                    <FormControl>
+                      <div className="col-span-4 flex items-center gap-2">
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {field.value ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               {isEdit && (
-                <div className="grid grid-cols-6 items-center gap-x-4">
-                  <span className="col-span-2 text-end text-sm font-medium">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4">
+                  <FormLabel className="col-span-2 text-end">
                     Password
-                  </span>
-                  <label className="col-span-4 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox
-                      checked={showPasswordFields}
-                      onCheckedChange={(checked) => {
-                        setShowPasswordFields(!!checked);
-                        if (!checked) {
-                          form.setValue("password", "");
-                          form.setValue("confirmPassword", "");
-                          form.clearErrors(["password", "confirmPassword"]);
-                        }
-                      }}
-                    />
-                    Change password
-                  </label>
-                </div>
+                  </FormLabel>
+                  <FormControl>
+                    <label className="col-span-4 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                      <Checkbox
+                        checked={showPasswordFields}
+                        onCheckedChange={(checked) => {
+                          setShowPasswordFields(!!checked);
+                          if (!checked) {
+                            form.setValue("password", "");
+                            form.setValue("confirmPassword", "");
+                            form.clearErrors(["password", "confirmPassword"]);
+                          }
+                        }}
+                      />
+                      Change password
+                    </label>
+                  </FormControl>
+                </FormItem>
               )}
               {(!isEdit || showPasswordFields) && (
                 <>
@@ -239,7 +264,7 @@ export function UsersActionDialog({
                         </FormLabel>
                         <FormControl>
                           <PasswordInput
-                            placeholder="e.g., S3cur3P@ssw0rd"
+                            // placeholder="e.g., S3cur3P@ssw0rd"
                             className="col-span-4"
                             autoComplete="new-password"
                             {...field}
@@ -260,7 +285,7 @@ export function UsersActionDialog({
                         <FormControl>
                           <PasswordInput
                             disabled={!isPasswordTouched}
-                            placeholder="e.g., S3cur3P@ssw0rd"
+                            // placeholder="e.g., S3cur3P@ssw0rd"
                             className="col-span-4"
                             autoComplete="new-password"
                             {...field}
