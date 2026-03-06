@@ -14,6 +14,11 @@ export const roleConfig: Record<
   string,
   { icon: React.ElementType; className: string }
 > = {
+  [UserRoleEnum.SUPER_ADMIN]: {
+    icon: ShieldCheck,
+    className:
+      "border-purple-200 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400",
+  },
   [UserRoleEnum.ADMIN]: {
     icon: ShieldCheck,
     className:
@@ -54,6 +59,7 @@ export const usersColumns: ColumnDef<User>[] = [
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
         className="translate-y-[2px]"
+        disabled={row.original.role === "SUPER_ADMIN"}
       />
     ),
     meta: {

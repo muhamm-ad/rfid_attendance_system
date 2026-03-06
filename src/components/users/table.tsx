@@ -146,11 +146,13 @@ export function UsersTable({
           {
             columnId: "role",
             title: "Role",
-            options: Object.values(UserRoleEnum).map((role) => ({
-              label: role.charAt(0) + role.slice(1).toLowerCase(),
-              value: role,
-              className: roleConfig[role]?.className ?? "theme-badge-muted",
-            })),
+            options: Object.values(UserRoleEnum)
+              .filter((role) => role !== "SUPER_ADMIN")
+              .map((role) => ({
+                label: role.charAt(0) + role.slice(1).toLowerCase(),
+                value: role,
+                className: roleConfig[role]?.className ?? "theme-badge-muted",
+              })),
           },
         ]}
       />

@@ -1,5 +1,6 @@
 // @/prisma/seed.ts
 
+import "dotenv/config";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth-utils";
 
@@ -40,6 +41,31 @@ export async function seedUsers() {
   console.log("   CASHIER: cashier@rfid.local / Cashier123!@#");
   console.log("   MANAGER: manager@rfid.local / Manager123!@#");
   console.log("   ⚠️  Please change these passwords after first login!");
+}
+
+export async function seedSuperAdmin() {
+  const email = process.env.SUPER_ADMIN_EMAIL;
+  const password = process.env.SUPER_ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    console.log("⚠️  SUPER_ADMIN_EMAIL or SUPER_ADMIN_PASSWORD not set in .env — skipping super admin seed.");
+    return;
+  }
+
+  await prisma.user.upsert({
+    where: { email },
+    update: {},
+    create: {
+      email,
+      password: await hashPassword(password),
+      role: "SUPER_ADMIN",
+      is_active: true,
+      first_name: "Super",
+      last_name: "Admin",
+    },
+  });
+
+  console.log(`✅ Super admin ensured: ${email}`);
 }
 
 type PersonType = "student" | "teacher" | "staff" | "visitor";
@@ -366,6 +392,7 @@ export async function seedDatabase() {
 }
 
 async function main() {
+  await seedSuperAdmin();
   await seedUsers();
   await seedDatabase();
 }

@@ -35,6 +35,7 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   MANAGER: 1,
   CASHIER: 2,
   ADMIN: 3,
+  SUPER_ADMIN: 4,
 };
 
 /** Result type for authentication middlewares */

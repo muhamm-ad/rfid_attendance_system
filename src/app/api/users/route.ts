@@ -85,6 +85,12 @@ export async function POST(request: NextRequest) {
   }
 
   const validRoles: UserRole[] = ["ADMIN", "CASHIER", "MANAGER"];
+  if (role === "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "Cannot create a user with SUPER_ADMIN role" },
+      { status: 403 }
+    );
+  }
   const chosenRole = validRoles.includes(role as UserRole) ? role : "MANAGER";
 
   const existing = await getUserByEmail(email);

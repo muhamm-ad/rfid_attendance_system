@@ -31,7 +31,9 @@ export function UserTableBulkActions<TData extends { id: string }>({
 
   // ─── Bulk delete ──────────────────────────────────────────────────────────
   const handleBulkDelete = async () => {
-    const ids = selectedRows.map((row) => row.original.id);
+    const ids = selectedRows
+      .filter((row) => (row.original as unknown as { role: string }).role !== "SUPER_ADMIN")
+      .map((row) => row.original.id);
     const results = await Promise.allSettled(
       ids.map((id) =>
         fetch(`/api/users/${id}`, { method: "DELETE" }).then(async (res) => {

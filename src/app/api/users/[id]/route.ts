@@ -62,6 +62,13 @@ export async function PUT(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  if (user.role === "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "The super admin account cannot be modified" },
+      { status: 403 },
+    );
+  }
+
   let body: {
     email?: string;
     password?: string;
@@ -84,6 +91,13 @@ export async function PUT(
         { status: 400 },
       );
     }
+  }
+
+  if (body.role === "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "Cannot assign SUPER_ADMIN role" },
+      { status: 403 },
+    );
   }
 
   const validRoles: UserRole[] = ["ADMIN", "CASHIER", "MANAGER"];
@@ -138,6 +152,13 @@ export async function DELETE(
   const user = await getUserById(id);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (user.role === "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "The super admin account cannot be deleted" },
+      { status: 403 },
+    );
   }
 
   await deleteUser(id);

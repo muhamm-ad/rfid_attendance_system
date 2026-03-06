@@ -15,6 +15,9 @@ import { useUsers } from "@/hooks/use-users";
 
 export function UsersTableRowActions({ row }: { row: Row<User> }) {
   const { setOpen, setCurrentRow } = useUsers();
+
+  if (row.original.role === "SUPER_ADMIN") return null;
+
   return (
     <>
       <DropdownMenu modal={false}>

@@ -198,10 +198,12 @@ export function UsersActionDialog({
                       onValueChange={field.onChange}
                       placeholder="Select a role"
                       className="col-span-4"
-                      items={Object.values(UserRoleEnum).map((role) => ({
-                        label: role,
-                        value: role,
-                      }))}
+                      items={Object.values(UserRoleEnum)
+                        .filter((role) => role !== "SUPER_ADMIN")
+                        .map((role) => ({
+                          label: role,
+                          value: role,
+                        }))}
                     />
                     <FormMessage className="col-span-4 col-start-3" />
                   </FormItem>
