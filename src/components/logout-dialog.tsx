@@ -2,10 +2,11 @@
 
 "use client";
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useNavigation } from "@/components/providers/navigation-provider";
 
 export default function Logout({
   open,
@@ -16,7 +17,9 @@ export default function Logout({
 }) {
   const [isSigningOut, startSignOut] = useTransition();
   const router = useRouter();
+  const { setNavigatingAway } = useNavigation();
   const handleLogout = () => {
+    setNavigatingAway(true);
     startSignOut(async () => {
       await signOut({ redirect: false });
       router.push("/login");

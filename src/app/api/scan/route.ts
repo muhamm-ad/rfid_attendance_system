@@ -6,8 +6,8 @@ import {
   getCurrentTrimester,
   getPersonWithPayments,
   logAccess,
-  requireViewerAuth,
-  requireStaffAuth,
+  requireManagerAuth,
+  requireCashierAuth,
 } from "@/lib";
 
 interface LatestScan {
@@ -19,7 +19,7 @@ let latestRegistrationScan: LatestScan | null = null;
 
 export async function POST(request: NextRequest) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const body = await request.json();
@@ -121,10 +121,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to retrieve the latest registration scan (Admin or Staff only)
+// GET endpoint to retrieve the latest registration scan (Admin or Cashier only)
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireViewerAuth(request);
+    const { error } = await requireManagerAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);

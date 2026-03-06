@@ -1,11 +1,11 @@
 // app/api/payments/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, requireStaffAuth } from "@/lib";
+import { prisma, requireCashierAuth } from "@/lib";
 
-// POST: Register a payment for a student (Admin or Staff only)
+// POST: Register a payment for a student (Admin or Cashier only)
 export async function POST(request: NextRequest) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const body = await request.json();
@@ -99,10 +99,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Retrieve payments for a student (Admin or Staff only)
+// GET: Retrieve payments for a student (Admin or Cashier only)
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);

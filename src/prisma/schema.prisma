@@ -17,8 +17,8 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  STAFF
-  VIEWER
+  CASHIER
+  MANAGER
 }
 
 model User {
@@ -29,7 +29,7 @@ model User {
   is_active  Boolean  @default(true)
   first_name String?
   last_name  String?
-  image      String?
+  image      String? // TODO: Fix image storage
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -69,7 +69,7 @@ model Person {
   type       PersonType
   last_name  String
   first_name String
-  photo      String?
+  photo      String? // TODO: Fix image storage
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
 

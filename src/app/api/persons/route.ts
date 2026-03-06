@@ -11,23 +11,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments, PersonType } from "@/types";
 import {
   prisma,
-  requireViewerAuth,
-  requireStaffAuth,
+  requireManagerAuth,
+  requireCashierAuth,
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
 } from "@/lib";
+import { PersonTypeEnum } from "@/types";
 
 // GET: Retrieve all persons (any authenticated user)
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireViewerAuth(request);
+    const { error } = await requireManagerAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type"); // Filter by type if provided
 
     const where: any = {};
-    if (type && ["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (type && Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       where.type = type;
     }
 
@@ -66,10 +67,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Create a new person (Admin or Staff only)
+// POST: Create a new person (Admin or Cashier only)
 export async function POST(request: NextRequest) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const body = await request.json();
@@ -93,11 +94,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate type value
-    if (!["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (!Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       return NextResponse.json(
         {
           error:
-            "Invalid type. Allowed values: student, teacher, staff, visitor",
+            `Invalid type. Allowed values: ${Object.values(PersonTypeEnum).join(", ")}`,
         },
         { status: 400 },
       );

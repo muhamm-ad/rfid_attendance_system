@@ -1,4 +1,4 @@
-// @/hooks/use-dialog-state.tsx
+// @/hooks/use-dialog-state.ts
 
 import { useState } from "react";
 

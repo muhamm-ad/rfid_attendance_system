@@ -70,7 +70,7 @@ The `Person` model represents a person in the system. It can be a student, teach
 | ------------ | --------------- | ------------------------ | ----------------------------------------------------------- |
 | `id`         | `Int`           | Unique identifier        | Primary key, randomly generated between 1000000 and 9999999 |
 | `rfid_uuid`  | `String`        | Unique RFID identifier   | Unique, required                                            |
-| `type`       | `PersonType`    | Person type              | Enum: student, teacher, staff, visitor                       |
+| `type`       | `PersonType`    | Person type              | Enum: student, teacher, staff members, visitor              |
 | `nom`        | `String`        | Last name                | Required                                                    |
 | `prenom`     | `String`        | First name               | Required                                                    |
 | `photo_path` | `String?`       | Photo path               | Optional, unique                                            |
@@ -282,7 +282,7 @@ Defines person types in the system.
 enum PersonType {
   student   // Student
   teacher   // Teacher
-  staff     // Administrative staff
+  staff     // Staff members
   visitor   // Visitor
 }
 ```

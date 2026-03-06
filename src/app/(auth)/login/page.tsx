@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { loginSchema, LoginSchema } from "@/schemas";
 import { useTransition } from "react";
+import { PasswordInput } from "@/components/password-input";
 
 import {
   Form,
@@ -29,15 +30,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+// import { Checkbox } from "@/components/ui/checkbox";
+// import { Label } from "@/components/ui/label";
 import { FormMessage as FormStatusMessage } from "@/components/ui/message";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AuthError } from "next-auth";
 
 export function LoginForm() {
-  const [isVisible, setIsVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -45,8 +45,8 @@ export function LoginForm() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "admin@demo.com",
+      password: "AdminDemo123!@#",
     },
   });
 
@@ -114,7 +114,7 @@ export function LoginForm() {
                 <Input
                   type="email"
                   placeholder="john.doe@example.com"
-                  className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  // className="border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
                   disabled={isPending}
                   {...field}
                 />
@@ -133,27 +133,12 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password*</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <Input
-                    type={isVisible ? "text" : "password"}
-                    placeholder="••••••••••••••••"
-                    className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
-                    disabled={isPending}
-                    {...field}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    onClick={() => setIsVisible((prev: boolean) => !prev)}
-                    className="text-gray-500 hover:text-violet-600 focus-visible:ring-violet-500/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
-                  >
-                    {isVisible ? <EyeOffIcon /> : <EyeIcon />}
-                    <span className="sr-only">
-                      {isVisible ? "Hide password" : "Show password"}
-                    </span>
-                  </Button>
-                </div>
+                <PasswordInput
+                  placeholder="••••••••••••••••"
+                  // className="pr-9 border-violet-200 focus:border-violet-500 focus:ring-violet-500/20"
+                  disabled={isPending}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -161,7 +146,7 @@ export function LoginForm() {
         />
 
         {/* Remember Me Checkbox */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <Checkbox
             id="rememberMe"
             className="size-6 border-violet-300 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
@@ -169,7 +154,7 @@ export function LoginForm() {
           <Label htmlFor="rememberMe" className="text-gray-600 cursor-pointer">
             Remember Me
           </Label>
-        </div>
+        </div> */}
 
         {error && <FormStatusMessage type="error" message={error} />}
         {success && <FormStatusMessage type="success" message={success} />}

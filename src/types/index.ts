@@ -13,6 +13,7 @@ import { LinkProps } from "next/link";
 import { NextResponse } from "next/server";
 
 // Re-export Prisma types for consumers that need them
+export { UserRole as UserRoleEnum, PersonType as PersonTypeEnum } from "@/prisma/generated/client";
 export type { UserRole, User, PersonType };
 
 // ======================= AUTHENTICATION TYPES ======================
@@ -31,8 +32,8 @@ export type AuthUser = {
 };
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  VIEWER: 1,
-  STAFF: 2,
+  MANAGER: 1,
+  CASHIER: 2,
   ADMIN: 3,
 };
 
@@ -80,8 +81,9 @@ export interface AttendanceLog {
   action: "in" | "out";
   status: "success" | "failed";
   timestamp: string; // API returns this as timestamp (aliased from attendance_date)
-  person_name: string;
-  person_type: string;
+  first_name: string;
+  last_name: string;
+  type: string;
   rfid_uuid: string;
   photo?: string;
 }

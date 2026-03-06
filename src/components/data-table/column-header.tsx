@@ -1,0 +1,80 @@
+// @/components/data-table/column-header.tsx
+
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CaretSortIcon,
+  EyeNoneIcon,
+} from "@radix-ui/react-icons";
+import { type Column } from "@tanstack/react-table";
+import { cn } from "@/lib/cn-utils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+type DataTableColumnHeaderProps<TData, TValue> =
+  React.HTMLAttributes<HTMLDivElement> & {
+    column: Column<TData, TValue>;
+    title: string;
+  };
+
+export function DataTableColumnHeader<TData, TValue>({
+  column,
+  title,
+  className,
+}: DataTableColumnHeaderProps<TData, TValue>) {
+  if (!column.getCanSort()) {
+    return (
+      <span className={cn("block text-center font-bold text-primary uppercase", className)}>
+        {title}
+      </span>
+    );
+  }
+
+  return (
+    <div className={cn("flex items-center justify-center w-full", className)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="font-bold text-primary uppercase hover:bg-transparent hover:text-primary"
+          >
+            <span>{title}</span>
+            {column.getIsSorted() === "desc" ? (
+              <ArrowDownIcon className="ms-1.5 h-4 w-4" />
+            ) : column.getIsSorted() === "asc" ? (
+              <ArrowUpIcon className="ms-1.5 h-4 w-4" />
+            ) : (
+              <CaretSortIcon className="ms-1.5 h-4 w-4" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
+            <ArrowUpIcon className="size-3.5 text-muted-foreground/70" />
+            Asc
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
+            <ArrowDownIcon className="size-3.5 text-muted-foreground/70" />
+            Desc
+          </DropdownMenuItem>
+          {column.getCanHide() && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
+                <EyeNoneIcon className="size-3.5 text-muted-foreground/70" />
+                Hide
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}

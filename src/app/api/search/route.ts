@@ -2,16 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
-import { prisma, requireViewerAuth, getPersonWithPayments } from "@/lib";
+import { prisma, requireManagerAuth, getPersonWithPayments } from "@/lib";
+import { PersonTypeEnum } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireViewerAuth(request);
+    const { error } = await requireManagerAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
-    const type = searchParams.get("type"); // student, teacher, staff, visitor
+    const type = searchParams.get("type") as PersonTypeEnum;
 
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       where.OR.push({ id: queryId });
     }
 
-    if (type && ["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (type && Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       where.type = type;
     }
 

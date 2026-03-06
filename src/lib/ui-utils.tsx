@@ -1,6 +1,5 @@
 // @/lib/ui-utils.tsx
 
-import React from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "./cn-utils";
 import { Label } from "@/components/ui/label";
@@ -12,6 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+export const DEFAULT_PAGE_SIZE = 13;
+
+
 // ─── Label & focus constants ───────────────────────────────────────────────────
 
 /** Single label style for filter dropdowns (Status, Action, Type, etc.) */
@@ -19,7 +21,8 @@ export const DROP_DOWN_LABEL_CLASSNAME =
   "mb-1.5 block text-sm font-medium theme-text-muted";
 
 /** Label inside a form field (spacing handled by parent space-y). */
-export const FORM_LABEL_CLASSNAME = "block text-sm font-medium theme-text-muted";
+export const FORM_LABEL_CLASSNAME =
+  "block text-sm font-medium theme-text-muted";
 
 /** Focus ring applied on interactive controls (buttons, triggers, inputs). */
 export const FOCUS_RING_CLASSNAME =
@@ -47,6 +50,13 @@ export const FOCUS_WITHIN_RING_CLASSNAME =
 
 /** Ring applied when a popover / dropdown trigger is in its open state. */
 export const OPEN_STATE_RING_CLASSNAME = "ring-1 ring-ring";
+
+export const TABLE_HEADER_CLASSNAME =
+  "text-center font-bold text-primary uppercase cursor-pointer hover:bg-accent/50 transition-colors hover:text-primary";
+
+export const TABLE_CELL_CLASSNAME =
+  "text-center whitespace-nowrap items-center justify-center text-foreground";
+
 
 // ─── Conditional class helpers ────────────────────────────────────────────────
 
@@ -149,10 +159,15 @@ export function FilterSelect({
 }
 
 export const typeColors = {
-  student: "bg-[oklch(0.90_0.08_240)] text-[oklch(0.25_0.15_240)]",  // blue
-  teacher: "bg-[oklch(0.93_0.08_85)]  text-[oklch(0.32_0.14_85)]",   // amber
-  staff:   "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]",  // teal
-  visitor: "bg-[oklch(0.92_0.07_350)] text-[oklch(0.32_0.16_350)]",  // rose
+  student: "bg-[oklch(0.90_0.08_240)] text-[oklch(0.25_0.15_240)]", // blue
+  teacher: "bg-[oklch(0.93_0.08_85)]  text-[oklch(0.32_0.14_85)]", // amber
+  staff: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
+  visitor: "bg-[oklch(0.92_0.07_350)] text-[oklch(0.32_0.16_350)]", // rose
+};
+
+export const actionColors = {
+  in:  "bg-[oklch(0.95_0.05_145)] text-[oklch(0.32_0.14_145)]", // green  – entry
+  out: "bg-[oklch(0.95_0.04_45)]  text-[oklch(0.36_0.14_45)]",  // orange – exit
 };
 
 // Helper to format level

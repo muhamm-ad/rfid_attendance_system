@@ -1,11 +1,11 @@
 // @/app/api/reports/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, requireViewerAuth } from "@/lib";
+import { prisma, requireManagerAuth } from "@/lib";
 
 export async function GET(request: NextRequest) {
   try {
-    const { error } = await requireViewerAuth(request);
+    const { error } = await requireManagerAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);

@@ -19,6 +19,7 @@ Scans an RFID badge and verifies access based on person type and payment status,
 **Description:**
 
 **Attendance Mode** (when `action` is provided):
+
 - Checks if the badge exists in the database
 - Retrieves the associated person's information
 - For students, verifies payment for the current trimester
@@ -26,6 +27,7 @@ Scans an RFID badge and verifies access based on person type and payment status,
 - Teachers, staff, and visitors always have access
 
 **Registration Mode** (when `action` is omitted or `null`):
+
 - Returns only the UUID without checking person or logging attendance
 - Used for scanning badges when adding new persons to the system
 - The UUID is stored temporarily and can be retrieved via GET `/api/scan`
@@ -33,7 +35,7 @@ Scans an RFID badge and verifies access based on person type and payment status,
 **Body Parameters:**
 
 - `rfid_uuid` (string, required): RFID badge UUID
-- `action` (string, optional): Action to record (`"in"` or `"out"`). 
+- `action` (string, optional): Action to record (`"in"` or `"out"`).
   - If provided: Attendance mode (checks person, verifies access, logs attendance)
   - If omitted or `null`: Registration mode (returns UUID only, no logging)
 
@@ -919,7 +921,7 @@ GET /api/stats?date=2025-11-15 # Backward compatible
     "total_persons": 150,
     "total_students": 120,
     "total_teachers": 15,
-    "total_staff": 10,
+    "total_cashier": 10,
     "total_visitors": 5
   },
   "attendance_summary": {
@@ -1201,7 +1203,7 @@ The system uses an academic calendar with 3 trimesters:
 
 - `student`: Student (payment required per trimester)
 - `teacher`: Teacher (access always authorized)
-- `staff`: Administrative staff (access always authorized)
+- `staff`: Staff members (access always authorized)
 - `visitor`: Visitor (access always authorized)
 
 ### Student Levels
