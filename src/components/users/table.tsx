@@ -29,7 +29,10 @@ import {
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { User, UserRoleEnum } from "@/types";
 import { UserTableBulkActions } from "@/components/users/table-bulk-actions";
-import { usersColumns as columns } from "@/components/users/table-columns";
+import {
+  usersColumns as columns,
+  roleConfig,
+} from "@/components/users/table-columns";
 
 type DataTableProps = {
   data: User[];
@@ -126,16 +129,27 @@ export function UsersTable({
             columnId: "is_active",
             title: "Status",
             options: [
-              { label: "Active", value: "true" },
-              { label: "Inactive", value: "false" },
+              {
+                label: "Active",
+                value: "true",
+                className:
+                  "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400",
+              },
+              {
+                label: "Inactive",
+                value: "false",
+                className:
+                  "border-gray-200 bg-gray-50 text-gray-500 dark:bg-gray-800/40 dark:text-gray-400",
+              },
             ],
           },
           {
             columnId: "role",
             title: "Role",
             options: Object.values(UserRoleEnum).map((role) => ({
-              label: role,
+              label: role.charAt(0) + role.slice(1).toLowerCase(),
               value: role,
+              className: roleConfig[role]?.className ?? "theme-badge-muted",
             })),
           },
         ]}

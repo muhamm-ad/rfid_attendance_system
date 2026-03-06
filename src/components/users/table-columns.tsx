@@ -10,7 +10,7 @@ import { User, UserRoleEnum } from "@/types";
 import { UsersTableRowActions } from "@/components/users/table-row-actions";
 
 // Role metadata: icon + badge colour
-const roleConfig: Record<
+export const roleConfig: Record<
   string,
   { icon: React.ElementType; className: string }
 > = {

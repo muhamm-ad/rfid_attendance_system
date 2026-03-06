@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { type Table } from "@tanstack/react-table";
-import { RefreshCw, CalendarArrowUp, CalendarArrowDown } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/cn-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ type DatetimeFilterConfig = {
   value: Date | null;
   onChange: (date: Date | null) => void;
   placeholder?: string;
+  icon?: React.ReactNode;
 };
 
 export type FilterConfig = FacetedFilterConfig | DatetimeFilterConfig;
@@ -134,9 +135,7 @@ export function DataTableToolbar<TData>({
                 onChange={filter.onChange}
                 label={filter.title}
                 placeholder={filter.placeholder ?? filter.title}
-                icon={
-                  filter.value ? <CalendarArrowUp /> : <CalendarArrowDown />
-                }
+                icon={filter.icon ?? undefined}
               />
             );
           }

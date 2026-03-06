@@ -49,44 +49,54 @@ export function DataTableFacetedFilter<TData, TValue>({
         <Button
           variant="outline"
           size="sm"
-          className={cn("h-8 border-dashed", isOpen && "bg-accent text-accent-foreground")}
+          className={cn(
+            "h-8 gap-0 border-dashed p-0 overflow-hidden",
+            isOpen && "bg-accent text-accent-foreground",
+          )}
         >
-          <PlusCircledIcon className="size-4" />
-          {title}
+          {/* Label zone — always has a muted background */}
+          <span className="flex h-full items-center gap-1.5 bg-muted px-3 text-muted-foreground">
+            <PlusCircledIcon className="size-4 shrink-0" />
+            {title}
+          </span>
+
+          {/* Badge zone — only shown when something is selected */}
           {selectedValues?.size > 0 && (
             <>
-              <Separator orientation="vertical" className="mx-2 h-4" />
-              <Badge
-                variant="brand"
-                className="rounded-sm px-1 font-normal lg:hidden"
-              >
-                {selectedValues.size}
-              </Badge>
-              <div className="hidden space-x-1 lg:flex">
-                {selectedValues.size > 2 ? (
-                  <Badge
-                    variant="brand"
-                    className="rounded-sm px-1 font-normal"
-                  >
-                    {selectedValues.size} selected
-                  </Badge>
-                ) : (
-                  options
-                    .filter((option) => selectedValues.has(option.value))
-                    .map((option) => (
-                      <Badge
-                        variant="outline"
-                        key={option.value}
-                        className={cn(
-                          "rounded-sm px-1 font-normal",
-                          option.className ?? "theme-badge-brand",
-                        )}
-                      >
-                        {option.label}
-                      </Badge>
-                    ))
-                )}
-              </div>
+              <Separator orientation="vertical" className="h-4" />
+              <span className="flex items-center gap-1 px-2">
+                <Badge
+                  variant="brand"
+                  className="rounded-sm px-1 font-normal lg:hidden"
+                >
+                  {selectedValues.size}
+                </Badge>
+                <span className="hidden space-x-1 lg:flex">
+                  {selectedValues.size > 2 ? (
+                    <Badge
+                      variant="brand"
+                      className="rounded-sm px-1 font-normal"
+                    >
+                      {selectedValues.size} selected
+                    </Badge>
+                  ) : (
+                    options
+                      .filter((option) => selectedValues.has(option.value))
+                      .map((option) => (
+                        <Badge
+                          variant="outline"
+                          key={option.value}
+                          className={cn(
+                            "rounded-sm px-1 font-normal",
+                            option.className ?? "theme-badge-brand",
+                          )}
+                        >
+                          {option.label}
+                        </Badge>
+                      ))
+                  )}
+                </span>
+              </span>
             </>
           )}
         </Button>

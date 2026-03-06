@@ -99,7 +99,7 @@ export function DatetimePicker({
                         "h-8",
                         isOpen && "bg-accent text-accent-foreground",
                         label
-                          ? "border-dashed"
+                          ? "gap-0 border-dashed p-0 overflow-hidden"
                           : cn(
                               "w-full justify-start font-normal",
                               !field.value && "text-muted-foreground",
@@ -109,20 +109,24 @@ export function DatetimePicker({
                     >
                       {label ? (
                         <>
-                          {icon}
-                          {label}
+                          {/* Label zone */}
+                          <span className="flex h-full items-center gap-1.5 bg-muted px-3 text-muted-foreground">
+                            {icon}
+                            {label}
+                          </span>
+
+                          {/* Badge zone — only when a date is selected */}
                           {field.value && (
                             <>
-                              <Separator
-                                orientation="vertical"
-                                className="mx-2 h-4"
-                              />
-                              <Badge
-                                variant="brand"
-                                className="rounded-sm px-1 font-normal"
-                              >
-                                {format(field.value, "PP")} · {time}
-                              </Badge>
+                              <Separator orientation="vertical" className="h-4" />
+                              <span className="flex items-center px-2">
+                                <Badge
+                                  variant="brand"
+                                  className="rounded-sm px-1 font-normal"
+                                >
+                                  {format(field.value, "PP")} · {time}
+                                </Badge>
+                              </span>
                             </>
                           )}
                         </>

@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
+import { CalendarArrowDown, CalendarArrowUp, CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/cn-utils";
 import { actionColors, typeColors } from "@/lib/ui-utils";
@@ -189,6 +189,7 @@ export function AttendancesTable({
             onChange: (date: Date | null) =>
               setStartDate(date ? format(date, "yyyy-MM-dd'T'HH:mm") : ""),
             placeholder: "Start date & time",
+            icon: <CalendarArrowUp />,
           },
           {
             type: "datetime" as const,
@@ -197,6 +198,7 @@ export function AttendancesTable({
             onChange: (date: Date | null) =>
               setEndDate(date ? format(date, "yyyy-MM-dd'T'HH:mm") : ""),
             placeholder: "End date & time",
+            icon: <CalendarArrowDown />,
           },
         ]}
       />

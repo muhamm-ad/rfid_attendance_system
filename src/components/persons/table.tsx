@@ -25,6 +25,7 @@ import {
   DEFAULT_PAGE_SIZE,
   TABLE_HEADER_CLASSNAME,
   TABLE_CELL_CLASSNAME,
+  typeColors,
 } from "@/lib/ui-utils";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { Person, PersonTypeEnum } from "@/types";
@@ -125,6 +126,8 @@ export function PersonsTable({
             options: Object.values(PersonTypeEnum).map((t) => ({
               label: t.charAt(0).toUpperCase() + t.slice(1),
               value: t,
+              className:
+                typeColors[t as keyof typeof typeColors] ?? "theme-badge-muted",
             })),
           },
         ]}
