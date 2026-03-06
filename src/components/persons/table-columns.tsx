@@ -59,8 +59,7 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── ID ────────────────────────────────────────────────────────────────────
   {
     accessorKey: "id",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ID" />
     ),
@@ -75,7 +74,6 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── RFID UUID ─────────────────────────────────────────────────────────────
   {
     accessorKey: "rfid_uuid",
-    enableSorting: true,
     enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="RFID UUID" />
@@ -91,8 +89,7 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── First name ─────────────────────────────────────────────────────────────
   {
     accessorKey: "first_name",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Name" />
     ),
@@ -106,8 +103,7 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── Last name ───────────────────────────────────────────────────────────────
   {
     accessorKey: "last_name",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Name" />
     ),
@@ -119,7 +115,6 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── Type ──────────────────────────────────────────────────────────────────
   {
     accessorKey: "type",
-    enableSorting: true,
     enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Type" />
@@ -144,7 +139,7 @@ export const personsColumns: ColumnDef<Person>[] = [
   {
     accessorKey: "payment_status",
     enableSorting: false,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Payment Status" />
     ),
@@ -197,8 +192,7 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── Updated at ────────────────────────────────────────────────────────────
   {
     accessorKey: "updated_at",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Modified" />
     ),
@@ -213,6 +207,8 @@ export const personsColumns: ColumnDef<Person>[] = [
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
           },
         )}
       </span>

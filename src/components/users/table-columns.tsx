@@ -16,15 +16,18 @@ const roleConfig: Record<
 > = {
   [UserRoleEnum.ADMIN]: {
     icon: ShieldCheck,
-    className: "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
+    className:
+      "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
   },
   [UserRoleEnum.CASHIER]: {
     icon: Shield,
-    className: "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
+    className:
+      "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
   },
   [UserRoleEnum.MANAGER]: {
     icon: Eye,
-    className: "border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
+    className:
+      "border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
   },
 };
 
@@ -32,6 +35,8 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── Select ────────────────────────────────────────────────────────────────
   {
     id: "select",
+    enableSorting: false,
+    enableHiding: false,
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -54,8 +59,6 @@ export const usersColumns: ColumnDef<User>[] = [
     meta: {
       className: cn("max-md:sticky start-0 z-10 rounded-tl-[inherit]"),
     },
-    enableSorting: false,
-    enableHiding: false,
   },
 
   // ─── Avatar ────────────────────────────────────────────────────────────────
@@ -78,8 +81,7 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── First name ─────────────────────────────────────────────────────────────
   {
     accessorKey: "first_name",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Name" />
     ),
@@ -93,8 +95,7 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── Last name ───────────────────────────────────────────────────────────────
   {
     accessorKey: "last_name",
-    enableSorting: true,
-    enableHiding: true,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Name" />
     ),
@@ -106,6 +107,7 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── Email ─────────────────────────────────────────────────────────────────
   {
     accessorKey: "email",
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Email" />
     ),
@@ -117,6 +119,8 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── Role ──────────────────────────────────────────────────────────────────
   {
     accessorKey: "role",
+    enableSorting: false,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Role" />
     ),
@@ -127,7 +131,10 @@ export const usersColumns: ColumnDef<User>[] = [
       return (
         <Badge
           variant="outline"
-          className={cn("gap-1 capitalize", config?.className ?? "theme-badge-muted")}
+          className={cn(
+            "gap-1 capitalize",
+            config?.className ?? "theme-badge-muted",
+          )}
         >
           <Icon size={12} />
           {role.toLowerCase()}
@@ -135,13 +142,13 @@ export const usersColumns: ColumnDef<User>[] = [
       );
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
-    enableSorting: false,
-    enableHiding: false,
   },
 
   // ─── Status (is_active) ────────────────────────────────────────────────────
   {
     accessorKey: "is_active",
+    enableSorting: false,
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -162,23 +169,29 @@ export const usersColumns: ColumnDef<User>[] = [
     },
     filterFn: (row, id, value: string[]) =>
       value.includes(row.getValue<boolean>(id) ? "true" : "false"),
-    enableHiding: false,
-    enableSorting: false,
   },
 
   // ─── Created at ────────────────────────────────────────────────────────────
   {
     accessorKey: "createdAt",
+    enableHiding: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => (
       <span className="text-sm theme-text-muted">
-        {new Date(row.getValue<string>("createdAt")).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}
+        {new Date(row.getValue<string>("createdAt")).toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          },
+        )}
       </span>
     ),
   },
@@ -186,6 +199,7 @@ export const usersColumns: ColumnDef<User>[] = [
   // ─── Row actions ───────────────────────────────────────────────────────────
   {
     id: "actions",
+    enableHiding: false,
     cell: UsersTableRowActions,
   },
 ];

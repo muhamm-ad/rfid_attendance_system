@@ -3,7 +3,7 @@ import { PersonsDialogs } from "@/components/persons/dialogs";
 import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonsTable } from "@/components/persons/table";
 import { PageHeader } from "@/components/page-header";
-import { Person } from "@/types";
+import { Person, UserRole, UserRoleEnum } from "@/types";
 
 import { BarChart3, Plus, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -15,7 +15,7 @@ function PersonsPrimaryButtons() {
   const { setOpen } = usePersons();
   const { data: session } = useSession();
   const router = useRouter();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const userRole = session?.user?.role as UserRole | undefined;
 
   return (
     <div className="flex items-center gap-4">
@@ -29,7 +29,7 @@ function PersonsPrimaryButtons() {
         <BarChart3 size={20} />
         Statistics
       </Button>
-      {isAdmin && (
+      {(userRole === UserRoleEnum.ADMIN || userRole === UserRoleEnum.CASHIER) && (
         <Button
           className="gap-2"
           name="Add Person"
