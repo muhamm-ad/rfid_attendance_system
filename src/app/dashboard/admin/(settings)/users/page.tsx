@@ -99,21 +99,34 @@ export default function UsersPage() {
     [pathname, router, search]
   );
 
+  const fetchUsers = useCallback(async () => {
+    const res = await fetch("/api/users");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Failed to load users");
+    setUsers(Array.isArray(data) ? data : []);
+  }, []);
+
   const loadUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/users");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to load users");
-      setUsers(Array.isArray(data) ? data : []);
+      await fetchUsers();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unexpected error");
       setUsers([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchUsers]);
+
+  const handleRefresh = useCallback(async () => {
+    setError(null);
+    try {
+      await fetchUsers();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unexpected error");
+    }
+  }, [fetchUsers]);
 
   useEffect(() => {
     loadUsers();
@@ -128,7 +141,7 @@ export default function UsersPage() {
       data={users}
       search={search}
       navigate={navigate}
-      onRefresh={loadUsers}
+      onRefresh={handleRefresh}
       error={error}
     />
   );

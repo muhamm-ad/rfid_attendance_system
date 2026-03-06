@@ -92,42 +92,55 @@ export default function PersonsPage() {
   const filterStr = (search.filter as string)?.trim() ?? "";
   const typeArr = (search.type as string[]) ?? [];
 
+  const fetchPersons = useCallback(async () => {
+    if (filterStr.length >= 2) {
+      const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
+      const url = typeParam
+        ? `/api/search?q=${encodeURIComponent(filterStr)}&type=${encodeURIComponent(typeParam)}`
+        : `/api/search?q=${encodeURIComponent(filterStr)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Search failed");
+      setPersons(Array.isArray(data) ? data : []);
+    } else {
+      const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
+      const url = typeParam
+        ? `/api/persons?type=${encodeURIComponent(typeParam)}`
+        : "/api/persons";
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load persons");
+      let list = Array.isArray(data) ? data : [];
+      if (typeArr.length > 1) {
+        list = list.filter((p: PersonWithPayments) =>
+          typeArr.includes(p.type)
+        );
+      }
+      setPersons(list);
+    }
+  }, [filterStr, typeArr.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const loadPersons = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      if (filterStr.length >= 2) {
-        const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
-        const url = typeParam
-          ? `/api/search?q=${encodeURIComponent(filterStr)}&type=${encodeURIComponent(typeParam)}`
-          : `/api/search?q=${encodeURIComponent(filterStr)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Search failed");
-        setPersons(Array.isArray(data) ? data : []);
-      } else {
-        const typeParam = typeArr.length === 1 ? typeArr[0] : undefined;
-        const url = typeParam
-          ? `/api/persons?type=${encodeURIComponent(typeParam)}`
-          : "/api/persons";
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || "Failed to load persons");
-        let list = Array.isArray(data) ? data : [];
-        if (typeArr.length > 1) {
-          list = list.filter((p: PersonWithPayments) =>
-            typeArr.includes(p.type)
-          );
-        }
-        setPersons(list);
-      }
+      await fetchPersons();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unexpected error");
       setPersons([]);
     } finally {
       setLoading(false);
     }
-  }, [filterStr, typeArr.join(",")]);
+  }, [fetchPersons]);
+
+  const handleRefresh = useCallback(async () => {
+    setError(null);
+    try {
+      await fetchPersons();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unexpected error");
+    }
+  }, [fetchPersons]);
 
   useEffect(() => {
     loadPersons();
@@ -142,7 +155,7 @@ export default function PersonsPage() {
       data={persons}
       search={search}
       navigate={navigate}
-      onRefresh={loadPersons}
+      onRefresh={handleRefresh}
       error={error}
     />
   );

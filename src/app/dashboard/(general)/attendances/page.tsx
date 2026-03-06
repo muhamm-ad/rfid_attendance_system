@@ -116,30 +116,43 @@ export default function AttendancesPage() {
   const startDate = (search.startDate as string) ?? "";
   const endDate = (search.endDate as string) ?? "";
 
+  const fetchLogs = useCallback(async () => {
+    const params = new URLSearchParams();
+    params.set("limit", "200");
+
+    // API accepts a single status / action value — send only when exactly one is selected
+    if (statusArr.length === 1) params.set("status", statusArr[0]);
+    if (actionArr.length === 1) params.set("action", actionArr[0]);
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+
+    const res = await fetch(`/api/attendance?${params.toString()}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Failed to load logs");
+    setLogs(Array.isArray(data) ? data : []);
+  }, [statusArr.join(","), actionArr.join(","), startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const loadLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      params.set("limit", "200");
-
-      // API accepts a single status / action value — send only when exactly one is selected
-      if (statusArr.length === 1) params.set("status", statusArr[0]);
-      if (actionArr.length === 1) params.set("action", actionArr[0]);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-
-      const res = await fetch(`/api/attendance?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to load logs");
-      setLogs(Array.isArray(data) ? data : []);
+      await fetchLogs();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unexpected error");
       setLogs([]);
     } finally {
       setLoading(false);
     }
-  }, [statusArr.join(","), actionArr.join(","), startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchLogs]);
+
+  const handleRefresh = useCallback(async () => {
+    setError(null);
+    try {
+      await fetchLogs();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unexpected error");
+    }
+  }, [fetchLogs]);
 
   useEffect(() => {
     loadLogs();
@@ -154,7 +167,7 @@ export default function AttendancesPage() {
       data={logs}
       search={search}
       navigate={navigate}
-      onRefresh={loadLogs}
+      onRefresh={handleRefresh}
       error={error}
     />
   );

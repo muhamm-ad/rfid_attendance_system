@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { type Table } from "@tanstack/react-table";
 import { RefreshCw } from "lucide-react";
@@ -41,7 +41,7 @@ type DataTableToolbarProps<TData> = {
   globalFilterValue?: string;
   searchPlaceholder?: string;
   searchKey?: string;
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<void>;
   refreshTitle?: string;
   filters?: FilterConfig[];
 };
@@ -74,6 +74,17 @@ export function DataTableToolbar<TData>({
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh || isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [onRefresh, isRefreshing]);
 
   // Detect whether the filter strip overflows
   useEffect(() => {
@@ -172,12 +183,13 @@ export function DataTableToolbar<TData>({
           <Button
             variant="outline"
             size="sm"
-            onClick={onRefresh}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
             name={refreshTitle}
             title={refreshTitle}
             className="h-8 gap-2"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={16} className={cn(isRefreshing && "animate-spin")} />
           </Button>
         )}
         <DataTableViewOptions table={table} />
