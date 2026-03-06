@@ -169,7 +169,7 @@ export const hasRequiredRole = async (
  */
 async function requireAuth(
   request: NextRequest,
-  targetRole: UserRole = "VIEWER",
+  targetRole: UserRole = "MANAGER",
   errorMessage: string = "Authentication required",
 ): Promise<AuthResult> {
   const authUser = await authenticate(request);
@@ -189,19 +189,19 @@ async function requireAuth(
   };
 }
 
-export async function requireViewerAuth(
+export async function requireManagerAuth(
   request: NextRequest,
 ): Promise<AuthResult> {
-  return await requireAuth(request, "VIEWER", "Authentication required");
+  return await requireAuth(request, "MANAGER", "Authentication required");
 }
 
-export async function requireStaffAuth(
+export async function requireCashierAuth(
   request: NextRequest,
 ): Promise<AuthResult> {
   return await requireAuth(
     request,
-    "STAFF",
-    "Admin or Staff authentication required",
+    "CASHIER",
+    "Admin or Cashier authentication required",
   );
 }
 

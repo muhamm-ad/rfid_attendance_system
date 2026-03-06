@@ -1,13 +1,13 @@
 // @/app/api/stats/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, requireStaffAuth, requireViewerAuth } from "@/lib";
+import { prisma, requireCashierAuth, requireManagerAuth } from "@/lib";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export async function GET(request: NextRequest) {
   try {
-      const { error } = await requireStaffAuth(request);
+      const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { searchParams } = new URL(request.url);
@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
       totalPersons,
       totalStudents,
       totalTeachers,
-      totalStaff,
+      totalCashier,
       totalVisitors,
     ] = await Promise.all([
       prisma.person.count(),
       prisma.person.count({ where: { type: "student" } }),
       prisma.person.count({ where: { type: "teacher" } }),
-      prisma.person.count({ where: { type: "staff" } }),
+      prisma.person.count({ where: { type: "cashier" } }),
       prisma.person.count({ where: { type: "visitor" } }),
     ]);
 
@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
         total_persons: totalPersons,
         total_students: totalStudents,
         total_teachers: totalTeachers,
-        total_staff: totalStaff,
+        total_cashier: totalCashier,
         total_visitors: totalVisitors,
       },
       attendance_summary: {

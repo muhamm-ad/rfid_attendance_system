@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'STAFF', 'VIEWER');
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'CASHIER', 'MANAGER');
 
 -- CreateEnum
-CREATE TYPE "PersonType" AS ENUM ('student', 'teacher', 'staff', 'visitor');
+CREATE TYPE "PersonType" AS ENUM ('student', 'teacher', 'cashier', 'visitor');
 
 -- CreateEnum
 CREATE TYPE "AttendanceAction" AS ENUM ('in', 'out');

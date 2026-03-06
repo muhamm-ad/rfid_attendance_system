@@ -86,7 +86,7 @@ export async function PUT(
     }
   }
 
-  const validRoles: UserRole[] = ["ADMIN", "STAFF", "VIEWER"];
+  const validRoles: UserRole[] = ["ADMIN", "CASHIER", "MANAGER"];
   const updates: Partial<typeof user> = {};
   if (body.role !== undefined && validRoles.includes(body.role)) {
     updates.role = body.role;

@@ -161,7 +161,7 @@ export function FilterSelect({
 export const typeColors = {
   student: "bg-[oklch(0.90_0.08_240)] text-[oklch(0.25_0.15_240)]", // blue
   teacher: "bg-[oklch(0.93_0.08_85)]  text-[oklch(0.32_0.14_85)]", // amber
-  staff: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
+  cashier: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
   visitor: "bg-[oklch(0.92_0.07_350)] text-[oklch(0.32_0.16_350)]", // rose
 };
 

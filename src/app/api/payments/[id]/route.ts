@@ -1,15 +1,15 @@
 // @/app/api/payments/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, requireStaffAuth } from "@/lib";
+import { prisma, requireCashierAuth } from "@/lib";
 
-// PUT: Update a payment (Admin or Staff only)
+// PUT: Update a payment (Admin or Cashier only)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { id: id_paymentParam } = await params;
@@ -135,13 +135,13 @@ export async function PUT(
   }
 }
 
-// DELETE: Delete a payment (Admin or Staff only)
+// DELETE: Delete a payment (Admin or Cashier only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { id: id_paymentParam } = await params;

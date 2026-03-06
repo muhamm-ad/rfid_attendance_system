@@ -23,7 +23,7 @@ Scans an RFID badge and verifies access based on person type and payment status,
 - Retrieves the associated person's information
 - For students, verifies payment for the current trimester
 - Records the access attempt in the log (Attendance)
-- Teachers, staff, and visitors always have access
+- Teachers, cashier, and visitors always have access
 
 **Registration Mode** (when `action` is omitted or `null`):
 - Returns only the UUID without checking person or logging attendance
@@ -231,7 +231,7 @@ Retrieves the list of all persons registered in the system.
 **Query Parameters:**
 
 - `type` (string, optional): Filter by person type
-  - Possible values: `student`, `teacher`, `staff`, `visitor`
+  - Possible values: `student`, `teacher`, `cashier`, `visitor`
 
 **Request Example:**
 
@@ -293,7 +293,7 @@ Creates a new person in the system.
 **Body Parameters:**
 
 - `rfid_uuid` (string, required): RFID badge UUID
-- `type` (string, required): Person type (`student`, `teacher`, `staff`, `visitor`)
+- `type` (string, required): Person type (`student`, `teacher`, `cashier`, `visitor`)
 - `nom` (string, required): Last name
 - `prenom` (string, required): First name
 - `photo_path` (string, required): Path to the photo
@@ -343,7 +343,7 @@ Creates a new person in the system.
 
 ```json
 {
-  "error": "Invalid type. Allowed values: student, teacher, staff, visitor"
+  "error": "Invalid type. Allowed values: student, teacher, cashier, visitor"
 }
 ```
 
@@ -919,7 +919,7 @@ GET /api/stats?date=2025-11-15 # Backward compatible
     "total_persons": 150,
     "total_students": 120,
     "total_teachers": 15,
-    "total_staff": 10,
+    "total_cashier": 10,
     "total_visitors": 5
   },
   "attendance_summary": {
@@ -999,7 +999,7 @@ Searches for persons by name, first name, or badge ID.
 **Query Parameters:**
 
 - `q` (string, required): Search term (minimum 2 characters)
-- `type` (string, optional): Filter by person type (`student`, `teacher`, `staff`, `visitor`)
+- `type` (string, optional): Filter by person type (`student`, `teacher`, `cashier`, `visitor`)
 
 **Request Example:**
 
@@ -1201,7 +1201,7 @@ The system uses an academic calendar with 3 trimesters:
 
 - `student`: Student (payment required per trimester)
 - `teacher`: Teacher (access always authorized)
-- `staff`: Administrative staff (access always authorized)
+- `cashier`: Administrative cashier (access always authorized)
 - `visitor`: Visitor (access always authorized)
 
 ### Student Levels

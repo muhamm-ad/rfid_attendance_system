@@ -15,29 +15,29 @@ This document defines the user roles, permissions, and access control model for 
 
 ## 👥 User Roles
 
-The system defines **three user roles** for system access (distinct from Person types like student/teacher/staff/visitor):
+The system defines **three user roles** for system access (distinct from Person types like student/teacher/cashier/visitor):
 
 ### 1. **Admin** (Administrator)
 
 - **Description:** Full system access with all privileges
-- **Use Case:** System administrators, IT staff, institution managers
+- **Use Case:** System administrators, IT cashier, institution managers
 - **Capabilities:**
   - Complete system management
   - User account management
   - All data operations
   - System configuration
 
-### 2. **Staff** (Staff Member)
+### 2. **Cashier** (Cashier Member)
 
 - **Description:** Operational access for daily management tasks
-- **Use Case:** Administrative staff, receptionists, office workers
+- **Use Case:** Administrative cashier, receptionists, office workers
 - **Capabilities:**
   - Manage persons (add, edit, view)
   - Manage payments
   - View reports and statistics
   - Cannot manage system users or perform system-level operations
 
-### 3. **Viewer** (Read-Only)
+### 3. **Manager** (Read-Only)
 
 - **Description:** Limited read-only access for viewing data
 - **Use Case:** Supervisors, auditors, external consultants
@@ -51,7 +51,7 @@ The system defines **three user roles** for system access (distinct from Person 
 
 ## 🔑 Permission Matrix
 
-| Feature/Operation | Admin | Staff | Viewer |
+| Feature/Operation | Admin | Cashier | Manager |
 |-------------------|-------|-------|--------|
 | **Person Management** |
 | View persons | ✅ | ✅ | ✅ |
@@ -96,7 +96,7 @@ The system defines **three user roles** for system access (distinct from Person 
 #### Person Management
 
 - ✅ **View all persons** - Can view all persons regardless of type
-- ✅ **Create person** - Can add new persons (students, teachers, staff, visitors)
+- ✅ **Create person** - Can add new persons (students, teachers, cashier, visitors)
 - ✅ **Update person** - Can modify any person's information
 - ✅ **Delete person** - Can permanently delete persons
 - ✅ **Upload photos** - Can upload and manage person photos
@@ -142,7 +142,7 @@ The system defines **three user roles** for system access (distinct from Person 
 
 ---
 
-### Staff Permissions
+### Cashier Permissions
 
 #### Person Management
 
@@ -183,12 +183,12 @@ The system defines **three user roles** for system access (distinct from Person 
 
 - ❌ **No system configuration** - Cannot modify system settings
 - ❌ **No database access** - Cannot perform database operations
-- ✅ **API access** - Can use API endpoints (with staff permissions)
+- ✅ **API access** - Can use API endpoints (with cashier permissions)
 - ❌ **No audit logs** - Cannot view system audit logs
 
 ---
 
-### Viewer Permissions
+### Manager Permissions
 
 #### Person Management
 
@@ -249,7 +249,7 @@ The system defines **three user roles** for system access (distinct from Person 
 - `POST /api/system/config` - System configuration
 - `GET /api/system/logs` - System audit logs
 
-### Admin & Staff Endpoints
+### Admin & Cashier Endpoints
 
 - `POST /api/persons` - Create person
 - `PUT /api/persons/[id]` - Update person
@@ -263,7 +263,7 @@ The system defines **three user roles** for system access (distinct from Person 
 - `PUT /api/payments/[id]` - Update payment
 - `DELETE /api/payments/[id]` - Delete payment
 
-### All Authenticated Users (Admin, Staff, Viewer)
+### All Authenticated Users (Admin, Cashier, Manager)
 
 - `GET /api/persons` - List persons
 - `GET /api/persons/[id]` - Get person details
@@ -281,8 +281,8 @@ The system defines **three user roles** for system access (distinct from Person 
 ### Dashboard (`/dashboard`)
 
 - **Admin:** ✅ Full access to all tabs
-- **Staff:** ✅ Full access to all tabs
-- **Viewer:** ✅ Read-only access (no edit/delete buttons)
+- **Cashier:** ✅ Full access to all tabs
+- **Manager:** ✅ Read-only access (no edit/delete buttons)
 
 ### Login Page (`/login`)
 
@@ -291,14 +291,14 @@ The system defines **three user roles** for system access (distinct from Person 
 ### User Management Page (`/admin/users`) - To be created
 
 - **Admin:** ✅ Full access
-- **Staff:** ❌ No access (redirect to dashboard)
-- **Viewer:** ❌ No access (redirect to dashboard)
+- **Cashier:** ❌ No access (redirect to dashboard)
+- **Manager:** ❌ No access (redirect to dashboard)
 
 ### Settings Page (`/admin/settings`) - To be created
 
 - **Admin:** ✅ Full access
-- **Staff:** ❌ No access (redirect to dashboard)
-- **Viewer:** ❌ No access (redirect to dashboard)
+- **Cashier:** ❌ No access (redirect to dashboard)
+- **Manager:** ❌ No access (redirect to dashboard)
 
 ---
 
@@ -330,7 +330,7 @@ User {
   id: string (UUID)
   email: string (unique)
   password: string (hashed)
-  role: 'ADMIN' | 'STAFF' | 'VIEWER'
+  role: 'ADMIN' | 'CASHIER' | 'MANAGER'
   name: string
   created_at: DateTime
   updated_at: DateTime
@@ -360,23 +360,23 @@ User {
 ```
 Admin (highest privileges)
   ↓
-Staff (operational privileges)
+Cashier (operational privileges)
   ↓
-Viewer (read-only privileges)
+Manager (read-only privileges)
 ```
 
 ### Permission Inheritance
 
 - Higher roles inherit all permissions of lower roles
 - Admin has all permissions
-- Staff has all Viewer permissions + write access
-- Viewer has only read permissions
+- Cashier has all Manager permissions + write access
+- Manager has only read permissions
 
 ---
 
 ## 📊 Permission Summary Table
 
-| Operation Category | Admin | Staff | Viewer |
+| Operation Category | Admin | Cashier | Manager |
 |-------------------|-------|-------|--------|
 | **Read Operations** | ✅ All | ✅ All | ✅ All |
 | **Write Operations** | ✅ All | ✅ All | ❌ None |

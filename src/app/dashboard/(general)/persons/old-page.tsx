@@ -57,7 +57,7 @@ const PERSON_TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
   { value: "student", label: "Students" },
   { value: "teacher", label: "Teachers" },
-  { value: "staff", label: "Staff" },
+  { value: "cashier", label: "Cashier" },
   { value: "visitor", label: "Visitors" },
 ] as const;
 
@@ -127,7 +127,7 @@ function PersonFiltersSection({
 
 type FormData = {
   rfid_uuid: string;
-  type: "student" | "teacher" | "staff" | "visitor";
+  type: "student" | "teacher" | "cashier" | "visitor";
   nom: string;
   prenom: string;
   photo_path: string;
@@ -287,7 +287,7 @@ function PersonFormDialog({
             >
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
-              <option value="staff">Staff</option>
+              <option value="cashier">Cashier</option>
               <option value="visitor">Visitor</option>
             </select>
           </div>
@@ -408,7 +408,7 @@ export default function PersonsPage() {
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     rfid_uuid: "",
-    type: "student" as "student" | "teacher" | "staff" | "visitor",
+    type: "student" as "student" | "teacher" | "cashier" | "visitor",
     nom: "",
     prenom: "",
     photo_path: "",
@@ -981,7 +981,7 @@ export default function PersonsPage() {
             Person Management
           </h1>
           <p className="page-subtitle">
-            Manage students, teachers, staff, and visitors
+            Manage students, teachers, cashier, and visitors
           </p>
         </div>
         <div className="page-actions">

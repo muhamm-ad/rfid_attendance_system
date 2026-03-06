@@ -8,13 +8,13 @@ A comprehensive attendance management and access control system based on RFID te
 
 - **RFID Scanning**: Automatic recording of entries and exits via RFID badges
 - **Payment Verification**: Automatic payment status check for students
-- **Multi-type Management**: Support for students, teachers, staff, and visitors
+- **Multi-type Management**: Support for students, teachers, cashier, and visitors
 - **Access Logs**: Complete history of all access attempts (success/failure)
 
 ### Person Management
 
 - **Full CRUD**: Create, read, update, and delete persons
-- **Person Types**: Students, teachers, administrative staff, visitors
+- **Person Types**: Students, teachers, administrative cashier, visitors
 - **Photos**: Photo association for each person
 - **Search**: Quick search by name, first name, or RFID UUID
 - **RFID Badge Scanning**: Scan badges directly when adding new persons
@@ -246,7 +246,7 @@ npm run lint         # Check code with ESLint
 ## Important Notes
 
 - **Student Access Control**: Students must have paid the current trimester to access
-- **Teachers and Staff**: Access always granted
+- **Teachers and Cashier**: Access always granted
 - **Visitors**: Access granted (can be modified as needed)
 - **Database**: PostgreSQL via @vercel/postgres for Vercel deployment compatibility
 - **Security**: Currently without authentication (to be added for production)

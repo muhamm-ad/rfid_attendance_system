@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "RFID Attendance System API",
-    "description": "API collection for the RFID Attendance System.\n\n**Base URL:** `{{base_url}}` (default: http://localhost:3000)\n\n**Format:** JSON\n\n**Authentication:**\n- **Public endpoints** (Scan, GET Scan): No auth required.\n- **Protected endpoints**: Use **Bearer Token** (JWT) in the `Authorization` header, or session cookie if calling from the same origin.\n- Get a JWT: log in via the app, then `POST /api/auth/token` with session cookie (or body `expiresIn` e.g. `1h`, `24h`).\n\n**Conventions:**\n- **Trimesters:** 1 (Oct–Jan), 2 (Feb–May), 3 (Jun–Sep)\n- **Person types:** student, teacher, staff, visitor\n- **Student levels:** License_1, License_2, License_3, Master_1, Master_2\n- **Payment methods:** cash, card, bank_transfer",
+    "description": "API collection for the RFID Attendance System.\n\n**Base URL:** `{{base_url}}` (default: http://localhost:3000)\n\n**Format:** JSON\n\n**Authentication:**\n- **Public endpoints** (Scan, GET Scan): No auth required.\n- **Protected endpoints**: Use **Bearer Token** (JWT) in the `Authorization` header, or session cookie if calling from the same origin.\n- Get a JWT: log in via the app, then `POST /api/auth/token` with session cookie (or body `expiresIn` e.g. `1h`, `24h`).\n\n**Conventions:**\n- **Trimesters:** 1 (Oct–Jan), 2 (Feb–May), 3 (Jun–Sep)\n- **Person types:** student, teacher, cashier, visitor\n- **Student levels:** License_1, License_2, License_3, Master_1, Master_2\n- **Payment methods:** cash, card, bank_transfer",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -29,7 +29,7 @@
               "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"action\": \"in\"\n}"
             },
             "url": "{{base_url}}/api/scan",
-            "description": "**Attendance mode.** Records an \"in\" action: checks badge, verifies person and (for students) payment for current trimester, logs attendance. Teachers, staff, visitors always have access.\n\n**Body:**\n- `rfid_uuid` (string, required): RFID badge UUID\n- `action` (string, required): `\"in\"` or `\"out\"`\n\n**Response 200:** `success`, `access_granted`, `person`, `message`, `timestamp`, `current_trimester`, `action`"
+            "description": "**Attendance mode.** Records an \"in\" action: checks badge, verifies person and (for students) payment for current trimester, logs attendance. Teachers, cashier, visitors always have access.\n\n**Body:**\n- `rfid_uuid` (string, required): RFID badge UUID\n- `action` (string, required): `\"in\"` or `\"out\"`\n\n**Response 200:** `success`, `access_granted`, `person`, `message`, `timestamp`, `current_trimester`, `action`"
           }
         },
         {
@@ -88,7 +88,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "persons"],
               "query": [
-                { "key": "type", "value": "student", "description": "Filter: student, teacher, staff, visitor" }
+                { "key": "type", "value": "student", "description": "Filter: student, teacher, cashier, visitor" }
               ]
             },
             "description": "Returns all persons (or filtered by `type`). Students include `trimester1_paid`, `trimester2_paid`, `trimester3_paid`. Sorted by nom, prenom."
@@ -104,7 +104,7 @@
               "raw": "{\n  \"rfid_uuid\": \"NEW001\",\n  \"type\": \"student\",\n  \"nom\": \"Sarr\",\n  \"prenom\": \"Moussa\",\n  \"photo_path\": \"/photos/moussa_sarr.jpg\",\n  \"level\": \"License_1\",\n  \"class\": \"L1-A\"\n}"
             },
             "url": "{{base_url}}/api/persons",
-            "description": "**Auth:** Admin or Staff.\n\n**Body (required):** rfid_uuid, type, nom, prenom, photo_path.\n**Optional:** level (students only: License_1..Master_2), class.\n\n**Responses:** 201 created; 400 missing/invalid; 409 RFID or photo already used."
+            "description": "**Auth:** Admin or Cashier.\n\n**Body (required):** rfid_uuid, type, nom, prenom, photo_path.\n**Optional:** level (students only: License_1..Master_2), class.\n\n**Responses:** 201 created; 400 missing/invalid; 409 RFID or photo already used."
           }
         },
         {
@@ -125,7 +125,7 @@
               "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"nom\": \"Diallo\",\n  \"prenom\": \"Amadou\",\n  \"photo_path\": \"/photos/amadou_diallo_updated.jpg\",\n  \"level\": \"License_2\",\n  \"class\": \"L2-B\"\n}"
             },
             "url": "{{base_url}}/api/persons/1",
-            "description": "**Auth:** Admin or Staff. All body fields optional; only provided fields are updated. Level/class can be set to null to clear."
+            "description": "**Auth:** Admin or Cashier. All body fields optional; only provided fields are updated. Level/class can be set to null to clear."
           }
         },
         {
@@ -133,7 +133,7 @@
           "request": {
             "method": "DELETE",
             "url": "{{base_url}}/api/persons/1",
-            "description": "**Auth:** Admin or Staff. Permanently deletes the person. Irreversible."
+            "description": "**Auth:** Admin or Cashier. Permanently deletes the person. Irreversible."
           }
         }
       ]
@@ -182,7 +182,7 @@
               "raw": "{\n  \"student_id\": 3,\n  \"trimester\": 2,\n  \"amount\": 50000,\n  \"payment_method\": \"cash\"\n}"
             },
             "url": "{{base_url}}/api/payments",
-            "description": "**Auth:** Admin or Staff.\n\n**Body:** student_id, trimester (1–3), amount, payment_method (cash, card, bank_transfer). One payment per student per trimester. **Response 201:** payment + student_payment objects."
+            "description": "**Auth:** Admin or Cashier.\n\n**Body:** student_id, trimester (1–3), amount, payment_method (cash, card, bank_transfer). One payment per student per trimester. **Response 201:** payment + student_payment objects."
           }
         },
         {
@@ -210,7 +210,7 @@
               "raw": "{\n  \"amount\": 55000,\n  \"payment_method\": \"card\",\n  \"trimester\": 2\n}"
             },
             "url": "{{base_url}}/api/payments/1",
-            "description": "**Auth:** Admin or Staff. Updates payment by student_payment ID. Body: amount, payment_method, trimester (all optional). 409 if trimester change causes duplicate."
+            "description": "**Auth:** Admin or Cashier. Updates payment by student_payment ID. Body: amount, payment_method, trimester (all optional). 409 if trimester change causes duplicate."
           }
         },
         {
@@ -218,7 +218,7 @@
           "request": {
             "method": "DELETE",
             "url": "{{base_url}}/api/payments/1",
-            "description": "**Auth:** Admin or Staff. Deletes payment by student_payment ID."
+            "description": "**Auth:** Admin or Cashier. Deletes payment by student_payment ID."
           }
         }
       ]
@@ -260,7 +260,7 @@
               "path": ["api", "search"],
               "query": [
                 { "key": "q", "value": "Diallo", "description": "Search term (min 2 chars); searches nom, prenom, rfid_uuid" },
-                { "key": "type", "value": "student", "description": "Optional: student, teacher, staff, visitor" }
+                { "key": "type", "value": "student", "description": "Optional: student, teacher, cashier, visitor" }
               ]
             },
             "description": "Case-insensitive search in name, first name, badge ID. Max 50 results."
@@ -340,7 +340,7 @@
               ]
             },
             "url": "{{base_url}}/api/upload-photo",
-            "description": "**Auth:** Admin or Staff. Multipart form: field name `photo`. Allowed: image/jpeg, image/png, image/webp; max 5MB. Returns `photo_path` (e.g. /photos/filename.jpg)."
+            "description": "**Auth:** Admin or Cashier. Multipart form: field name `photo`. Allowed: image/jpeg, image/png, image/webp; max 5MB. Returns `photo_path` (e.g. /photos/filename.jpg)."
           }
         }
       ]

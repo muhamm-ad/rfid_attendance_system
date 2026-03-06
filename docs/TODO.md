@@ -52,7 +52,7 @@
 
 - [ ] Implement authentication system (NextAuth.js or similar)
 - [ ] Create user/login management system
-- [ ] Add role-based access control (Admin, Staff, Viewer)
+- [ ] Add role-based access control (Admin, Cashier, Manager)
 - [ ] Protect all API routes with authentication middleware
 - [ ] Add login page and session management
 - [ ] Implement password hashing and secure storage

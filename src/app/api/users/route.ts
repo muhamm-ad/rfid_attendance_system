@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const validRoles: UserRole[] = ["ADMIN", "STAFF", "VIEWER"];
-  const chosenRole = validRoles.includes(role as UserRole) ? role : "VIEWER";
+  const validRoles: UserRole[] = ["ADMIN", "CASHIER", "MANAGER"];
+  const chosenRole = validRoles.includes(role as UserRole) ? role : "MANAGER";
 
   const existing = await getUserByEmail(email);
   if (existing) {

@@ -18,11 +18,11 @@ const roleConfig: Record<
     icon: ShieldCheck,
     className: "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400",
   },
-  [UserRoleEnum.STAFF]: {
+  [UserRoleEnum.CASHIER]: {
     icon: Shield,
     className: "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400",
   },
-  [UserRoleEnum.VIEWER]: {
+  [UserRoleEnum.MANAGER]: {
     icon: Eye,
     className: "border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
   },

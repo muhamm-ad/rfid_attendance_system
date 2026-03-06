@@ -6,8 +6,8 @@ import { hashPassword } from "@/lib/auth-utils";
 export async function seedUsers() {
   // Create default users
   const defaultPassword = await hashPassword("Admin123!@#");
-  const staffPassword = await hashPassword("Staff123!@#");
-  const viewerPassword = await hashPassword("Viewer123!@#");
+  const cashierPassword = await hashPassword("Cashier123!@#");
+  const managerPassword = await hashPassword("Manager123!@#");
 
   await prisma.user.createMany({
     data: [
@@ -19,30 +19,30 @@ export async function seedUsers() {
         role: "ADMIN",
       },
       {
-        email: "staff@rfid.local",
-        password: staffPassword,
-        first_name: "Staff",
+        email: "cashier@rfid.local",
+        password: cashierPassword,
+        first_name: "Cashier",
         last_name: "Member",
-        role: "STAFF",
+        role: "CASHIER",
       },
       {
-        email: "viewer@rfid.local",
-        password: viewerPassword,
-        first_name: "Viewer",
+        email: "manager@rfid.local",
+        password: managerPassword,
+        first_name: "Manager",
         last_name: "User",
-        role: "VIEWER",
+        role: "MANAGER",
       },
     ],
   });
 
   console.log("✅ Default users created:");
   console.log("   ADMIN: admin@rfid.local / Admin123!@#");
-  console.log("   STAFF: staff@rfid.local / Staff123!@#");
-  console.log("   VIEWER: viewer@rfid.local / Viewer123!@#");
+  console.log("   CASHIER: cashier@rfid.local / Cashier123!@#");
+  console.log("   MANAGER: manager@rfid.local / Manager123!@#");
   console.log("   ⚠️  Please change these passwords after first login!");
 }
 
-type PersonType = "student" | "teacher" | "staff" | "visitor";
+type PersonType = "student" | "teacher" | "cashier" | "visitor";
 
 type PersonSeed = {
   rfid_uuid: string;
@@ -66,7 +66,7 @@ type PaymentSeed = {
   payment_method: "cash" | "card" | "bank_transfer";
 };
 
-// Persons: 25 students, 6 teachers, 5 staff, 10 visitors (46 total)
+// Persons: 25 students, 6 teachers, 5 cashier, 10 visitors (46 total)
 const PERSONS_SEED: PersonSeed[] = [
   // Students
   { rfid_uuid: "STU-0001", type: "student", nom: "Diallo", prenom: "Amadou", photo: "/photos/amadou_diallo.jpg" },
@@ -101,12 +101,12 @@ const PERSONS_SEED: PersonSeed[] = [
   { rfid_uuid: "TCH-0004", type: "teacher", nom: "Touré", prenom: "Mamadou", photo: "/photos/mamadou_toure.jpg" },
   { rfid_uuid: "TCH-0005", type: "teacher", nom: "Sène", prenom: "Bintou", photo: "/photos/bintou_sene.jpg" },
   { rfid_uuid: "TCH-0006", type: "teacher", nom: "Camara", prenom: "Moussa", photo: "/photos/moussa_camara.jpg" },
-  // Staff
-  { rfid_uuid: "STF-0001", type: "staff", nom: "Faye", prenom: "Astou", photo: "/photos/astou_faye.jpg" },
-  { rfid_uuid: "STF-0002", type: "staff", nom: "Diagne", prenom: "Mame", photo: "/photos/mame_diagne.jpg" },
-  { rfid_uuid: "STF-0003", type: "staff", nom: "Sène", prenom: "Pape", photo: "/photos/pape_sene.jpg" },
-  { rfid_uuid: "STF-0004", type: "staff", nom: "Ndiaye", prenom: "Awa", photo: "/photos/awa_ndiaye.jpg" },
-  { rfid_uuid: "STF-0005", type: "staff", nom: "Sow", prenom: "Moussa", photo: "/photos/moussa_sow.jpg" },
+  // Cashier
+  { rfid_uuid: "STF-0001", type: "cashier", nom: "Faye", prenom: "Astou", photo: "/photos/astou_faye.jpg" },
+  { rfid_uuid: "STF-0002", type: "cashier", nom: "Diagne", prenom: "Mame", photo: "/photos/mame_diagne.jpg" },
+  { rfid_uuid: "STF-0003", type: "cashier", nom: "Sène", prenom: "Pape", photo: "/photos/pape_sene.jpg" },
+  { rfid_uuid: "STF-0004", type: "cashier", nom: "Ndiaye", prenom: "Awa", photo: "/photos/awa_ndiaye.jpg" },
+  { rfid_uuid: "STF-0005", type: "cashier", nom: "Sow", prenom: "Moussa", photo: "/photos/moussa_sow.jpg" },
   // Visitors
   { rfid_uuid: "VIS-0001", type: "visitor", nom: "Dupont", prenom: "Jean", photo: "/photos/jean_dupont.jpg" },
   { rfid_uuid: "VIS-0002", type: "visitor", nom: "Martin", prenom: "Sophie", photo: "/photos/sophie_martin.jpg" },
@@ -214,7 +214,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
   { rfid_uuid: "TCH-0005", action: "out", status: "success", attendance_date: "2024-11-15T17:15:00Z" },
   { rfid_uuid: "TCH-0006", action: "in", status: "success", attendance_date: "2024-11-19T07:40:00Z" },
   { rfid_uuid: "TCH-0006", action: "out", status: "success", attendance_date: "2024-11-19T17:00:00Z" },
-  // Staff
+  // Cashier
   { rfid_uuid: "STF-0001", action: "in", status: "success", attendance_date: "2024-11-15T07:20:00Z" },
   { rfid_uuid: "STF-0001", action: "out", status: "success", attendance_date: "2024-11-15T18:00:00Z" },
   { rfid_uuid: "STF-0001", action: "in", status: "success", attendance_date: "2024-11-16T07:15:00Z" },

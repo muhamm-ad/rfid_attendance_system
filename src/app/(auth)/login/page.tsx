@@ -146,7 +146,7 @@ export function LoginForm() {
         />
 
         {/* Remember Me Checkbox */}
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <Checkbox
             id="rememberMe"
             className="size-6 border-violet-300 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
@@ -154,7 +154,7 @@ export function LoginForm() {
           <Label htmlFor="rememberMe" className="text-gray-600 cursor-pointer">
             Remember Me
           </Label>
-        </div>
+        </div> */}
 
         {error && <FormStatusMessage type="error" message={error} />}
         {success && <FormStatusMessage type="success" message={success} />}

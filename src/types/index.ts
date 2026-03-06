@@ -32,8 +32,8 @@ export type AuthUser = {
 };
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  VIEWER: 1,
-  STAFF: 2,
+  MANAGER: 1,
+  CASHIER: 2,
   ADMIN: 3,
 };
 

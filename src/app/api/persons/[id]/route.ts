@@ -3,8 +3,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   prisma,
-  requireViewerAuth,
-  requireStaffAuth,
+  requireManagerAuth,
+  requireCashierAuth,
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
   findPersonByIdOrRfid,
@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireViewerAuth(request);
+    const { error } = await requireManagerAuth(request);
     if (error) return error;
 
     const { id: idParam } = await params;
@@ -49,7 +49,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { id: idParam } = await params;
@@ -93,13 +93,13 @@ export async function PUT(
   }
 }
 
-// DELETE: Delete a person (Admin or Staff only)
+// DELETE: Delete a person (Admin or Cashier only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { error } = await requireStaffAuth(request);
+    const { error } = await requireCashierAuth(request);
     if (error) return error;
 
     const { id: idParam } = await params;

@@ -50,7 +50,7 @@ const TYPE_OPTIONS = [
   { value: "all", label: "All" },
   { value: "student", label: "Students" },
   { value: "teacher", label: "Teachers" },
-  { value: "staff", label: "Staff" },
+  { value: "cashier", label: "Cashier" },
   { value: "visitor", label: "Visitors" },
 ] as const;
 

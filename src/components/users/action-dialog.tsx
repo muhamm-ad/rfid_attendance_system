@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +41,7 @@ export function UsersActionDialog({
   onSuccess?: () => void;
 }) {
   const isEdit = !!currentRow;
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
   const form = useForm<UserForm>({
     resolver: zodResolver(userFormSchema),
     defaultValues: isEdit
@@ -106,6 +109,7 @@ export function UsersActionDialog({
       open={open}
       onOpenChange={(state) => {
         form.reset();
+        setShowPasswordFields(false);
         onOpenChange(state);
       }}
     >
@@ -202,45 +206,72 @@ export function UsersActionDialog({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                    <FormLabel className="col-span-2 text-end">
-                      Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder="e.g., S3cur3P@ssw0rd"
-                        className="col-span-4"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="col-span-4 col-start-3" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                    <FormLabel className="col-span-2 text-end">
-                      Confirm Password
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        disabled={!isPasswordTouched}
-                        placeholder="e.g., S3cur3P@ssw0rd"
-                        className="col-span-4"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="col-span-4 col-start-3" />
-                  </FormItem>
-                )}
-              />
+              {isEdit && (
+                <div className="grid grid-cols-6 items-center gap-x-4">
+                  <span className="col-span-2 text-end text-sm font-medium">
+                    Password
+                  </span>
+                  <label className="col-span-4 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                    <Checkbox
+                      checked={showPasswordFields}
+                      onCheckedChange={(checked) => {
+                        setShowPasswordFields(!!checked);
+                        if (!checked) {
+                          form.setValue("password", "");
+                          form.setValue("confirmPassword", "");
+                          form.clearErrors(["password", "confirmPassword"]);
+                        }
+                      }}
+                    />
+                    Change password
+                  </label>
+                </div>
+              )}
+              {(!isEdit || showPasswordFields) && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
+                        <FormLabel className="col-span-2 text-end">
+                          Password
+                        </FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            placeholder="e.g., S3cur3P@ssw0rd"
+                            className="col-span-4"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="col-span-4 col-start-3" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
+                        <FormLabel className="col-span-2 text-end">
+                          Confirm Password
+                        </FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            disabled={!isPasswordTouched}
+                            placeholder="e.g., S3cur3P@ssw0rd"
+                            className="col-span-4"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="col-span-4 col-start-3" />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </form>
           </Form>
         </div>
