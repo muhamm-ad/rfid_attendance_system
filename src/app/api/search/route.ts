@@ -2,13 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PersonWithPayments } from "@/types";
-import { prisma, getPersonWithPayments } from "@/lib";
+import { prisma, requireManagerAuth, getPersonWithPayments } from "@/lib";
+import { PersonTypeEnum } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
+    const { error } = await requireManagerAuth(request);
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
-    const type = searchParams.get("type"); // student, teacher, staff, visitor
+    const type = searchParams.get("type") as PersonTypeEnum;
 
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -24,8 +28,8 @@ export async function GET(request: NextRequest) {
     // Case-insensitive search for names and UUID
     const where: any = {
       OR: [
-        { nom: { contains: query, mode: "insensitive" } },
-        { prenom: { contains: query, mode: "insensitive" } },
+        { last_name: { contains: query, mode: "insensitive" } },
+        { first_name: { contains: query, mode: "insensitive" } },
         { rfid_uuid: { contains: query, mode: "insensitive" } },
       ],
     };
@@ -34,13 +38,13 @@ export async function GET(request: NextRequest) {
       where.OR.push({ id: queryId });
     }
 
-    if (type && ["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (type && Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       where.type = type;
     }
 
     const results = await prisma.person.findMany({
       where,
-      orderBy: [{ nom: "asc" }, { prenom: "asc" }],
+      orderBy: [{ last_name: "asc" }, { first_name: "asc" }],
       take: 50,
     });
 

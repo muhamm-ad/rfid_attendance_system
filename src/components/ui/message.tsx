@@ -3,7 +3,7 @@
 "use client";
 
 import { LucideIcon, AlertCircle, CheckCircle2, AlertTriangle, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn-utils";
 
 type MessageType = "error" | "success" | "warning" | "info";
 

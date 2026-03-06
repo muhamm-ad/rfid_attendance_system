@@ -2,8 +2,8 @@
 
 export * from "./cn-utils";
 export * from "./ui-utils";
-export * from "./auth-utils";
 
+import { prisma } from "@/lib/db";
 import { PersonWithPayments } from "@/types";
 
 /**

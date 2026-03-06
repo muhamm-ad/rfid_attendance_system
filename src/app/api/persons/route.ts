@@ -1,57 +1,65 @@
 // @/app/api/persons/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
-import { PersonWithPayments } from "@/types";
-import { prisma, auth, getPersonWithPayments } from "@/lib";
+// TODO:
+// - [ ] Add pagination
+// - [ ] Add more filters
+// - [ ] Validate rfid_uuid pattern
+// - [ ] Validate first and last name
+// - [ ] fix photo field
 
-// GET: Retrieve all persons
+import { NextRequest, NextResponse } from "next/server";
+import { PersonWithPayments, PersonType } from "@/types";
+import {
+  prisma,
+  requireManagerAuth,
+  requireCashierAuth,
+  getPersonWithPayments,
+  handlePrismaUniqueConstraintError,
+} from "@/lib";
+import { PersonTypeEnum } from "@/types";
+
+// GET: Retrieve all persons (any authenticated user)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // TODO: Get user role from database and check if it is ADMIN
-    if (session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { error } = await requireManagerAuth(request);
+    if (error) return error;
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type"); // Filter by type if provided
 
     const where: any = {};
-    if (type && ["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (type && Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       where.type = type;
     }
 
     const persons = await prisma.person.findMany({
       where,
-      orderBy: [{ nom: "asc" }, { prenom: "asc" }],
+      orderBy: [{ last_name: "asc" }, { first_name: "asc" }],
     });
 
     // For students, add payment info
-    const personsWithPayments = await Promise.all(
-      persons.map(async (person) => {
-        if (person.type === "student") {
-          return await getPersonWithPayments(person.rfid_uuid);
-        }
-        // For non-students, convert dates and add payment fields
-        return {
-          ...person,
-          created_at: person.created_at.toISOString(),
-          updated_at: person.updated_at.toISOString(),
-          trimester1_paid: true,
-          trimester2_paid: true,
-          trimester3_paid: true,
-        } as PersonWithPayments;
-      }),
-    );
+    // const personsWithPayments = await Promise.all(
+    //   persons.map(async (person) => {
+    //     if (person.type === "student") {
+    //       return await getPersonWithPayments(person.rfid_uuid);
+    //     }
+    //     // For non-students, convert dates and add payment fields
+    //     return {
+    //       ...person,
+    //       created_at: person.created_at.toISOString(),
+    //       updated_at: person.updated_at.toISOString(),
+    //       trimester1_paid: true,
+    //       trimester2_paid: true,
+    //       trimester3_paid: true,
+    //     } as PersonWithPayments;
+    //   }),
+    // );
 
-    // console.log(`📋 ${personsWithPayments.length} persons retrieved`);
-    return NextResponse.json(personsWithPayments);
+    // return NextResponse.json(personsWithPayments);
+    return NextResponse.json(persons);
   } catch (error) {
-    console.error("❌ Error while retrieving persons:", error);
+    console.error("Error:", error);
+
     return NextResponse.json(
       { error: "Error while retrieving persons" },
       { status: 500 },
@@ -59,70 +67,40 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Create a new person
+// POST: Create a new person (Admin or Cashier only)
 export async function POST(request: NextRequest) {
   try {
+    const { error } = await requireCashierAuth(request);
+    if (error) return error;
+
     const body = await request.json();
     const {
-      rfid_uuid, // RFID UUID
+      rfid_uuid,
       type,
-      nom,
-      prenom,
-      photo_path,
-      level,
-      class: classField,
+      last_name,
+      first_name,
+      photo, // FIXME: get photo instead of photo_path
     } = body;
 
     // Validate required fields
-    if (!rfid_uuid || !type || !nom || !prenom) {
+    if (!rfid_uuid || !type || !last_name || !first_name) {
       return NextResponse.json(
         {
           error:
-            "Missing required fields (rfid_uuid, type, nom, prenom)",
+            "Missing required fields (rfid_uuid, type, last_name, first_name)",
         },
         { status: 400 },
       );
     }
 
     // Validate type value
-    if (!["student", "teacher", "staff", "visitor"].includes(type)) {
+    if (!Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       return NextResponse.json(
         {
           error:
-            "Invalid type. Allowed values: student, teacher, staff, visitor",
+            `Invalid type. Allowed values: ${Object.values(PersonTypeEnum).join(", ")}`,
         },
         { status: 400 },
-      );
-    }
-
-    // Validate level if provided (only for students)
-    if (level && type !== "student") {
-      return NextResponse.json(
-        { error: "Level can only be set for students" },
-        { status: 400 },
-      );
-    }
-
-    if (
-      level &&
-      !["License_1", "License_2", "License_3", "Master_1", "Master_2"].includes(
-        level,
-      )
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "Invalid level. Allowed values: License_1, License_2, License_3, Master_1, Master_2",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Validate class if provided (only for students)
-    if (classField && type !== "student") {
-      return NextResponse.json(
-        { error: "Class can only be set for students" },
-        { status: 400 }
       );
     }
 
@@ -130,16 +108,13 @@ export async function POST(request: NextRequest) {
     const newPerson = await prisma.person.create({
       data: {
         rfid_uuid,
-        type: type as any,
-        nom,
-        prenom,
-        photo_path: photo_path || null,
-        level: level || null,
-        class: classField || null,
+        type: type as PersonType,
+        last_name,
+        first_name,
+        photo: photo || null,
       },
     });
 
-    // console.log(`✅ New person created: ${prenom} ${nom} (${type})`);
     return NextResponse.json(
       {
         ...newPerson,
@@ -149,22 +124,11 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error: any) {
-    console.error("❌ Error while creating the person:", error);
+    console.error("Error:", error);
 
-    if (error.code === "P2002") {
-      // Prisma unique constraint error
-      if (error.meta?.target?.includes("rfid_uuid")) {
-        return NextResponse.json(
-          { error: "This RFID UUID is already associated with a person" },
-          { status: 409 },
-        );
-      }
-      if (error.meta?.target?.includes("photo_path")) {
-        return NextResponse.json(
-          { error: "This photo path is already used" },
-          { status: 409 },
-        );
-      }
+    const uniqueConstraintResponse = handlePrismaUniqueConstraintError(error);
+    if (uniqueConstraintResponse) {
+      return uniqueConstraintResponse;
     }
 
     return NextResponse.json(

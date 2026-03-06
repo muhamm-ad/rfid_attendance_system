@@ -3,10 +3,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib";
 
-export const PUBLIC_ROUTES = ["/docs", "/demo"];
-export const ADMIN_ROUTES = ["/settings"];
+export const PUBLIC_ROUTES = ["/documentation"];
+export const ADMIN_ROUTES = ["/dashboard/admin", "/admin"];
+
+/** True if pathname is an admin route or a sub-route (e.g. /dashboard/admin/users). */
+export function isAdminRoutePath(pathname: string): boolean {
+  return ADMIN_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/"),
+  );
+}
+
 export const AUTH_ROUTES = ["/login", "/logout"];
-export const API_AUTH_PREFIX = "/api/auth"; // Use for api authentication purpose
+export const API_AUTH_PREFIX = "/api"; // Use for api authentication purpose
 export const DEFAULT_REDIRECT = "/dashboard";
 
 export default auth((req) => {
@@ -31,19 +39,16 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  const isAdminRoute = ADMIN_ROUTES.includes(nextUrl.pathname);
-  if (isAdminRoute) {
-    console.log("USER: ", req.auth?.user);
+  if (isAdminRoutePath(nextUrl.pathname)) {
     const userRole = req.auth?.user?.role;
-    const isAdmin = userRole === "ADMIN";
+    const isAdmin = userRole === "SUPER_ADMIN" || userRole === "ADMIN";
     if (!isAdmin) {
       return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
     }
     return NextResponse.next();
   }
 
-  console.log("ROUTE: ", req.nextUrl.pathname);
-  console.log("IS LOGGED IN: ", isLoggedIn);
+  return NextResponse.next();
 });
 
 export const config = {

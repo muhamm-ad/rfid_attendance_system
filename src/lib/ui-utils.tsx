@@ -1,52 +1,173 @@
 // @/lib/ui-utils.tsx
 
-import React from "react";
+import { AlertCircle } from "lucide-react";
+import { cn } from "./cn-utils";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Common CSS classes
-export const inputClasses =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500";
+export const DEFAULT_PAGE_SIZE = 13;
 
-export const selectClasses =
-  "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500";
 
-export const buttonPrimaryClasses =
-  "flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors";
+// ─── Label & focus constants ───────────────────────────────────────────────────
 
-export const buttonSecondaryClasses =
-  "flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors";
+/** Single label style for filter dropdowns (Status, Action, Type, etc.) */
+export const DROP_DOWN_LABEL_CLASSNAME =
+  "mb-1.5 block text-sm font-medium theme-text-muted";
 
-// Badge components
-export const Badge: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-}> = ({ children, className = "" }) => (
-  <span className={`px-2 py-1 text-xs font-medium rounded-full ${className}`}>
-    {children}
-  </span>
+/** Label inside a form field (spacing handled by parent space-y). */
+export const FORM_LABEL_CLASSNAME =
+  "block text-sm font-medium theme-text-muted";
+
+/** Focus ring applied on interactive controls (buttons, triggers, inputs). */
+export const FOCUS_RING_CLASSNAME =
+  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+/** SelectTrigger base class: focus ring + border. */
+export const FILTER_SELECT_TRIGGER_CLASSNAME = cn(
+  FOCUS_RING_CLASSNAME,
+  "border-input",
 );
 
-export const BadgeGray: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => (
-  <Badge className="bg-gray-100 text-gray-800 capitalize">{children}</Badge>
+/** Reset-filter button class: shrink + focus ring. */
+export const RESET_FILTER_BUTTON_CLASSNAME = cn(
+  "shrink-0",
+  FOCUS_RING_CLASSNAME,
 );
 
-export const BadgeBlue: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => <Badge className="bg-blue-50 text-blue-700">{children}</Badge>;
+/**
+ * Focus ring for *container* elements with nested interactive children
+ * (e.g. a combobox trigger whose inner <input> receives focus).
+ * Uses focus-within so the ring appears on the wrapper, not the child.
+ */
+export const FOCUS_WITHIN_RING_CLASSNAME =
+  "focus-within:outline-none focus-within:ring-1 focus-within:ring-ring";
 
-// Status colors
-export const statusColors = {
-  success: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800",
+/** Ring applied when a popover / dropdown trigger is in its open state. */
+export const OPEN_STATE_RING_CLASSNAME = "ring-1 ring-ring";
+
+export const TABLE_HEADER_CLASSNAME =
+  "text-center font-bold text-primary uppercase cursor-pointer hover:bg-accent/50 transition-colors hover:text-primary";
+
+export const TABLE_CELL_CLASSNAME =
+  "text-center whitespace-nowrap items-center justify-center text-foreground";
+
+
+// ─── Conditional class helpers ────────────────────────────────────────────────
+
+export const ERROR_CLASSNAME = (hasError: boolean) =>
+  cn(hasError && "border-destructive focus-visible:ring-destructive");
+
+export const DISABLED_CLASSNAME = (disabled: boolean) =>
+  cn(disabled && "opacity-50 cursor-not-allowed");
+
+export const MUTED_CLASSNAME = (muted: boolean) =>
+  cn(muted && "text-muted-foreground");
+
+export const FOCUSED_CLASSNAME = (focused: boolean) =>
+  cn(focused && FOCUS_RING_CLASSNAME);
+
+/** SelectTrigger class with optional disabled / error states. */
+export const SELECT_TRIGGER_CLASSNAME = (
+  disabled: boolean,
+  hasError: boolean,
+) =>
+  cn(
+    FILTER_SELECT_TRIGGER_CLASSNAME,
+    DISABLED_CLASSNAME(disabled),
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** DateTimePicker trigger button class. */
+export const DATE_PICKER_TRIGGER_CLASSNAME = (
+  dateValue: string,
+  disabled: boolean,
+  hasError: boolean,
+) =>
+  cn(
+    "w-full justify-between font-normal border-input",
+    MUTED_CLASSNAME(!dateValue),
+    DISABLED_CLASSNAME(disabled),
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** Base class for native form inputs and selects (text, file, select…). */
+export const INPUT_CLASSNAME = (hasError: boolean) =>
+  cn(
+    "w-full px-3 py-2 border theme-border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50 focus:border-[var(--brand)] transition-colors",
+    ERROR_CLASSNAME(hasError),
+  );
+
+/** Inline error message displayed beneath a form field. */
+export function FormFieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+      <AlertCircle className="h-3 w-3 shrink-0" aria-hidden />
+      {message}
+    </p>
+  );
+}
+
+// ─── Shared FilterSelect component ────────────────────────────────────────────
+
+export type FilterOption = { value: string; label: string };
+
+/**
+ * Reusable labelled Select for filter bars.
+ * Treats the empty string as "all" internally.
+ */
+export function FilterSelect({
+  label,
+  value,
+  onValueChange,
+  options,
+  widthClass = "w-36",
+}: {
+  label: string;
+  value: string;
+  onValueChange: (v: string) => void;
+  options: readonly FilterOption[];
+  widthClass?: string;
+}) {
+  const current = value || "all";
+  return (
+    <div className={widthClass}>
+      <Label className={DROP_DOWN_LABEL_CLASSNAME}>{label}</Label>
+      <Select
+        value={current}
+        onValueChange={(v) => onValueChange(v === "all" ? "" : v)}
+      >
+        <SelectTrigger className={FILTER_SELECT_TRIGGER_CLASSNAME}>
+          <SelectValue placeholder="All" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(({ value: optVal, label: optLabel }) => (
+            <SelectItem key={optVal} value={optVal}>
+              {optLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+export const typeColors = {
+  student: "bg-[oklch(0.90_0.08_240)] text-[oklch(0.25_0.15_240)]", // blue
+  teacher: "bg-[oklch(0.93_0.08_85)]  text-[oklch(0.32_0.14_85)]", // amber
+  staff: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
+  visitor: "bg-[oklch(0.92_0.07_350)] text-[oklch(0.32_0.16_350)]", // rose
 };
 
-// Type colors
-export const typeColors = {
-  student: "bg-blue-100 text-blue-800",
-  teacher: "bg-purple-100 text-purple-800",
-  staff: "bg-green-100 text-green-800",
-  visitor: "bg-orange-100 text-orange-800",
+export const actionColors = {
+  in:  "bg-[oklch(0.95_0.05_145)] text-[oklch(0.32_0.14_145)]", // green  – entry
+  out: "bg-[oklch(0.95_0.04_45)]  text-[oklch(0.36_0.14_45)]",  // orange – exit
 };
 
 // Helper to format level
@@ -55,21 +176,45 @@ export function formatLevel(level: string | null | undefined): string {
   return level.replace("_", " ");
 }
 
-// Helper to filter persons (case-insensitive)
-export function filterPersons<
-  T extends { nom: string; prenom: string; id: number; rfid_uuid: string },
->(persons: T[], searchTerm: string): T[] {
+// Helper to get initials from a name (e.g. "John Doe" -> "JD")
+export function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+type PersonLike =
+  | { first_name: string; last_name: string; id: number; rfid_uuid: string }
+  | { nom: string; prenom: string; id: number; rfid_uuid: string };
+
+function getSearchName(person: PersonLike): { first: string; last: string } {
+  if ("first_name" in person && "last_name" in person) {
+    return { first: person.first_name, last: person.last_name };
+  }
+  return { first: person.prenom, last: person.nom };
+}
+
+// Helper to filter persons (case-insensitive). Supports both first_name/last_name and nom/prenom.
+export function filterPersons<T extends PersonLike>(
+  persons: T[],
+  searchTerm: string,
+): T[] {
   if (!searchTerm) return persons;
   const search = searchTerm.toLowerCase().trim();
   return persons.filter((person) => {
-    const nomLower = person.nom.toLowerCase();
-    const prenomLower = person.prenom.toLowerCase();
-    const fullName = `${prenomLower} ${nomLower}`;
-    const fullNameReverse = `${nomLower} ${prenomLower}`;
+    const { first, last } = getSearchName(person);
+    const firstLower = first.toLowerCase();
+    const lastLower = last.toLowerCase();
+    const fullName = `${firstLower} ${lastLower}`;
+    const fullNameReverse = `${lastLower} ${firstLower}`;
 
     return (
-      nomLower.includes(search) ||
-      prenomLower.includes(search) ||
+      firstLower.includes(search) ||
+      lastLower.includes(search) ||
       fullName.includes(search) ||
       fullNameReverse.includes(search) ||
       person.id.toString().includes(search) ||

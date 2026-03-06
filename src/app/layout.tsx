@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import SessionProvider from "../components/providers/session-provider";
+import { NavigationProvider } from "../components/providers/navigation-provider";
 import { auth } from "@/lib";
 import { Session } from "next-auth";
 
@@ -39,9 +40,11 @@ export default async function RootLayout({
           refetchInterval={10}
           refetchOnWindowFocus={true}
         >
-          <div className="min-h-screen flex flex-col overflow-x-hidden">
-            {children}
-          </div>
+          <NavigationProvider>
+            <div className="min-h-screen flex flex-col overflow-x-hidden">
+              {children}
+            </div>
+          </NavigationProvider>
         </SessionProvider>
       </body>
     </html>

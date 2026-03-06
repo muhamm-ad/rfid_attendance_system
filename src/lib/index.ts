@@ -6,4 +6,5 @@ import "server-only";
 
 export { handlers, auth, signIn, signOut } from "./auth";
 export { prisma } from "./db";
+export * from "./auth-utils";
 export * from "./utils";
