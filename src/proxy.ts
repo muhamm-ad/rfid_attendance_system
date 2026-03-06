@@ -41,7 +41,7 @@ export default auth((req) => {
 
   if (isAdminRoutePath(nextUrl.pathname)) {
     const userRole = req.auth?.user?.role;
-    const isAdmin = userRole === "ADMIN";
+    const isAdmin = userRole === "SUPER_ADMIN" || userRole === "ADMIN";
     if (!isAdmin) {
       return NextResponse.redirect(new URL(DEFAULT_REDIRECT, nextUrl));
     }

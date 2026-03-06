@@ -4,7 +4,7 @@ import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonsTable } from "@/components/persons/table";
 import { PageHeader } from "@/components/page-header";
 import { PageContainer } from "@/components/page-container";
-import { Person, UserRole, UserRoleEnum } from "@/types";
+import { Person, UserRole, hasRole } from "@/types";
 
 import { BarChart3, Plus, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -30,7 +30,7 @@ function PersonsPrimaryButtons() {
         <BarChart3 size={20} />
         Statistics
       </Button>
-      {(userRole === UserRoleEnum.ADMIN || userRole === UserRoleEnum.CASHIER) && (
+      {hasRole(userRole, "CASHIER") && (
         <Button
           className="gap-2"
           name="Add Person"

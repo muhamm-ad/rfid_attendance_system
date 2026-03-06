@@ -13,7 +13,7 @@ import {
   Database,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { UserRole } from "@/types";
+import { UserRole, hasRole } from "@/types";
 import {
   Sidebar,
   SidebarContent,
@@ -83,7 +83,7 @@ const adminNavGroups = [
 export function AppSidebar() {
   const { data: session, status } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
-  const isAdmin = userRole === "ADMIN";
+  const isAdmin = hasRole(userRole, "ADMIN");
 
   if (status === "loading" || !session) {
     return <Loading />;

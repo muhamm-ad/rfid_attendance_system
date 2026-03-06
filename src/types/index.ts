@@ -38,6 +38,20 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   SUPER_ADMIN: 4,
 };
 
+/**
+ * Returns true when `userRole` meets or exceeds `minimumRole` in the hierarchy.
+ * e.g. hasRole("SUPER_ADMIN", "ADMIN") → true
+ *      hasRole("CASHIER", "ADMIN")     → false
+ *      hasRole("ADMIN", "CASHIER")     → true
+ */
+export function hasRole(
+  userRole: UserRole | undefined | null,
+  minimumRole: UserRole,
+): boolean {
+  if (!userRole) return false;
+  return (ROLE_HIERARCHY[userRole] ?? 0) >= ROLE_HIERARCHY[minimumRole];
+}
+
 /** Result type for authentication middlewares */
 export type AuthResult =
   | { auth_user: AuthUser; error: null }
