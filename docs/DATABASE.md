@@ -62,7 +62,7 @@ The database consists of **4 main tables** and **5 enumerations** that define cu
 
 ### 1. Person (Table: `persons`)
 
-The `Person` model represents a person in the system. It can be a student, teacher, cashier member, or visitor.
+The `Person` model represents a person in the system. It can be a student, teacher, staff member, or visitor.
 
 #### Fields
 
@@ -70,7 +70,7 @@ The `Person` model represents a person in the system. It can be a student, teach
 | ------------ | --------------- | ------------------------ | ----------------------------------------------------------- |
 | `id`         | `Int`           | Unique identifier        | Primary key, randomly generated between 1000000 and 9999999 |
 | `rfid_uuid`  | `String`        | Unique RFID identifier   | Unique, required                                            |
-| `type`       | `PersonType`    | Person type              | Enum: student, teacher, cashier, visitor                       |
+| `type`       | `PersonType`    | Person type              | Enum: student, teacher, staff members, visitor              |
 | `nom`        | `String`        | Last name                | Required                                                    |
 | `prenom`     | `String`        | First name               | Required                                                    |
 | `photo_path` | `String?`       | Photo path               | Optional, unique                                            |
@@ -282,7 +282,7 @@ Defines person types in the system.
 enum PersonType {
   student   // Student
   teacher   // Teacher
-  cashier     // Administrative cashier
+  staff     // Staff members
   visitor   // Visitor
 }
 ```
@@ -492,7 +492,7 @@ const person = await prisma.person.findUnique({
 
 This database is designed to manage an RFID attendance system with payment tracking. The structure allows to:
 
-- ✅ Manage different person types (students, teachers, cashier, visitors)
+- ✅ Manage different person types (students, teachers, staff, visitors)
 - ✅ Record entries and exits via RFID
 - ✅ Track payments by trimester for students
 - ✅ Maintain referential integrity with cascade deletions

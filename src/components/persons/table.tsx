@@ -132,7 +132,7 @@ export function PersonsTable({
 
       {/* Table container */}
       <div className={cn("flex flex-col min-h-0 flex-1 overflow-hidden")}>
-        <div className="overflow-x-auto rounded-lg border theme-border bg-background">
+        <div className="overflow-x-auto no-scrollbar rounded-lg border theme-border bg-background">
           <Table className="min-w-full [&_tr]:border-b theme-border">
             <TableHeader className="bg-background [&_tr]:border-b theme-border">
               {table.getHeaderGroups().map((headerGroup) => (

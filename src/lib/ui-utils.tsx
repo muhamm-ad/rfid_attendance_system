@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const DEFAULT_PAGE_SIZE = 11;
+export const DEFAULT_PAGE_SIZE = 13;
 
 
 // ─── Label & focus constants ───────────────────────────────────────────────────
@@ -161,8 +161,13 @@ export function FilterSelect({
 export const typeColors = {
   student: "bg-[oklch(0.90_0.08_240)] text-[oklch(0.25_0.15_240)]", // blue
   teacher: "bg-[oklch(0.93_0.08_85)]  text-[oklch(0.32_0.14_85)]", // amber
-  cashier: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
+  staff: "bg-[oklch(0.90_0.08_185)] text-[oklch(0.25_0.13_185)]", // teal
   visitor: "bg-[oklch(0.92_0.07_350)] text-[oklch(0.32_0.16_350)]", // rose
+};
+
+export const actionColors = {
+  in:  "bg-[oklch(0.95_0.05_145)] text-[oklch(0.32_0.14_145)]", // green  – entry
+  out: "bg-[oklch(0.95_0.04_45)]  text-[oklch(0.36_0.14_45)]",  // orange – exit
 };
 
 // Helper to format level

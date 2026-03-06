@@ -16,6 +16,7 @@ import {
   getPersonWithPayments,
   handlePrismaUniqueConstraintError,
 } from "@/lib";
+import { PersonTypeEnum } from "@/types";
 
 // GET: Retrieve all persons (any authenticated user)
 export async function GET(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type"); // Filter by type if provided
 
     const where: any = {};
-    if (type && ["student", "teacher", "cashier", "visitor"].includes(type)) {
+    if (type && Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       where.type = type;
     }
 
@@ -93,11 +94,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate type value
-    if (!["student", "teacher", "cashier", "visitor"].includes(type)) {
+    if (!Object.values(PersonTypeEnum).includes(type as PersonTypeEnum)) {
       return NextResponse.json(
         {
           error:
-            "Invalid type. Allowed values: student, teacher, cashier, visitor",
+            `Invalid type. Allowed values: ${Object.values(PersonTypeEnum).join(", ")}`,
         },
         { status: 400 },
       );

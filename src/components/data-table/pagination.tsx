@@ -34,7 +34,7 @@ export function DataTablePagination<TData>({
   if (pageCount <= 1 && pageSize >= rowCount) return null;
 
   return (
-    <div className={cn("flex items-center justify-center px-2", className)}>
+    <div className={cn("flex items-center justify-center px-2 pb-0", className)}>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium theme-text-muted">
           Page {pageIndex + 1} of {pageCount || 1}

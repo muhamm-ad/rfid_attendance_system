@@ -71,7 +71,7 @@ export const usersColumns: ColumnDef<User>[] = [
       const { first_name, last_name, image } = row.original;
       const name = [first_name, last_name].filter(Boolean).join(" ") || "?";
       return (
-        <div className="flex justify-center">
+        <div className="flex items-center justify-end w-16">
           <UserAvatar src={image} name={name} />
         </div>
       );

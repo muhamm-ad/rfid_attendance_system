@@ -59,7 +59,7 @@ model ApiKey {
 enum PersonType {
   student
   teacher
-  cashier
+  staff
   visitor
 }
 

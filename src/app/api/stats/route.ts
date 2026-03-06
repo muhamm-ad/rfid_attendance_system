@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
       totalPersons,
       totalStudents,
       totalTeachers,
-      totalCashier,
+      totalStaff,
       totalVisitors,
     ] = await Promise.all([
       prisma.person.count(),
       prisma.person.count({ where: { type: "student" } }),
       prisma.person.count({ where: { type: "teacher" } }),
-      prisma.person.count({ where: { type: "cashier" } }),
+      prisma.person.count({ where: { type: "staff" } }),
       prisma.person.count({ where: { type: "visitor" } }),
     ]);
 
@@ -250,7 +250,7 @@ export async function GET(request: NextRequest) {
         total_persons: totalPersons,
         total_students: totalStudents,
         total_teachers: totalTeachers,
-        total_cashier: totalCashier,
+        total_cashier: totalStaff,
         total_visitors: totalVisitors,
       },
       attendance_summary: {

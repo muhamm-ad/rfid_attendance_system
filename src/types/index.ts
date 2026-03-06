@@ -81,8 +81,9 @@ export interface AttendanceLog {
   action: "in" | "out";
   status: "success" | "failed";
   timestamp: string; // API returns this as timestamp (aliased from attendance_date)
-  person_name: string;
-  person_type: string;
+  first_name: string;
+  last_name: string;
+  type: string;
   rfid_uuid: string;
   photo?: string;
 }

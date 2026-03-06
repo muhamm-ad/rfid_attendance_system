@@ -85,8 +85,9 @@ export async function GET(request: NextRequest) {
       action: log.action,
       status: log.status,
       timestamp: log.attendance_date.toISOString(),
-      person_name: `${log.person.last_name} ${log.person.first_name}`,
-      person_type: log.person.type,
+      first_name: log.person.first_name,
+      last_name: log.person.last_name,
+      type: log.person.type,
       rfid_uuid: log.person.rfid_uuid,
       photo: log.person.photo ?? undefined,
     }));

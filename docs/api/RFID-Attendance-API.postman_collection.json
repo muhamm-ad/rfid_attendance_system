@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "RFID Attendance System API",
-    "description": "API collection for the RFID Attendance System.\n\n**Base URL:** `{{base_url}}` (default: http://localhost:3000)\n\n**Format:** JSON\n\n**Authentication:**\n- **Public endpoints** (Scan, GET Scan): No auth required.\n- **Protected endpoints**: Use **Bearer Token** (JWT) in the `Authorization` header, or session cookie if calling from the same origin.\n- Get a JWT: log in via the app, then `POST /api/auth/token` with session cookie (or body `expiresIn` e.g. `1h`, `24h`).\n\n**Conventions:**\n- **Trimesters:** 1 (Oct–Jan), 2 (Feb–May), 3 (Jun–Sep)\n- **Person types:** student, teacher, cashier, visitor\n- **Student levels:** License_1, License_2, License_3, Master_1, Master_2\n- **Payment methods:** cash, card, bank_transfer",
+    "description": "API collection for the RFID Attendance System.\n\n**Base URL:** `{{base_url}}` (default: http://localhost:3000)\n\n**Format:** JSON\n\n**Authentication:**\n- **Public endpoints** (Scan, GET Scan): No auth required.\n- **Protected endpoints**: Use **Bearer Token** (JWT) in the `Authorization` header, or session cookie if calling from the same origin.\n- Get a JWT: log in via the app, then `POST /api/auth/token` with session cookie (or body `expiresIn` e.g. `1h`, `24h`).\n\n**Conventions:**\n- **Trimesters:** 1 (Oct–Jan), 2 (Feb–May), 3 (Jun–Sep)\n- **Person types:** student, teacher, staff, visitor\n- **Student levels:** License_1, License_2, License_3, Master_1, Master_2\n- **Payment methods:** cash, card, bank_transfer",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -29,7 +29,7 @@
               "raw": "{\n  \"rfid_uuid\": \"A1B2C3D4\",\n  \"action\": \"in\"\n}"
             },
             "url": "{{base_url}}/api/scan",
-            "description": "**Attendance mode.** Records an \"in\" action: checks badge, verifies person and (for students) payment for current trimester, logs attendance. Teachers, cashier, visitors always have access.\n\n**Body:**\n- `rfid_uuid` (string, required): RFID badge UUID\n- `action` (string, required): `\"in\"` or `\"out\"`\n\n**Response 200:** `success`, `access_granted`, `person`, `message`, `timestamp`, `current_trimester`, `action`"
+            "description": "**Attendance mode.** Records an \"in\" action: checks badge, verifies person and (for students) payment for current trimester, logs attendance. Teachers, staff, visitors always have access.\n\n**Body:**\n- `rfid_uuid` (string, required): RFID badge UUID\n- `action` (string, required): `\"in\"` or `\"out\"`\n\n**Response 200:** `success`, `access_granted`, `person`, `message`, `timestamp`, `current_trimester`, `action`"
           }
         },
         {
@@ -88,7 +88,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "persons"],
               "query": [
-                { "key": "type", "value": "student", "description": "Filter: student, teacher, cashier, visitor" }
+                { "key": "type", "value": "student", "description": "Filter: student, teacher, staff, visitor" }
               ]
             },
             "description": "Returns all persons (or filtered by `type`). Students include `trimester1_paid`, `trimester2_paid`, `trimester3_paid`. Sorted by nom, prenom."
@@ -260,7 +260,7 @@
               "path": ["api", "search"],
               "query": [
                 { "key": "q", "value": "Diallo", "description": "Search term (min 2 chars); searches nom, prenom, rfid_uuid" },
-                { "key": "type", "value": "student", "description": "Optional: student, teacher, cashier, visitor" }
+                { "key": "type", "value": "student", "description": "Optional: student, teacher, staff, visitor" }
               ]
             },
             "description": "Case-insensitive search in name, first name, badge ID. Max 50 results."

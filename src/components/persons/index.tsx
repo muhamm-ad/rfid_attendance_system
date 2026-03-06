@@ -3,6 +3,7 @@ import { PersonsDialogs } from "@/components/persons/dialogs";
 import { PersonsProvider } from "@/components/providers/persons-provider";
 import { PersonsTable } from "@/components/persons/table";
 import { PageHeader } from "@/components/page-header";
+import { PageContainer } from "@/components/page-container";
 import { Person, UserRole, UserRoleEnum } from "@/types";
 
 import { BarChart3, Plus, Users } from "lucide-react";
@@ -59,7 +60,7 @@ export function Persons({
 }) {
   return (
     <PersonsProvider>
-      <div className="page-container h-full">
+      <PageContainer>
         <PageHeader
           icon={Users}
           title="Person & Badge Management"
@@ -80,7 +81,7 @@ export function Persons({
           />
         </div>
         <PersonsDialogs />
-      </div>
+      </PageContainer>
     </PersonsProvider>
   );
 }

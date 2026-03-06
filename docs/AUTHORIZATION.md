@@ -15,12 +15,12 @@ This document defines the user roles, permissions, and access control model for 
 
 ## 👥 User Roles
 
-The system defines **three user roles** for system access (distinct from Person types like student/teacher/cashier/visitor):
+The system defines **three user roles** for system access (distinct from Person types like student/teacher/staff/visitor):
 
 ### 1. **Admin** (Administrator)
 
 - **Description:** Full system access with all privileges
-- **Use Case:** System administrators, IT cashier, institution managers
+- **Use Case:** System administrators, institution managers
 - **Capabilities:**
   - Complete system management
   - User account management
@@ -96,7 +96,7 @@ The system defines **three user roles** for system access (distinct from Person 
 #### Person Management
 
 - ✅ **View all persons** - Can view all persons regardless of type
-- ✅ **Create person** - Can add new persons (students, teachers, cashier, visitors)
+- ✅ **Create person** - Can add new persons (students, teachers, staff members, visitors)
 - ✅ **Update person** - Can modify any person's information
 - ✅ **Delete person** - Can permanently delete persons
 - ✅ **Upload photos** - Can upload and manage person photos

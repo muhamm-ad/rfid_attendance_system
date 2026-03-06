@@ -49,7 +49,7 @@ export const personsColumns: ColumnDef<Person>[] = [
       const { first_name, last_name, photo } = row.original;
       const name = `${first_name} ${last_name}`;
       return (
-        <div className="flex justify-center">
+        <div className="flex items-center justify-end w-16">
           <UserAvatar src={photo} name={name} />
         </div>
       );
@@ -218,7 +218,6 @@ export const personsColumns: ColumnDef<Person>[] = [
   // ─── Row actions ───────────────────────────────────────────────────────────
   {
     enableSorting: false,
-    enableHiding: false,
     id: "actions",
     cell: PersonsTableRowActions,
   },

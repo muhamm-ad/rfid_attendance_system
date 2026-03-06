@@ -70,7 +70,7 @@ export async function getPersonWithPayments(
     };
   }
 
-  // For other types (teacher, cashier, visitor), payment is not required
+  // For other types (teacher, staff, visitor), payment is not required
   return {
     ...person,
     created_at: person.created_at.toISOString(),

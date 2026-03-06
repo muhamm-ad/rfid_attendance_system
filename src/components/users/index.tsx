@@ -3,6 +3,7 @@ import { UsersDialogs } from "@/components/users/dialogs";
 import { UsersProvider } from "@/components/providers/users-provider";
 import { UsersTable } from "@/components/users/table";
 import { PageHeader } from "@/components/page-header";
+import { PageContainer } from "@/components/page-container";
 import { User } from "@/types";
 import { MailPlus, UserPlus, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export function Users({
 }) {
   return (
     <UsersProvider>
-      <div className="page-container h-full">
+      <PageContainer>
         <PageHeader
           icon={UsersIcon}
           title="User Management"
@@ -64,7 +65,7 @@ export function Users({
           />
         </div>
         <UsersDialogs />
-      </div>
+      </PageContainer>
     </UsersProvider>
   );
 }

@@ -9,6 +9,8 @@ export const loginSchema = z.object({
 
 export type LoginSchema = z.infer<typeof loginSchema>;
 
+// ------------------------------------------------------------
+
 export const userFormSchema = z
   .object({
     firstName: z.string().optional(),
@@ -76,6 +78,8 @@ export const userFormSchema = z
 
 export type UserForm = z.infer<typeof userFormSchema>;
 
+// ------------------------------------------------------------
+
 export const personFormSchema = z.object({
   firstName: z.string().min(1, "First Name is required."),
   lastName: z.string().min(1, "Last Name is required."),
@@ -86,6 +90,8 @@ export const personFormSchema = z.object({
 });
 
 export type PersonForm = z.infer<typeof personFormSchema>;
+
+// ------------------------------------------------------------
 
 // TODO: Add invitation-specific fields when the API is ready (e.g. expiry date, custom message template, resend count…)
 export const userInviteSchema = z.object({
@@ -99,11 +105,23 @@ export const userInviteSchema = z.object({
 
 export type UserInviteForm = z.infer<typeof userInviteSchema>;
 
+// ------------------------------------------------------------
+
+export const dateTimePickerSchema = z.object({
+  datetime: z.date({ error: "Date & time is required!" }),
+});
+
+export type DateTimePickerForm = z.infer<typeof dateTimePickerSchema>;
+
+// ------------------------------------------------------------
+
 export const apiKeyNameSchema = z.object({
   name: z.string().min(1, "Name is required.").max(100),
 });
 
 export type ApiKeyNameForm = z.infer<typeof apiKeyNameSchema>;
+
+// ------------------------------------------------------------
 
 export const jwtExpiresInSchema = z.object({
   expiresIn: z.string().min(1, "Expiration is required.").max(20),

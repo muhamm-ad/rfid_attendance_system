@@ -42,7 +42,7 @@ export async function seedUsers() {
   console.log("   ⚠️  Please change these passwords after first login!");
 }
 
-type PersonType = "student" | "teacher" | "cashier" | "visitor";
+type PersonType = "student" | "teacher" | "staff" | "visitor";
 
 type PersonSeed = {
   rfid_uuid: string;
@@ -101,12 +101,12 @@ const PERSONS_SEED: PersonSeed[] = [
   { rfid_uuid: "TCH-0004", type: "teacher", nom: "Touré", prenom: "Mamadou", photo: "/photos/mamadou_toure.jpg" },
   { rfid_uuid: "TCH-0005", type: "teacher", nom: "Sène", prenom: "Bintou", photo: "/photos/bintou_sene.jpg" },
   { rfid_uuid: "TCH-0006", type: "teacher", nom: "Camara", prenom: "Moussa", photo: "/photos/moussa_camara.jpg" },
-  // Cashier
-  { rfid_uuid: "STF-0001", type: "cashier", nom: "Faye", prenom: "Astou", photo: "/photos/astou_faye.jpg" },
-  { rfid_uuid: "STF-0002", type: "cashier", nom: "Diagne", prenom: "Mame", photo: "/photos/mame_diagne.jpg" },
-  { rfid_uuid: "STF-0003", type: "cashier", nom: "Sène", prenom: "Pape", photo: "/photos/pape_sene.jpg" },
-  { rfid_uuid: "STF-0004", type: "cashier", nom: "Ndiaye", prenom: "Awa", photo: "/photos/awa_ndiaye.jpg" },
-  { rfid_uuid: "STF-0005", type: "cashier", nom: "Sow", prenom: "Moussa", photo: "/photos/moussa_sow.jpg" },
+  // Staff Members
+  { rfid_uuid: "STF-0001", type: "staff", nom: "Faye", prenom: "Astou", photo: "/photos/astou_faye.jpg" },
+  { rfid_uuid: "STF-0002", type: "staff", nom: "Diagne", prenom: "Mame", photo: "/photos/mame_diagne.jpg" },
+  { rfid_uuid: "STF-0003", type: "staff", nom: "Sène", prenom: "Pape", photo: "/photos/pape_sene.jpg" },
+  { rfid_uuid: "STF-0004", type: "staff", nom: "Ndiaye", prenom: "Awa", photo: "/photos/awa_ndiaye.jpg" },
+  { rfid_uuid: "STF-0005", type: "staff", nom: "Sow", prenom: "Moussa", photo: "/photos/moussa_sow.jpg" },
   // Visitors
   { rfid_uuid: "VIS-0001", type: "visitor", nom: "Dupont", prenom: "Jean", photo: "/photos/jean_dupont.jpg" },
   { rfid_uuid: "VIS-0002", type: "visitor", nom: "Martin", prenom: "Sophie", photo: "/photos/sophie_martin.jpg" },
@@ -214,7 +214,7 @@ const ATTENDANCE_SEED: AttendanceSeed[] = [
   { rfid_uuid: "TCH-0005", action: "out", status: "success", attendance_date: "2024-11-15T17:15:00Z" },
   { rfid_uuid: "TCH-0006", action: "in", status: "success", attendance_date: "2024-11-19T07:40:00Z" },
   { rfid_uuid: "TCH-0006", action: "out", status: "success", attendance_date: "2024-11-19T17:00:00Z" },
-  // Cashier
+  // Staff Members
   { rfid_uuid: "STF-0001", action: "in", status: "success", attendance_date: "2024-11-15T07:20:00Z" },
   { rfid_uuid: "STF-0001", action: "out", status: "success", attendance_date: "2024-11-15T18:00:00Z" },
   { rfid_uuid: "STF-0001", action: "in", status: "success", attendance_date: "2024-11-16T07:15:00Z" },
